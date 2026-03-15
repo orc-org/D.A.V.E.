@@ -1,0 +1,40 @@
+# ROS 2 Build Artifacts
+build/
+install/
+log/
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+ros2_ws/.colcon/
+
+# Python-specific
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.tox/
+.venv/
+venv/
+ENV/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# CMake/Build
+install_manifest.txt
+_CPack_Packages/
+CMakeFiles/
+CMakeCache.txt
+
+# User-specific
+.env
+.python-version
+*.orig
