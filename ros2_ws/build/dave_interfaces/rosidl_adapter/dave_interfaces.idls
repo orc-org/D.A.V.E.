@@ -1,0 +1,3 @@
+/home/isaac/Documents/D.A.V.E./ros2_ws/build/dave_interfaces/rosidl_adapter/dave_interfaces:msg/Bearing.idl
+/home/isaac/Documents/D.A.V.E./ros2_ws/build/dave_interfaces/rosidl_adapter/dave_interfaces:msg/Position.idl
+/home/isaac/Documents/D.A.V.E./ros2_ws/build/dave_interfaces/rosidl_adapter/dave_interfaces:srv/GetSetNav.idl

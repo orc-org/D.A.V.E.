@@ -1,0 +1,15 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from custom_interfaces/srv/GetNav.srv
+// generated code does not contain a copyright notice
+
+
+module custom_interfaces {
+  module srv {
+    struct GetNav_Request {
+      string function;
+    };
+    struct GetNav_Response {
+      string returned;
+    };
+  };
+};

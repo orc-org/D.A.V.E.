@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "custom_interfaces__py",
+		"source" : "/home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces/custom_interfaces__py"
+	}
+}

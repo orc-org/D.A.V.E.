@@ -1,0 +1,53 @@
+[0.010s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16
+[0.058s] [ 50%] [32mBuilding CXX object CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o[0m
+[1.751s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:[m[K In function ‘[01m[Kint main(int, char**)[m[K’:
+[1.751s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:632:5:[m[K [01;31m[Kerror: [m[K‘[01m[Kros[m[K’ has not been declared
+[1.751s]   632 |     [01;31m[Kros[m[K::init(argc, argv, "GPSnode"); // initialize GPSnode
+[1.751s]       |     [01;31m[K^~~[m[K
+[1.751s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:634:5:[m[K [01;31m[Kerror: [m[K‘[01m[Kros[m[K’ has not been declared
+[1.751s]   634 |     [01;31m[Kros[m[K::NodeHandle GPS; // create node handle
+[1.752s]       |     [01;31m[K^~~[m[K
+[1.752s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:637:5:[m[K [01;31m[Kerror: [m[K‘[01m[Kros[m[K’ has not been declared
+[1.752s]   637 |     [01;31m[Kros[m[K::Publisher currentCoordinates_Topic = GPS.advertise<custom_interfaces::msg::Message>("currentCoordinates", 1);
+[1.752s]       |     [01;31m[K^~~[m[K
+[1.752s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:640:5:[m[K [01;31m[Kerror: [m[K‘[01m[Kros[m[K’ has not been declared
+[1.752s]   640 |     [01;31m[Kros[m[K::Publisher bearing_Topic = GPS.advertise<custom_interfaces::msg::Message>("bearingToTarget", 1);
+[1.752s]       |     [01;31m[K^~~[m[K
+[1.752s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:642:5:[m[K [01;31m[Kerror: [m[K‘[01m[Kros[m[K’ has not been declared
+[1.752s]   642 |     [01;31m[Kros[m[K::Rate r(1); //publish messages at a rate of 1Hz
+[1.752s]       |     [01;31m[K^~~[m[K
+[1.753s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:644:12:[m[K [01;31m[Kerror: [m[K‘[01m[KGPS[m[K’ was not declared in this scope
+[1.753s]   644 |     while ([01;31m[KGPS[m[K.ok()){
+[1.753s]       |            [01;31m[K^~~[m[K
+[1.753s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:646:9:[m[K [01;31m[Kerror: [m[K‘[01m[Kcustom_interfaces[m[K’ has not been declared
+[1.753s]   646 |         [01;31m[Kcustom_interfaces[m[K::msg::Message currentCoordinates;
+[1.753s]       |         [01;31m[K^~~~~~~~~~~~~~~~~[m[K
+[1.754s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:647:9:[m[K [01;31m[Kerror: [m[K‘[01m[Kcustom_interfaces[m[K’ has not been declared
+[1.754s]   647 |         [01;31m[Kcustom_interfaces[m[K::msg::Message bearing;
+[1.754s]       |         [01;31m[K^~~~~~~~~~~~~~~~~[m[K
+[1.757s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:650:9:[m[K [01;31m[Kerror: [m[K‘[01m[KcurrentCoordinates[m[K’ was not declared in this scope
+[1.758s]   650 |         [01;31m[KcurrentCoordinates[m[K = translate(g_currentPosition);
+[1.758s]       |         [01;31m[K^~~~~~~~~~~~~~~~~~[m[K
+[1.760s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:651:9:[m[K [01;31m[Kerror: [m[K‘[01m[Kbearing[m[K’ was not declared in this scope; did you mean ‘[01m[KgetBearing[m[K’?
+[1.760s]   651 |         [01;31m[Kbearing[m[K = getBearing();
+[1.760s]       |         [01;31m[K^~~~~~~[m[K
+[1.760s]       |         [32m[KgetBearing[m[K
+[1.762s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:660:9:[m[K [01;31m[Kerror: [m[K‘[01m[KROS_INFO[m[K’ was not declared in this scope
+[1.762s]   660 |         [01;31m[KROS_INFO[m[K("%s", ss.str().c_str());
+[1.762s]       |         [01;31m[K^~~~~~~~[m[K
+[1.766s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:663:9:[m[K [01;31m[Kerror: [m[K‘[01m[KcurrentCoordinates_Topic[m[K’ was not declared in this scope
+[1.766s]   663 |         [01;31m[KcurrentCoordinates_Topic[m[K.publish(currentCoordinates);
+[1.766s]       |         [01;31m[K^~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[1.769s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:664:9:[m[K [01;31m[Kerror: [m[K‘[01m[Kbearing_Topic[m[K’ was not declared in this scope
+[1.769s]   664 |         [01;31m[Kbearing_Topic[m[K.publish(bearing);
+[1.769s]       |         [01;31m[K^~~~~~~~~~~~~[m[K
+[1.769s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:666:9:[m[K [01;31m[Kerror: [m[K‘[01m[Kros[m[K’ has not been declared
+[1.769s]   666 |         [01;31m[Kros[m[K::spinOnce();
+[1.769s]       |         [01;31m[K^~~[m[K
+[1.770s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:667:9:[m[K [01;31m[Kerror: [m[K‘[01m[Kr[m[K’ was not declared in this scope
+[1.770s]   667 |         [01;31m[Kr[m[K.sleep();
+[1.770s]       |         [01;31m[K^[m[K
+[2.084s] gmake[2]: *** [CMakeFiles/GPSnode.dir/build.make:76: CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o] Error 1
+[2.084s] gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/GPSnode.dir/all] Error 2
+[2.084s] gmake: *** [Makefile:146: all] Error 2
+[2.088s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16

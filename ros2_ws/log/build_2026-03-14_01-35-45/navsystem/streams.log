@@ -1,0 +1,10 @@
+[0.013s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16
+[0.058s] [ 50%] [32mBuilding CXX object CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o[0m
+[0.170s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:16:10:[m[K [01;31m[Kfatal error: [m[Kcustom_interfaces/msg/Message.hpp: No such file or directory
+[0.170s]    16 | #include [01;31m[K"custom_interfaces/msg/Message.hpp"[m[K
+[0.170s]       |          [01;31m[K^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[0.170s] compilation terminated.
+[0.176s] gmake[2]: *** [CMakeFiles/GPSnode.dir/build.make:76: CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o] Error 1
+[0.176s] gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/GPSnode.dir/all] Error 2
+[0.177s] gmake: *** [Makefile:146: all] Error 2
+[0.179s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16

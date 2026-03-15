@@ -1,0 +1,12 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from navsystem/msg/Message.msg
+// generated code does not contain a copyright notice
+
+
+module navsystem {
+  module msg {
+    struct Message {
+      string message;
+    };
+  };
+};

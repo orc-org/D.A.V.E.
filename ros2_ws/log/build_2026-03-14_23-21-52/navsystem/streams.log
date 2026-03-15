@@ -1,0 +1,69 @@
+[0.012s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem': AMENT_PREFIX_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16
+[0.054s] [35m[1mConsolidate compiler generated dependencies of target GPSnode[0m
+[0.073s] [ 50%] [32mBuilding CXX object CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o[0m
+[1.803s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:[m[K In function ‘[01m[Kvoid setNav(std::shared_ptr<navigation_interfaces::srv::SetNav_Request_<std::allocator<void> > >, std::shared_ptr<navigation_interfaces::srv::SetNav_Response_<std::allocator<void> > >)[m[K’:
+[1.803s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:654:84:[m[K [01;35m[Kwarning: [m[Ksuggest parentheses around ‘[01m[K&&[m[K’ within ‘[01m[K||[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wparentheses-Wparentheses]8;;[m[K]
+[1.803s]   654 |     if ((selection != 1 && argumentCase !=0) || [01;35m[K(selection == 0 || selection == 3) && (argumentCase !=2)[m[K){ // check for errors (since not all function can take all arguments)
+[1.803s]       |                                                 [01;35m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~[m[K
+[1.806s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:[m[K At global scope:
+[1.807s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:765:28:[m[K [01;31m[Kerror: [m[K‘[01m[KSharePtr[m[K’ in ‘[01m[Kclass rclcpp::TimerBase[m[K’ does not name a type
+[1.807s]   765 |         rclcpp::TimerBase::[01;31m[KSharePtr[m[K timer_;
+[1.807s]       |                            [01;31m[K^~~~~~~~[m[K
+[1.842s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:[m[K In constructor ‘[01m[KGPSnode::GPSnode()[m[K’:
+[1.842s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:743:13:[m[K [01;31m[Kerror: [m[K‘[01m[Ktimer_[m[K’ was not declared in this scope; did you mean ‘[01m[Ktimer_t[m[K’?
+[1.842s]   743 |             [01;31m[Ktimer_[m[K = this->create_publisher<string>(1000ms, std::bind(&GPSnode::timer_callback, this));
+[1.842s]       |             [01;31m[K^~~~~~[m[K
+[1.842s]       |             [32m[Ktimer_t[m[K
+[1.844s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:743:52:[m[K [01;31m[Kerror: [m[Kno matching function for call to ‘[01m[KGPSnode::create_publisher<std::string>(std::chrono::milliseconds, std::_Bind_helper<false, void (GPSnode::*)(), GPSnode*>::type)[m[K’
+[1.844s]   743 |             timer_ = [01;31m[Kthis->create_publisher<string>(1000ms, std::bind(&GPSnode::timer_callback, this))[m[K;
+[1.845s]       |                      [01;31m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[1.845s] In file included from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/node.hpp:1321[m[K,
+[1.845s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors/single_threaded_executor.hpp:28[m[K,
+[1.845s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:22[m[K,
+[1.845s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155[m[K,
+[1.845s]                  from [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23[m[K:
+[1.845s] [01m[K/opt/ros/humble/include/rclcpp/rclcpp/node_impl.hpp:73:1:[m[K [01;36m[Knote: [m[Kcandidate: ‘[01m[Ktemplate<class MessageT, class AllocatorT, class PublisherT> std::shared_ptr<PublisherT> rclcpp::Node::create_publisher(const string&, const rclcpp::QoS&, const rclcpp::PublisherOptionsWithAllocator<AllocatorT>&)[m[K’
+[1.845s]    73 | [01;36m[KNode[m[K::create_publisher(
+[1.845s]       | [01;36m[K^~~~[m[K
+[1.845s] [01m[K/opt/ros/humble/include/rclcpp/rclcpp/node_impl.hpp:73:1:[m[K [01;36m[Knote: [m[K  template argument deduction/substitution failed:
+[1.845s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:743:53:[m[K [01;36m[Knote: [m[K  cannot convert ‘[01m[Kstd::literals::chrono_literals::operator""ms<'1', '0', '0', '0'>()[m[K’ (type ‘[01m[Kstd::chrono::milliseconds[m[K’ {aka ‘[01m[Kstd::chrono::duration<long int, std::ratio<1, 1000> >[m[K’}) to type ‘[01m[Kconst string&[m[K’ {aka ‘[01m[Kconst std::__cxx11::basic_string<char>&[m[K’}
+[1.845s]   743 |             timer_ = this->create_publisher<string>([01;36m[K1000ms[m[K, std::bind(&GPSnode::timer_callback, this));
+[1.845s]       |                                                     [01;36m[K^~~~~~[m[K
+[1.845s] In file included from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/logging.hpp:24[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/client.hpp:40[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:24[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21[m[K,
+[1.846s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155[m[K,
+[1.846s]                  from [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23[m[K:
+[1.846s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:[m[K In member function ‘[01m[Kvoid GPSnode::timer_callback()[m[K’:
+[1.846s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:757:161:[m[K [01;31m[Kerror: [m[K‘[01m[Kusing _bearing_type = class std::__cxx11::basic_string<char>[m[K’ {aka ‘[01m[Kclass std::__cxx11::basic_string<char>[m[K’} has no member named ‘[01m[Kc_srt[m[K’; did you mean ‘[01m[Kc_str[m[K’?
+[1.846s]   757 |                 RCLCPP_INFO(this->get_logger(), "Current Coordinates: '%s'   Bearing to Target: '%s'", positionMessage.position.c_str(), bearingMessage.bearing.[01;31m[Kc_srt[m[K());
+[1.846s]       |                                                                                                                                                                 [01;31m[K^~~~~[m[K
+[1.849s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:[m[K In function ‘[01m[Kint main(int, char**)[m[K’:
+[1.849s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:782:17:[m[K [01;31m[Kerror: [m[Kno matching function for call to ‘[01m[Kspin(std::shared_ptr<GPSnode>)[m[K’
+[1.849s]   782 |     [01;31m[Krclcpp::spin(std::make_shared<GPSnode>())[m[K;
+[1.849s]       |     [01;31m[K~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[1.849s] In file included from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155[m[K,
+[1.849s]                  from [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23[m[K:
+[1.849s] [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:45:1:[m[K [01;36m[Knote: [m[Kcandidate: ‘[01m[Kvoid rclcpp::spin(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr)[m[K’
+[1.849s]    45 | [01;36m[Kspin[m[K(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+[1.849s]       | [01;36m[K^~~~[m[K
+[1.849s] [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:45:60:[m[K [01;36m[Knote: [m[K  no known conversion for argument 1 from ‘[01m[Kshared_ptr<[01;32m[KGPSnode[m[K>[m[K’ to ‘[01m[Kshared_ptr<[01;32m[Krclcpp::node_interfaces::NodeBaseInterface[m[K>[m[K’
+[1.849s]    45 | spin([01;36m[Krclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr[m[K);
+[1.849s]       |      [01;36m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~[m[K
+[1.849s] [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:49:1:[m[K [01;36m[Knote: [m[Kcandidate: ‘[01m[Kvoid rclcpp::spin(rclcpp::Node::SharedPtr)[m[K’
+[1.849s]    49 | [01;36m[Kspin[m[K(rclcpp::Node::SharedPtr node_ptr);
+[1.850s]       | [01;36m[K^~~~[m[K
+[1.850s] [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:49:30:[m[K [01;36m[Knote: [m[K  no known conversion for argument 1 from ‘[01m[Kshared_ptr<[01;32m[KGPSnode[m[K>[m[K’ to ‘[01m[Kshared_ptr<[01;32m[Krclcpp::Node[m[K>[m[K’
+[1.850s]    49 | spin([01;36m[Krclcpp::Node::SharedPtr node_ptr[m[K);
+[1.850s]       |      [01;36m[K~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~[m[K
+[2.628s] gmake[2]: *** [CMakeFiles/GPSnode.dir/build.make:76: CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o] Error 1
+[2.628s] gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/GPSnode.dir/all] Error 2
+[2.629s] gmake: *** [Makefile:146: all] Error 2
+[2.631s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem' returned '2': AMENT_PREFIX_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16

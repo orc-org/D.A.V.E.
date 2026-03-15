@@ -1,0 +1,13 @@
+setup.py
+navigation_interfaces/__init__.py
+navigation_interfaces.egg-info/PKG-INFO
+navigation_interfaces.egg-info/SOURCES.txt
+navigation_interfaces.egg-info/dependency_links.txt
+navigation_interfaces.egg-info/top_level.txt
+navigation_interfaces/msg/__init__.py
+navigation_interfaces/msg/_bearing.py
+navigation_interfaces/msg/_position.py
+navigation_interfaces/srv/__init__.py
+navigation_interfaces/srv/_get_nav.py
+navigation_interfaces/srv/_get_set_nav.py
+navigation_interfaces/srv/_set_nav.py

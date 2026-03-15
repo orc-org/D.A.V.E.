@@ -1,0 +1,233 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-102af52408a90e5c013c.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17
+					]
+				},
+				{
+					"build" : "dave_interfaces__py",
+					"jsonFile" : "directory-dave_interfaces__py-ae677e29078656a7dfb9.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "/home/isaac/Documents/D.A.V.E./ros2_ws/build/dave_interfaces/dave_interfaces__py",
+					"targetIndexes" : 
+					[
+						4
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0,
+						1
+					],
+					"name" : "dave_interfaces",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
+						12,
+						13,
+						14,
+						15,
+						16,
+						17
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_build_dave_interfaces_egg::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_build_dave_interfaces_egg-cf61d6d93e24c8dfaeaa.json",
+					"name" : "ament_cmake_python_build_dave_interfaces_egg",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ament_cmake_python_copy_dave_interfaces::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ament_cmake_python_copy_dave_interfaces-83566e8153c7b576d423.json",
+					"name" : "ament_cmake_python_copy_dave_interfaces",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces-b90dd01696074a2b4a96.json",
+					"name" : "dave_interfaces",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__cpp-67747a2a6250af9c3e87.json",
+					"name" : "dave_interfaces__cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "dave_interfaces__py::@f8895e0b160b6e06102c",
+					"jsonFile" : "target-dave_interfaces__py-90652d1fab88bacfe8c4.json",
+					"name" : "dave_interfaces__py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_generator_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_generator_c-f507c31b0583e02ceee9.json",
+					"name" : "dave_interfaces__rosidl_generator_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_generator_py::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_generator_py-7622eac0da34740badb9.json",
+					"name" : "dave_interfaces__rosidl_generator_py",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_typesupport_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_typesupport_c-25310f79152368fa1dc0.json",
+					"name" : "dave_interfaces__rosidl_typesupport_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_typesupport_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_typesupport_c__pyext-f42719973e6618f37950.json",
+					"name" : "dave_interfaces__rosidl_typesupport_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_typesupport_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_typesupport_cpp-77601fecbfdd144ed8e6.json",
+					"name" : "dave_interfaces__rosidl_typesupport_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_typesupport_fastrtps_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_typesupport_fastrtps_c-3f8cb2a2432b9874be1d.json",
+					"name" : "dave_interfaces__rosidl_typesupport_fastrtps_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_typesupport_fastrtps_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_typesupport_fastrtps_c__pyext-89952908197ca985a204.json",
+					"name" : "dave_interfaces__rosidl_typesupport_fastrtps_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_typesupport_fastrtps_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_typesupport_fastrtps_cpp-b4089ce5a26d8a08f6c1.json",
+					"name" : "dave_interfaces__rosidl_typesupport_fastrtps_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_typesupport_introspection_c::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_typesupport_introspection_c-af8a805f99cf30658cd2.json",
+					"name" : "dave_interfaces__rosidl_typesupport_introspection_c",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_typesupport_introspection_c__pyext::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_typesupport_introspection_c__pyext-eead275c0ab4d8889a13.json",
+					"name" : "dave_interfaces__rosidl_typesupport_introspection_c__pyext",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces__rosidl_typesupport_introspection_cpp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces__rosidl_typesupport_introspection_cpp-d7698d8c2c485ea1d9e5.json",
+					"name" : "dave_interfaces__rosidl_typesupport_introspection_cpp",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "dave_interfaces_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-dave_interfaces_uninstall-b2b25ee7bf30b5ceae8a.json",
+					"name" : "dave_interfaces_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-f8fb5de699c84bcbb38d.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/isaac/Documents/D.A.V.E./ros2_ws/build/dave_interfaces",
+		"source" : "/home/isaac/Documents/D.A.V.E./ros2_ws/src/dave_interfaces"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

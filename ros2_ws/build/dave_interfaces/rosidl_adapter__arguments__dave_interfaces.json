@@ -1,0 +1,8 @@
+{
+  "package_name": "dave_interfaces",
+  "non_idl_tuples": [
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/dave_interfaces:msg/Bearing.msg",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/dave_interfaces:msg/Position.msg",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/dave_interfaces:srv/GetSetNav.srv"
+  ]
+}

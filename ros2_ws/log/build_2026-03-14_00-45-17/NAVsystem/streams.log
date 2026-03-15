@@ -1,0 +1,5 @@
+[0.010s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/NAVsystem': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/NAVsystem -- -j16 -l16
+[0.028s] [0mCMake Error: The source directory "/home/isaac/Documents/D.A.V.E./ros2_ws/src/NAVsystem" does not exist.
+[0.029s] Specify --help for usage, or press the help button on the CMake GUI.[0m
+[0.029s] gmake: *** [Makefile:308: cmake_check_build_system] Error 1
+[0.031s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/NAVsystem' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/NAVsystem -- -j16 -l16
