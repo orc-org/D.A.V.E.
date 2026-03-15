@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rover_arm">
+
+  <!-- load global parameters -->
+  <xacro:property name="config_path" value="$(find rover_description)/config/physical_params.yaml" />
+  <xacro:property name="params" value="${xacro.load_yaml(config_path)}['robot_dimensions']" />
+
+  <!-- extract values -->
+  <xacro:property name="c_off" value="${params['column_base_offset']}" />
+  <xacro:property name="c_len" value="${params['column_height']}" />
+  <xacro:property name="m_len" value="${params['mount_length']}" />
+  <xacro:property name="a_len" value="${params['arm_length']}" />
+  <xacro:property name="t_len" value="${params['tool_tip_length']}" />
+
+  <material name="black"><color rgba="0 0 0 1"/></material>
+  <material name="blue"><color rgba="0 0 0.8 1"/></material>
+  <material name="red"><color rgba="0 0.8 0 1"/></material>
+  <material name="green"><color rgba="0 0.8 0 1"/></material>
+
+  <link name="base_link">
+    <visual><geometry><box size="4.0 4.0 1.0"/></geometry><material name="black"/></visual>
+  </link>
+
+  <joint name="stand_column_joint" type="fixed">
+    <parent link="base_link"/><child link="column_link"/>
+    <origin xyz="0 0 ${c_off}"/>
+  </joint>
+  <link name="column_link">
+    <visual><origin xyz="0 0 ${c_len/2}"/><geometry><cylinder radius="0.5" length="${c_len}"/></geometry><material name="blue"/></visual>
+  </link>
+
+  <joint name="stand_arm_joint" type="fixed">
+    <parent link="column_link"/><child link="mount_link"/>
+    <origin xyz="0 0 ${c_len}"/>
+  </joint>
+  <link name="mount_link">
+    <visual><origin xyz="${m_len/2} 0 0"/><geometry><box size="${m_len} 0.5 0.5"/></geometry><material name="red"/></visual>
+  </link>
+
+  <joint name="arm_joint" type="revolute">
+    <parent link="mount_link"/><child link="actual_arm_link"/>
+    <origin xyz="${m_len} 0 0"/><axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="10" velocity="1.0"/>
+  </joint>
+  <link name="actual_arm_link">
+    <visual><origin xyz="${a_len/2} 0 0"/><geometry><box size="${a_len} 0.4 0.4"/></geometry><material name="green"/></visual>
+  </link>
+
+  <joint name="tool_joint" type="fixed">
+    <parent link="actual_arm_link"/><child link="tool_link"/>
+    <origin xyz="${a_len} 0 0"/>
+  </joint>
+  <link name="tool_link">
+    <visual><origin xyz="${t_len/2} 0 0"/><geometry><sphere radius="0.3"/></geometry><material name="green"/></visual>
+  </link>
+
+</robot>

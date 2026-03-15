@@ -1,0 +1,7 @@
+# Robot Physical Dimensions (Units: decimeters (lol), or whatever we want later)
+robot_dimensions:
+  column_base_offset: 0.5
+  column_height: 5.0
+  mount_length: 6.0
+  arm_length: 8.0
+  tool_tip_length: 2.0
