@@ -1,0 +1,25 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/navigation_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/navigation_interfaces/msg/detail/bearing__type_support.c.o"
+  "CMakeFiles/navigation_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/navigation_interfaces/msg/detail/bearing__type_support.c.o.d"
+  "CMakeFiles/navigation_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/navigation_interfaces/msg/detail/position__type_support.c.o"
+  "CMakeFiles/navigation_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/navigation_interfaces/msg/detail/position__type_support.c.o.d"
+  "CMakeFiles/navigation_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/navigation_interfaces/srv/detail/get_nav__type_support.c.o"
+  "CMakeFiles/navigation_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/navigation_interfaces/srv/detail/get_nav__type_support.c.o.d"
+  "CMakeFiles/navigation_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/navigation_interfaces/srv/detail/set_nav__type_support.c.o"
+  "CMakeFiles/navigation_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/navigation_interfaces/srv/detail/set_nav__type_support.c.o.d"
+  "libnavigation_interfaces__rosidl_typesupport_introspection_c.pdb"
+  "libnavigation_interfaces__rosidl_typesupport_introspection_c.so"
+  "rosidl_typesupport_introspection_c/navigation_interfaces/msg/detail/bearing__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/navigation_interfaces/msg/detail/bearing__type_support.c"
+  "rosidl_typesupport_introspection_c/navigation_interfaces/msg/detail/position__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/navigation_interfaces/msg/detail/position__type_support.c"
+  "rosidl_typesupport_introspection_c/navigation_interfaces/srv/detail/get_nav__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/navigation_interfaces/srv/detail/get_nav__type_support.c"
+  "rosidl_typesupport_introspection_c/navigation_interfaces/srv/detail/set_nav__rosidl_typesupport_introspection_c.h"
+  "rosidl_typesupport_introspection_c/navigation_interfaces/srv/detail/set_nav__type_support.c"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/navigation_interfaces__rosidl_typesupport_introspection_c.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

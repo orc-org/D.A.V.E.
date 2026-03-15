@@ -1,0 +1,9 @@
+{
+  "package_name": "navigation_interfaces",
+  "non_idl_tuples": [
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/navigation_interfaces:msg/Bearing.msg",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/navigation_interfaces:msg/Position.msg",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/navigation_interfaces:srv/GetNav.srv",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/navigation_interfaces:srv/SetNav.srv"
+  ]
+}

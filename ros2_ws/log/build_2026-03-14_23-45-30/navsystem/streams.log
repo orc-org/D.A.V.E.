@@ -1,0 +1,23 @@
+[0.011s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem': AMENT_PREFIX_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16
+[0.051s] [35m[1mConsolidate compiler generated dependencies of target GPSnode[0m
+[0.067s] [ 50%] [32mBuilding CXX object CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o[0m
+[1.836s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:[m[K In constructor ‘[01m[KGPSnode::GPSnode()[m[K’:
+[1.836s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:743:52:[m[K [01;31m[Kerror: [m[Kno matching function for call to ‘[01m[KGPSnode::create_publisher<std::string>(std::chrono::seconds, std::_Bind_helper<false, void (GPSnode::*)(), GPSnode*>::type)[m[K’
+[1.836s]   743 |             timer_ = [01;31m[Kthis->create_publisher<string>(1s, std::bind(&GPSnode::timer_callback, this))[m[K;
+[1.836s]       |                      [01;31m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[m[K
+[1.836s] In file included from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/node.hpp:1321[m[K,
+[1.836s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors/single_threaded_executor.hpp:28[m[K,
+[1.836s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:22[m[K,
+[1.836s]                  from [01m[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155[m[K,
+[1.836s]                  from [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23[m[K:
+[1.836s] [01m[K/opt/ros/humble/include/rclcpp/rclcpp/node_impl.hpp:73:1:[m[K [01;36m[Knote: [m[Kcandidate: ‘[01m[Ktemplate<class MessageT, class AllocatorT, class PublisherT> std::shared_ptr<PublisherT> rclcpp::Node::create_publisher(const string&, const rclcpp::QoS&, const rclcpp::PublisherOptionsWithAllocator<AllocatorT>&)[m[K’
+[1.836s]    73 | [01;36m[KNode[m[K::create_publisher(
+[1.837s]       | [01;36m[K^~~~[m[K
+[1.837s] [01m[K/opt/ros/humble/include/rclcpp/rclcpp/node_impl.hpp:73:1:[m[K [01;36m[Knote: [m[K  template argument deduction/substitution failed:
+[1.837s] [01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:743:53:[m[K [01;36m[Knote: [m[K  cannot convert ‘[01m[Kstd::literals::chrono_literals::operator""s<'1'>()[m[K’ (type ‘[01m[Kstd::chrono::seconds[m[K’ {aka ‘[01m[Kstd::chrono::duration<long int>[m[K’}) to type ‘[01m[Kconst string&[m[K’ {aka ‘[01m[Kconst std::__cxx11::basic_string<char>&[m[K’}
+[1.837s]   743 |             timer_ = this->create_publisher<string>([01;36m[K1s[m[K, std::bind(&GPSnode::timer_callback, this));
+[1.837s]       |                                                     [01;36m[K^~[m[K
+[2.689s] gmake[2]: *** [CMakeFiles/GPSnode.dir/build.make:76: CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o] Error 1
+[2.689s] gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/GPSnode.dir/all] Error 2
+[2.689s] gmake: *** [Makefile:146: all] Error 2
+[2.693s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem' returned '2': AMENT_PREFIX_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16

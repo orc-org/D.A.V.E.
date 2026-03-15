@@ -1,0 +1,297 @@
+[0.009s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces -- -j16 -l16
+[0.030s] -- Found ament_cmake: 1.3.13 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.120s] -- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[0.121s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.123s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.145s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.345s] -- Found ament_cmake_ros: 0.10.0 (/opt/ros/humble/share/ament_cmake_ros/cmake)
+[0.479s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.657s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.676s] -- Found python_cmake_module: 0.10.0 (/opt/ros/humble/share/python_cmake_module/cmake)
+[0.694s] -- Using PYTHON_EXECUTABLE: /usr/bin/python3
+[0.694s] -- Using PYTHON_INCLUDE_DIRS: /usr/include/python3.10
+[0.694s] -- Using PYTHON_LIBRARIES: /usr/lib/x86_64-linux-gnu/libpython3.10.so
+[0.700s] -- Found ament_lint_auto: 0.12.15 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[0.707s] -- Added test 'lint_cmake' to check CMake code style
+[0.708s] -- Added test 'xmllint' to check XML markup files
+[0.709s] -- Configuring done
+[0.736s] -- Generating done
+[0.744s] -- Build files have been written to: /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces
+[0.767s] [  2%] [34m[1mGenerating C code for ROS interfaces[0m
+[0.774s] [  4%] [34m[1mGenerating C++ code for ROS interfaces[0m
+[0.782s] [  4%] Built target ament_cmake_python_copy_custom_interfaces
+[0.963s] running egg_info
+[0.964s] writing custom_interfaces.egg-info/PKG-INFO
+[0.964s] writing dependency_links to custom_interfaces.egg-info/dependency_links.txt
+[0.964s] writing top-level names to custom_interfaces.egg-info/top_level.txt
+[0.965s] reading manifest file 'custom_interfaces.egg-info/SOURCES.txt'
+[0.966s] writing manifest file 'custom_interfaces.egg-info/SOURCES.txt'
+[0.987s] [  4%] Built target ament_cmake_python_build_custom_interfaces_egg
+[1.049s] [  4%] Built target custom_interfaces__cpp
+[1.057s] [  6%] [34m[1mGenerating C++ introspection for ROS interfaces[0m
+[1.057s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_generator_c[0m
+[1.057s] [  8%] [34m[1mGenerating C++ type support dispatch for ROS interfaces[0m
+[1.057s] [ 10%] [34m[1mGenerating C++ type support for eProsima Fast-RTPS[0m
+[1.068s] [ 14%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_generator_c.dir/rosidl_generator_c/custom_interfaces/srv/detail/set_nav__functions.c.o[0m
+[1.068s] [ 14%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_generator_c.dir/rosidl_generator_c/custom_interfaces/msg/detail/message__functions.c.o[0m
+[1.068s] [ 17%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_generator_c.dir/rosidl_generator_c/custom_interfaces/srv/detail/get_nav__functions.c.o[0m
+[1.112s] [ 19%] [32m[1mLinking C shared library libcustom_interfaces__rosidl_generator_c.so[0m
+[1.147s] [ 19%] Built target custom_interfaces__rosidl_generator_c
+[1.156s] [ 25%] [34m[1mGenerating C type support for eProsima Fast-RTPS[0m
+[1.156s] [ 25%] [34m[1mGenerating C introspection for ROS interfaces[0m
+[1.156s] [ 25%] [34m[1mGenerating C type support dispatch for ROS interfaces[0m
+[1.254s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_typesupport_cpp[0m
+[1.266s] [ 31%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/custom_interfaces/srv/get_nav__type_support.cpp.o[0m
+[1.267s] [ 31%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/custom_interfaces/srv/set_nav__type_support.cpp.o[0m
+[1.267s] [ 31%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_cpp.dir/rosidl_typesupport_cpp/custom_interfaces/msg/message__type_support.cpp.o[0m
+[1.284s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_typesupport_introspection_cpp[0m
+[1.297s] [ 34%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/custom_interfaces/srv/detail/get_nav__type_support.cpp.o[0m
+[1.298s] [ 36%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/custom_interfaces/msg/detail/message__type_support.cpp.o[0m
+[1.298s] [ 38%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_introspection_cpp.dir/rosidl_typesupport_introspection_cpp/custom_interfaces/srv/detail/set_nav__type_support.cpp.o[0m
+[1.307s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_typesupport_fastrtps_cpp[0m
+[1.323s] [ 40%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/custom_interfaces/msg/detail/dds_fastrtps/message__type_support.cpp.o[0m
+[1.323s] [ 44%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/custom_interfaces/srv/detail/dds_fastrtps/get_nav__type_support.cpp.o[0m
+[1.324s] [ 44%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_fastrtps_cpp.dir/rosidl_typesupport_fastrtps_cpp/custom_interfaces/srv/detail/dds_fastrtps/set_nav__type_support.cpp.o[0m
+[1.388s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_typesupport_c[0m
+[1.403s] [ 46%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/custom_interfaces/srv/get_nav__type_support.cpp.o[0m
+[1.403s] [ 48%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/custom_interfaces/srv/set_nav__type_support.cpp.o[0m
+[1.405s] [ 51%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_c.dir/rosidl_typesupport_c/custom_interfaces/msg/message__type_support.cpp.o[0m
+[1.445s] [ 53%] [32m[1mLinking CXX shared library libcustom_interfaces__rosidl_typesupport_c.so[0m
+[1.457s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_typesupport_introspection_c[0m
+[1.482s] [ 57%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/custom_interfaces/srv/detail/set_nav__type_support.c.o[0m
+[1.483s] [ 57%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/custom_interfaces/msg/detail/message__type_support.c.o[0m
+[1.483s] [ 59%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/custom_interfaces/srv/detail/get_nav__type_support.c.o[0m
+[1.505s] [ 59%] Built target custom_interfaces__rosidl_typesupport_c
+[1.514s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_typesupport_fastrtps_c[0m
+[1.531s] [ 61%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/custom_interfaces/msg/detail/message__type_support_c.cpp.o[0m
+[1.532s] [ 68%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/custom_interfaces/srv/detail/set_nav__type_support_c.cpp.o[0m
+[1.532s] [ 68%] [32mBuilding CXX object CMakeFiles/custom_interfaces__rosidl_typesupport_fastrtps_c.dir/rosidl_typesupport_fastrtps_c/custom_interfaces/srv/detail/get_nav__type_support_c.cpp.o[0m
+[1.532s] [ 68%] [32m[1mLinking C shared library libcustom_interfaces__rosidl_typesupport_introspection_c.so[0m
+[1.567s] [ 68%] Built target custom_interfaces__rosidl_typesupport_introspection_c
+[1.573s] [ 70%] [32m[1mLinking CXX shared library libcustom_interfaces__rosidl_typesupport_cpp.so[0m
+[1.631s] [ 70%] Built target custom_interfaces__rosidl_typesupport_cpp
+[1.680s] [ 72%] [32m[1mLinking CXX shared library libcustom_interfaces__rosidl_typesupport_introspection_cpp.so[0m
+[1.743s] [ 72%] Built target custom_interfaces__rosidl_typesupport_introspection_cpp
+[1.744s] [ 74%] [32m[1mLinking CXX shared library libcustom_interfaces__rosidl_typesupport_fastrtps_cpp.so[0m
+[1.817s] [ 74%] Built target custom_interfaces__rosidl_typesupport_fastrtps_cpp
+[1.839s] [ 76%] [32m[1mLinking CXX shared library libcustom_interfaces__rosidl_typesupport_fastrtps_c.so[0m
+[1.899s] [ 76%] Built target custom_interfaces__rosidl_typesupport_fastrtps_c
+[1.917s] [ 76%] Built target custom_interfaces
+[1.939s] [ 78%] [34m[1mGenerating Python code for ROS interfaces[0m
+[2.295s] [ 78%] Built target custom_interfaces__py
+[2.305s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_generator_py[0m
+[2.317s] [ 80%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_generator_py.dir/rosidl_generator_py/custom_interfaces/msg/_message_s.c.o[0m
+[2.318s] [ 85%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_generator_py.dir/rosidl_generator_py/custom_interfaces/srv/_set_nav_s.c.o[0m
+[2.318s] [ 85%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_generator_py.dir/rosidl_generator_py/custom_interfaces/srv/_get_nav_s.c.o[0m
+[2.391s] [ 87%] [32m[1mLinking C shared library rosidl_generator_py/custom_interfaces/libcustom_interfaces__rosidl_generator_py.so[0m
+[2.426s] [ 87%] Built target custom_interfaces__rosidl_generator_py
+[2.435s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_typesupport_c__pyext[0m
+[2.436s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_typesupport_introspection_c__pyext[0m
+[2.436s] [35m[1mConsolidate compiler generated dependencies of target custom_interfaces__rosidl_typesupport_fastrtps_c__pyext[0m
+[2.447s] [ 93%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_typesupport_fastrtps_c__pyext.dir/rosidl_generator_py/custom_interfaces/_custom_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c.o[0m
+[2.447s] [ 93%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_typesupport_c__pyext.dir/rosidl_generator_py/custom_interfaces/_custom_interfaces_s.ep.rosidl_typesupport_c.c.o[0m
+[2.447s] [ 93%] [32mBuilding C object CMakeFiles/custom_interfaces__rosidl_typesupport_introspection_c__pyext.dir/rosidl_generator_py/custom_interfaces/_custom_interfaces_s.ep.rosidl_typesupport_introspection_c.c.o[0m
+[2.523s] [ 95%] [32m[1mLinking C shared library rosidl_generator_py/custom_interfaces/custom_interfaces_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so[0m
+[2.524s] [ 97%] [32m[1mLinking C shared library rosidl_generator_py/custom_interfaces/custom_interfaces_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so[0m
+[2.525s] [100%] [32m[1mLinking C shared library rosidl_generator_py/custom_interfaces/custom_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so[0m
+[2.552s] [100%] Built target custom_interfaces__rosidl_typesupport_c__pyext
+[2.552s] [100%] Built target custom_interfaces__rosidl_typesupport_introspection_c__pyext
+[2.554s] [100%] Built target custom_interfaces__rosidl_typesupport_fastrtps_c__pyext
+[2.566s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces -- -j16 -l16
+[2.575s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces
+[2.582s] -- Install configuration: ""
+[2.582s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/ament_index/resource_index/rosidl_interfaces/custom_interfaces
+[2.582s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces
+[2.583s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg
+[2.583s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail
+[2.583s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__type_support.h
+[2.583s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__struct.h
+[2.583s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__functions.h
+[2.583s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__functions.c
+[2.583s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/message.h
+[2.583s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/rosidl_generator_c__visibility_control.h
+[2.583s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv
+[2.583s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail
+[2.583s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__functions.c
+[2.583s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__functions.h
+[2.583s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__struct.h
+[2.584s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__functions.h
+[2.584s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__struct.h
+[2.584s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__type_support.h
+[2.584s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__type_support.h
+[2.584s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__functions.c
+[2.584s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/set_nav.h
+[2.584s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/get_nav.h
+[2.584s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/environment/library_path.sh
+[2.584s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/environment/library_path.dsv
+[2.585s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_generator_c.so
+[2.585s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_generator_c.so" to ""
+[2.585s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces
+[2.585s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg
+[2.585s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail
+[2.585s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__rosidl_typesupport_fastrtps_c.h
+[2.585s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/rosidl_typesupport_fastrtps_c__visibility_control.h
+[2.585s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv
+[2.585s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail
+[2.586s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__rosidl_typesupport_fastrtps_c.h
+[2.586s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__rosidl_typesupport_fastrtps_c.h
+[2.586s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_fastrtps_c.so
+[2.586s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_fastrtps_c.so" to ""
+[2.586s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces
+[2.586s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg
+[2.586s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail
+[2.586s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__type_support.c
+[2.586s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__rosidl_typesupport_introspection_c.h
+[2.587s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/rosidl_typesupport_introspection_c__visibility_control.h
+[2.587s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv
+[2.587s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail
+[2.587s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__rosidl_typesupport_introspection_c.h
+[2.587s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__rosidl_typesupport_introspection_c.h
+[2.587s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__type_support.c
+[2.587s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__type_support.c
+[2.587s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_introspection_c.so
+[2.588s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_introspection_c.so" to ""
+[2.588s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_c.so
+[2.588s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_c.so" to ""
+[2.588s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces
+[2.588s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg
+[2.588s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail
+[2.588s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__traits.hpp
+[2.588s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__struct.hpp
+[2.589s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__type_support.hpp
+[2.589s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__builder.hpp
+[2.589s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/message.hpp
+[2.589s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/rosidl_generator_cpp__visibility_control.hpp
+[2.589s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv
+[2.589s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail
+[2.589s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__traits.hpp
+[2.589s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__struct.hpp
+[2.589s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__builder.hpp
+[2.589s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__struct.hpp
+[2.589s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__type_support.hpp
+[2.590s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__type_support.hpp
+[2.590s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__builder.hpp
+[2.590s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__traits.hpp
+[2.590s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/get_nav.hpp
+[2.590s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/set_nav.hpp
+[2.590s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces
+[2.590s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg
+[2.590s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail
+[2.590s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/dds_fastrtps
+[2.590s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__rosidl_typesupport_fastrtps_cpp.hpp
+[2.590s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/rosidl_typesupport_fastrtps_cpp__visibility_control.h
+[2.591s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv
+[2.591s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail
+[2.591s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/dds_fastrtps
+[2.591s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__rosidl_typesupport_fastrtps_cpp.hpp
+[2.591s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__rosidl_typesupport_fastrtps_cpp.hpp
+[2.591s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_fastrtps_cpp.so
+[2.592s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_fastrtps_cpp.so" to ""
+[2.592s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces
+[2.592s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg
+[2.592s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail
+[2.592s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__type_support.cpp
+[2.592s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/msg/detail/message__rosidl_typesupport_introspection_cpp.hpp
+[2.592s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv
+[2.592s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail
+[2.592s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__type_support.cpp
+[2.592s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__type_support.cpp
+[2.592s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/set_nav__rosidl_typesupport_introspection_cpp.hpp
+[2.593s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/include/custom_interfaces/custom_interfaces/srv/detail/get_nav__rosidl_typesupport_introspection_cpp.hpp
+[2.593s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_introspection_cpp.so
+[2.594s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_introspection_cpp.so" to ""
+[2.594s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_cpp.so
+[2.594s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_typesupport_cpp.so" to ""
+[2.594s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/environment/pythonpath.sh
+[2.594s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/environment/pythonpath.dsv
+[2.594s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces-0.0.0-py3.10.egg-info
+[2.594s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces-0.0.0-py3.10.egg-info/SOURCES.txt
+[2.595s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces-0.0.0-py3.10.egg-info/top_level.txt
+[2.595s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces-0.0.0-py3.10.egg-info/dependency_links.txt
+[2.595s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces-0.0.0-py3.10.egg-info/PKG-INFO
+[2.595s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces
+[2.595s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/_custom_interfaces_s.ep.rosidl_typesupport_c.c
+[2.595s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/custom_interfaces_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[2.595s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/__init__.py
+[2.595s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/libcustom_interfaces__rosidl_generator_py.so
+[2.596s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/_custom_interfaces_s.ep.rosidl_typesupport_introspection_c.c
+[2.596s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/custom_interfaces_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[2.596s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/msg
+[2.596s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/msg/__init__.py
+[2.596s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/msg/_message.py
+[2.596s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/msg/_message_s.c
+[2.596s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/_custom_interfaces_s.ep.rosidl_typesupport_fastrtps_c.c
+[2.596s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/custom_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[2.597s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv
+[2.597s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv/__init__.py
+[2.597s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv/_get_nav_s.c
+[2.597s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv/_get_nav.py
+[2.597s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv/_set_nav.py
+[2.597s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv/_set_nav_s.c
+[2.625s] Listing '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces'...
+[2.625s] Compiling '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/__init__.py'...
+[2.625s] Listing '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/msg'...
+[2.625s] Compiling '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/msg/__init__.py'...
+[2.625s] Compiling '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/msg/_message.py'...
+[2.625s] Listing '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv'...
+[2.625s] Compiling '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv/__init__.py'...
+[2.625s] Compiling '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv/_get_nav.py'...
+[2.625s] Compiling '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/srv/_set_nav.py'...
+[2.628s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/custom_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so
+[2.628s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/custom_interfaces_s__rosidl_typesupport_fastrtps_c.cpython-310-x86_64-linux-gnu.so" to ""
+[2.629s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/custom_interfaces_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so
+[2.629s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/custom_interfaces_s__rosidl_typesupport_introspection_c.cpython-310-x86_64-linux-gnu.so" to ""
+[2.629s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/custom_interfaces_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so
+[2.629s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages/custom_interfaces/custom_interfaces_s__rosidl_typesupport_c.cpython-310-x86_64-linux-gnu.so" to ""
+[2.629s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_generator_py.so
+[2.630s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib/libcustom_interfaces__rosidl_generator_py.so" to ""
+[2.630s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/msg/Message.idl
+[2.630s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/srv/GetNav.idl
+[2.630s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/srv/SetNav.idl
+[2.630s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/msg/Message.msg
+[2.630s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/srv/GetNav.srv
+[2.630s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/srv/GetNav_Request.msg
+[2.630s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/srv/GetNav_Response.msg
+[2.630s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/srv/SetNav.srv
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/srv/SetNav_Request.msg
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/srv/SetNav_Response.msg
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/ament_index/resource_index/package_run_dependencies/custom_interfaces
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/ament_index/resource_index/parent_prefix_path/custom_interfaces
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/environment/ament_prefix_path.sh
+[2.631s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/environment/ament_prefix_path.dsv
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/environment/path.sh
+[2.631s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/environment/path.dsv
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/local_setup.bash
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/local_setup.sh
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/local_setup.zsh
+[2.631s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/local_setup.dsv
+[2.631s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/package.dsv
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/ament_index/resource_index/packages/custom_interfaces
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/export_custom_interfaces__rosidl_generator_cExport.cmake
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/export_custom_interfaces__rosidl_generator_cExport-noconfig.cmake
+[2.631s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/export_custom_interfaces__rosidl_typesupport_fastrtps_cExport.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/export_custom_interfaces__rosidl_typesupport_fastrtps_cExport-noconfig.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfaces__rosidl_typesupport_introspection_cExport.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfaces__rosidl_typesupport_introspection_cExport-noconfig.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfaces__rosidl_typesupport_cExport.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfaces__rosidl_typesupport_cExport-noconfig.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/export_custom_interfaces__rosidl_generator_cppExport.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/export_custom_interfaces__rosidl_typesupport_fastrtps_cppExport.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/export_custom_interfaces__rosidl_typesupport_fastrtps_cppExport-noconfig.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfaces__rosidl_typesupport_introspection_cppExport.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfaces__rosidl_typesupport_introspection_cppExport-noconfig.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfaces__rosidl_typesupport_cppExport.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfaces__rosidl_typesupport_cppExport-noconfig.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/export_custom_interfaces__rosidl_generator_pyExport.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/export_custom_interfaces__rosidl_generator_pyExport-noconfig.cmake
+[2.632s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/rosidl_cmake-extras.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/ament_cmake_export_include_directories-extras.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/ament_cmake_export_libraries-extras.cmake
+[2.632s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/ament_cmake_export_targets-extras.cmake
+[2.633s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/rosidl_cmake_export_typesupport_targets-extras.cmake
+[2.633s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/ament_cmake_export_dependencies-extras.cmake
+[2.633s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/rosidl_cmake_export_typesupport_libraries-extras.cmake
+[2.633s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfacesConfig.cmake
+[2.633s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/cmake/custom_interfacesConfig-version.cmake
+[2.633s] -- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/share/custom_interfaces/package.xml
+[2.635s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --install /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces

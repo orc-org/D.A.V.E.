@@ -1,0 +1,30 @@
+{
+  "package_name": "navigation_interfaces",
+  "output_dir": "/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_generator_py/navigation_interfaces",
+  "template_dir": "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource",
+  "idl_tuples": [
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces:msg/Bearing.idl",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces:msg/Position.idl",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces:srv/GetNav.idl",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces:srv/SetNav.idl"
+  ],
+  "target_dependencies": [
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../../../lib/rosidl_generator_py/rosidl_generator_py",
+    "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_generator_py/__init__.py",
+    "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_generator_py/generate_py_impl.py",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_action_pkg_typesupport_entry_point.c.em",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_action.py.em",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_idl_pkg_typesupport_entry_point.c.em",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_idl_support.c.em",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_idl.py.em",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_msg_pkg_typesupport_entry_point.c.em",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_msg_support.c.em",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_msg.py.em",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_srv_pkg_typesupport_entry_point.c.em",
+    "/opt/ros/humble/share/rosidl_generator_py/cmake/../resource/_srv.py.em",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces/msg/Bearing.idl",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces/msg/Position.idl",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces/srv/GetNav.idl",
+    "/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces/srv/SetNav.idl"
+  ]
+}

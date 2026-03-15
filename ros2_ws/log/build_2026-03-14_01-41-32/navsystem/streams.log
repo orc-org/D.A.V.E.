@@ -1,0 +1,25 @@
+[0.013s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16
+[0.065s] [ 50%] [32mBuilding CXX object CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o[0m
+[2.096s] [100%] [32m[1mLinking CXX executable GPSnode[0m
+[2.185s] [100%] Built target GPSnode
+[2.196s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem -- -j16 -l16
+[2.205s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --install /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem
+[2.211s] -- Install configuration: ""
+[2.211s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/lib/navsystem/GPSnode
+[2.212s] -- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/lib/navsystem/GPSnode" to ""
+[2.212s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/ament_index/resource_index/package_run_dependencies/navsystem
+[2.212s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/ament_index/resource_index/parent_prefix_path/navsystem
+[2.212s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/ament_prefix_path.sh
+[2.212s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/ament_prefix_path.dsv
+[2.212s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/path.sh
+[2.213s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/path.dsv
+[2.213s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.bash
+[2.213s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.sh
+[2.213s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.zsh
+[2.213s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.dsv
+[2.213s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/package.dsv
+[2.213s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/ament_index/resource_index/packages/navsystem
+[2.213s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/cmake/navsystemConfig.cmake
+[2.214s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/cmake/navsystemConfig-version.cmake
+[2.214s] -- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/package.xml
+[2.215s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble LD_LIBRARY_PATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/cmake --install /home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem

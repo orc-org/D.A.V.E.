@@ -1,0 +1,22 @@
+[35m[1mConsolidate compiler generated dependencies of target GPSnode[0m
+[ 50%] [32mBuilding CXX object CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o[0m
+[100%] [32m[1mLinking CXX executable GPSnode[0m
+[100%] Built target GPSnode
+-- Install configuration: ""
+-- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/lib/navsystem/GPSnode
+-- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/lib/navsystem/GPSnode" to ""
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/ament_index/resource_index/package_run_dependencies/navsystem
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/ament_index/resource_index/parent_prefix_path/navsystem
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/ament_prefix_path.sh
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/ament_prefix_path.dsv
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/path.sh
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/path.dsv
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.bash
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.sh
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.zsh
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.dsv
+-- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/package.dsv
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/ament_index/resource_index/packages/navsystem
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/cmake/navsystemConfig.cmake
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/cmake/navsystemConfig-version.cmake
+-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/package.xml

@@ -1,0 +1,53 @@
+[0.008s] Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces -- -j16 -l16
+[0.028s] -- Found ament_cmake: 1.3.13 (/opt/ros/humble/share/ament_cmake/cmake)
+[0.114s] -- Found rosidl_default_generators: 1.2.0 (/opt/ros/humble/share/rosidl_default_generators/cmake)
+[0.114s] -- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c
+[0.116s] -- Found rosidl_adapter: 3.1.8 (/opt/ros/humble/share/rosidl_adapter/cmake)
+[0.137s] -- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp
+[0.274s] [31mCMake Error at /opt/ros/humble/share/rosidl_adapter/cmake/rosidl_adapt_interfaces.cmake:59 (message):
+[0.274s]   execute_process(/usr/bin/python3 -m rosidl_adapter --package-name
+[0.275s]   custom_interfaces --arguments-file
+[0.275s]   /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces/rosidl_adapter__arguments__custom_interfaces.json
+[0.275s]   --output-dir
+[0.275s]   /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces/rosidl_adapter/custom_interfaces
+[0.275s]   --output-file
+[0.275s]   /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces/rosidl_adapter/custom_interfaces.idls)
+[0.275s]   returned error code 1:
+[0.275s] 
+[0.275s]   Error processing 'string targetFunction' of
+[0.275s]   'custom_interfaces/SetNav_Request': ''targetFunction' is an invalid field
+[0.275s]   name.  It should have the pattern '^(?!.*__)(?!.*_$)[a-z][a-z0-9_]*$''
+[0.275s] 
+[0.275s]   Traceback (most recent call last):
+[0.275s] 
+[0.275s]     File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+[0.275s]       return _run_code(code, main_globals, None,
+[0.275s]     File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+[0.275s]       exec(code, run_globals)
+[0.275s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/__main__.py", line 19, in <module>
+[0.275s]       sys.exit(main())
+[0.275s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/main.py", line 53, in main
+[0.275s]       abs_idl_file = convert_to_idl(
+[0.275s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/__init__.py", line 24, in convert_to_idl
+[0.275s]       return convert_srv_to_idl(
+[0.275s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/srv/__init__.py", line 28, in convert_srv_to_idl
+[0.276s]       srv = parse_service_string(package_name, input_file.stem, content)
+[0.276s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/parser.py", line 859, in parse_service_string
+[0.276s]       request_message = parse_message_string(
+[0.276s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/parser.py", line 519, in parse_message_string
+[0.276s]       fields.append(Field(
+[0.276s]     File "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_adapter/parser.py", line 354, in __init__
+[0.276s]       raise NameError(
+[0.276s] 
+[0.276s]   NameError: 'targetFunction' is an invalid field name.  It should have the
+[0.276s]   pattern '^(?!.*__)(?!.*_$)[a-z][a-z0-9_]*$'
+[0.276s] 
+[0.276s] Call Stack (most recent call first):
+[0.276s]   /opt/ros/humble/share/rosidl_cmake/cmake/rosidl_generate_interfaces.cmake:130 (rosidl_adapt_interfaces)
+[0.276s]   CMakeLists.txt:13 (rosidl_generate_interfaces)
+[0.276s] 
+[0.276s] [0m
+[0.276s] -- Configuring incomplete, errors occurred!
+[0.276s] See also "/home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces/CMakeFiles/CMakeOutput.log".
+[0.279s] gmake: *** [Makefile:226: cmake_check_build_system] Error 1
+[0.282s] Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/custom_interfaces -- -j16 -l16

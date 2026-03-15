@@ -1,0 +1,81 @@
+[0.000000] (-) TimerEvent: {}
+[0.000559] (-) JobUnselected: {'identifier': 'custom_interfaces'}
+[0.000649] (navsystem) JobQueued: {'identifier': 'navsystem', 'dependencies': OrderedDict([('custom_interfaces', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces')])}
+[0.000691] (navsystem) JobStarted: {'identifier': 'navsystem'}
+[0.008350] (navsystem) JobProgress: {'identifier': 'navsystem', 'progress': 'cmake'}
+[0.008811] (navsystem) JobProgress: {'identifier': 'navsystem', 'progress': 'build'}
+[0.009267] (navsystem) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem', '--', '-j16', '-l16'], 'cwd': '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_CA:en'), ('USER', 'isaac'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/isaac'), ('OLDPWD', '/home/isaac'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1875'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'isaac'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'isaac'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/The-Computationeer:@/tmp/.ICE-unix/1502,unix/The-Computationeer:/tmp/.ICE-unix/1502'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/f3311a36_5881_4ff3_b4f6_d6f379488367'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.95JDM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.179'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/home/isaac/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble')]), 'shell': False}
+[0.058151] (navsystem) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o\x1b[0m\n'}
+[0.099809] (-) TimerEvent: {}
+[0.200127] (-) TimerEvent: {}
+[0.300497] (-) TimerEvent: {}
+[0.400775] (-) TimerEvent: {}
+[0.501107] (-) TimerEvent: {}
+[0.601450] (-) TimerEvent: {}
+[0.701795] (-) TimerEvent: {}
+[0.802426] (-) TimerEvent: {}
+[0.902763] (-) TimerEvent: {}
+[1.003128] (-) TimerEvent: {}
+[1.103471] (-) TimerEvent: {}
+[1.203788] (-) TimerEvent: {}
+[1.304118] (-) TimerEvent: {}
+[1.404504] (-) TimerEvent: {}
+[1.504822] (-) TimerEvent: {}
+[1.605135] (-) TimerEvent: {}
+[1.705418] (-) TimerEvent: {}
+[1.751176] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:\x1b[m\x1b[K In function \xe2\x80\x98\x1b[01m\x1b[Kint main(int, char**)\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[1.751556] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:632:5:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kros\x1b[m\x1b[K\xe2\x80\x99 has not been declared\n'}
+[1.751719] (navsystem) StderrLine: {'line': b'  632 |     \x1b[01;31m\x1b[Kros\x1b[m\x1b[K::init(argc, argv, "GPSnode"); // initialize GPSnode\n'}
+[1.751853] (navsystem) StderrLine: {'line': b'      |     \x1b[01;31m\x1b[K^~~\x1b[m\x1b[K\n'}
+[1.751974] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:634:5:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kros\x1b[m\x1b[K\xe2\x80\x99 has not been declared\n'}
+[1.752095] (navsystem) StderrLine: {'line': b'  634 |     \x1b[01;31m\x1b[Kros\x1b[m\x1b[K::NodeHandle GPS; // create node handle\n'}
+[1.752212] (navsystem) StderrLine: {'line': b'      |     \x1b[01;31m\x1b[K^~~\x1b[m\x1b[K\n'}
+[1.752271] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:637:5:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kros\x1b[m\x1b[K\xe2\x80\x99 has not been declared\n'}
+[1.752312] (navsystem) StderrLine: {'line': b'  637 |     \x1b[01;31m\x1b[Kros\x1b[m\x1b[K::Publisher currentCoordinates_Topic = GPS.advertise<custom_interfaces::msg::Message>("currentCoordinates", 1);\n'}
+[1.752348] (navsystem) StderrLine: {'line': b'      |     \x1b[01;31m\x1b[K^~~\x1b[m\x1b[K\n'}
+[1.752382] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:640:5:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kros\x1b[m\x1b[K\xe2\x80\x99 has not been declared\n'}
+[1.752415] (navsystem) StderrLine: {'line': b'  640 |     \x1b[01;31m\x1b[Kros\x1b[m\x1b[K::Publisher bearing_Topic = GPS.advertise<custom_interfaces::msg::Message>("bearingToTarget", 1);\n'}
+[1.752450] (navsystem) StderrLine: {'line': b'      |     \x1b[01;31m\x1b[K^~~\x1b[m\x1b[K\n'}
+[1.752483] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:642:5:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kros\x1b[m\x1b[K\xe2\x80\x99 has not been declared\n'}
+[1.752523] (navsystem) StderrLine: {'line': b'  642 |     \x1b[01;31m\x1b[Kros\x1b[m\x1b[K::Rate r(1); //publish messages at a rate of 1Hz\n'}
+[1.752556] (navsystem) StderrLine: {'line': b'      |     \x1b[01;31m\x1b[K^~~\x1b[m\x1b[K\n'}
+[1.753904] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:644:12:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[KGPS\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[1.754006] (navsystem) StderrLine: {'line': b'  644 |     while (\x1b[01;31m\x1b[KGPS\x1b[m\x1b[K.ok()){\n'}
+[1.754054] (navsystem) StderrLine: {'line': b'      |            \x1b[01;31m\x1b[K^~~\x1b[m\x1b[K\n'}
+[1.754090] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:646:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kcustom_interfaces\x1b[m\x1b[K\xe2\x80\x99 has not been declared\n'}
+[1.754124] (navsystem) StderrLine: {'line': b'  646 |         \x1b[01;31m\x1b[Kcustom_interfaces\x1b[m\x1b[K::msg::Message currentCoordinates;\n'}
+[1.754157] (navsystem) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.754190] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:647:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kcustom_interfaces\x1b[m\x1b[K\xe2\x80\x99 has not been declared\n'}
+[1.754224] (navsystem) StderrLine: {'line': b'  647 |         \x1b[01;31m\x1b[Kcustom_interfaces\x1b[m\x1b[K::msg::Message bearing;\n'}
+[1.754272] (navsystem) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.758004] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:650:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[KcurrentCoordinates\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[1.758150] (navsystem) StderrLine: {'line': b'  650 |         \x1b[01;31m\x1b[KcurrentCoordinates\x1b[m\x1b[K = translate(g_currentPosition);\n'}
+[1.758248] (navsystem) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.760297] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:651:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kbearing\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope; did you mean \xe2\x80\x98\x1b[01m\x1b[KgetBearing\x1b[m\x1b[K\xe2\x80\x99?\n'}
+[1.760417] (navsystem) StderrLine: {'line': b'  651 |         \x1b[01;31m\x1b[Kbearing\x1b[m\x1b[K = getBearing();\n'}
+[1.760503] (navsystem) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.760576] (navsystem) StderrLine: {'line': b'      |         \x1b[32m\x1b[KgetBearing\x1b[m\x1b[K\n'}
+[1.762698] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:660:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[KROS_INFO\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[1.762812] (navsystem) StderrLine: {'line': b'  660 |         \x1b[01;31m\x1b[KROS_INFO\x1b[m\x1b[K("%s", ss.str().c_str());\n'}
+[1.762888] (navsystem) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~~~~\x1b[m\x1b[K\n'}
+[1.766611] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:663:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[KcurrentCoordinates_Topic\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[1.766727] (navsystem) StderrLine: {'line': b'  663 |         \x1b[01;31m\x1b[KcurrentCoordinates_Topic\x1b[m\x1b[K.publish(currentCoordinates);\n'}
+[1.766824] (navsystem) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~~~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.769248] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:664:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kbearing_Topic\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[1.769364] (navsystem) StderrLine: {'line': b'  664 |         \x1b[01;31m\x1b[Kbearing_Topic\x1b[m\x1b[K.publish(bearing);\n'}
+[1.769452] (navsystem) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.769520] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:666:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kros\x1b[m\x1b[K\xe2\x80\x99 has not been declared\n'}
+[1.769602] (navsystem) StderrLine: {'line': b'  666 |         \x1b[01;31m\x1b[Kros\x1b[m\x1b[K::spinOnce();\n'}
+[1.769669] (navsystem) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^~~\x1b[m\x1b[K\n'}
+[1.770624] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:667:9:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[Kr\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[1.770722] (navsystem) StderrLine: {'line': b'  667 |         \x1b[01;31m\x1b[Kr\x1b[m\x1b[K.sleep();\n'}
+[1.770791] (navsystem) StderrLine: {'line': b'      |         \x1b[01;31m\x1b[K^\x1b[m\x1b[K\n'}
+[1.805539] (-) TimerEvent: {}
+[1.905868] (-) TimerEvent: {}
+[2.006205] (-) TimerEvent: {}
+[2.084491] (navsystem) StderrLine: {'line': b'gmake[2]: *** [CMakeFiles/GPSnode.dir/build.make:76: CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o] Error 1\n'}
+[2.084711] (navsystem) StderrLine: {'line': b'gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/GPSnode.dir/all] Error 2\n'}
+[2.085088] (navsystem) StderrLine: {'line': b'gmake: *** [Makefile:146: all] Error 2\n'}
+[2.087912] (navsystem) CommandEnded: {'returncode': 2}
+[2.094701] (navsystem) JobEnded: {'identifier': 'navsystem', 'rc': 2}
+[2.105141] (-) EventReactorShutdown: {}

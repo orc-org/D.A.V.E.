@@ -1,0 +1,18 @@
+[31mCMake Error at CMakeLists.txt:11 (find_package):
+  By not providing "Findnavigation_interfaces.cmake" in CMAKE_MODULE_PATH
+  this project has asked CMake to find a package configuration file provided
+  by "navigation_interfaces", but CMake did not find one.
+
+  Could not find a package configuration file provided by
+  "navigation_interfaces" with any of the following names:
+
+    navigation_interfacesConfig.cmake
+    navigation_interfaces-config.cmake
+
+  Add the installation prefix of "navigation_interfaces" to CMAKE_PREFIX_PATH
+  or set "navigation_interfaces_DIR" to a directory containing one of the
+  above files.  If "navigation_interfaces" provides a separate development
+  package or SDK, be sure it has been installed.
+
+[0m
+gmake: *** [Makefile:267: cmake_check_build_system] Error 1

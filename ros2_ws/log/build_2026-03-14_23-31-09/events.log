@@ -1,0 +1,370 @@
+[0.000000] (-) TimerEvent: {}
+[0.000301] (-) JobUnselected: {'identifier': 'navigation_interfaces'}
+[0.000347] (navsystem) JobQueued: {'identifier': 'navsystem', 'dependencies': OrderedDict([('navigation_interfaces', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces')])}
+[0.000388] (navsystem) JobStarted: {'identifier': 'navsystem'}
+[0.009208] (navsystem) JobProgress: {'identifier': 'navsystem', 'progress': 'cmake'}
+[0.009668] (navsystem) JobProgress: {'identifier': 'navsystem', 'progress': 'build'}
+[0.010268] (navsystem) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem', '--', '-j16', '-l16'], 'cwd': '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_CA:en'), ('USER', 'isaac'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/lib:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/isaac'), ('OLDPWD', '/home/isaac'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1869'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'isaac'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'isaac'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/The-Computationeer:@/tmp/.ICE-unix/1545,unix/The-Computationeer:/tmp/.ICE-unix/1545'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/82bc2af6_d3c2_406a_839d_36821c402083'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.7M3HM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.145'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/home/isaac/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/local/lib/python3.10/dist-packages:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble')]), 'shell': False}
+[0.051593] (navsystem) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target GPSnode\x1b[0m\n'}
+[0.069964] (navsystem) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o\x1b[0m\n'}
+[0.099301] (-) TimerEvent: {}
+[0.199660] (-) TimerEvent: {}
+[0.300014] (-) TimerEvent: {}
+[0.400355] (-) TimerEvent: {}
+[0.500657] (-) TimerEvent: {}
+[0.601008] (-) TimerEvent: {}
+[0.701342] (-) TimerEvent: {}
+[0.802034] (-) TimerEvent: {}
+[0.902743] (-) TimerEvent: {}
+[1.003126] (-) TimerEvent: {}
+[1.103463] (-) TimerEvent: {}
+[1.203798] (-) TimerEvent: {}
+[1.304169] (-) TimerEvent: {}
+[1.404511] (-) TimerEvent: {}
+[1.504862] (-) TimerEvent: {}
+[1.605234] (-) TimerEvent: {}
+[1.705813] (-) TimerEvent: {}
+[1.806227] (-) TimerEvent: {}
+[1.811087] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:\x1b[m\x1b[K In constructor \xe2\x80\x98\x1b[01m\x1b[KGPSnode::GPSnode()\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[1.811364] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:732:127:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kclass template argument deduction failed:\n'}
+[1.811469] (navsystem) StderrLine: {'line': b'  732 |             rclcpp::Publisher bearingPublisher = this->create_publisher<navigation_interfaces::msg::Bearing>("bearingTopic", 1\x1b[01;31m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.811569] (navsystem) StderrLine: {'line': b'      |                                                                                                                               \x1b[01;31m\x1b[K^\x1b[m\x1b[K\n'}
+[1.811659] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:732:127:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kno matching function for call to \xe2\x80\x98\x1b[01m\x1b[KPublisher(std::shared_ptr<rclcpp::Publisher<navigation_interfaces::msg::Bearing_<std::allocator<void> >, std::allocator<void> > >)\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.811996] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/topic_statistics/subscription_topic_statistics.hpp:31\x1b[m\x1b[K,\n'}
+[1.812142] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/subscription.hpp:50\x1b[m\x1b[K,\n'}
+[1.812240] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:25\x1b[m\x1b[K,\n'}
+[1.812342] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.812429] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.812509] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.812593] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.812818] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.812867] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.812914] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.812951] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.812985] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/publisher.hpp:125:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class MessageT, class AllocatorT> Publisher(rclcpp::node_interfaces::NodeBaseInterface*, const string&, const rclcpp::QoS&, const rclcpp::PublisherOptionsWithAllocator<AllocatorT>&)-> rclcpp::Publisher<MessageT, AllocatorT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.813023] (navsystem) StderrLine: {'line': b'  125 |   \x1b[01;36m\x1b[KPublisher\x1b[m\x1b[K(\n'}
+[1.813057] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~~~\x1b[m\x1b[K\n'}
+[1.813090] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/publisher.hpp:125:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.813124] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:732:127:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 4 arguments, 1 provided\n'}
+[1.813158] (navsystem) StderrLine: {'line': b'  732 |             rclcpp::Publisher bearingPublisher = this->create_publisher<navigation_interfaces::msg::Bearing>("bearingTopic", 1\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.813192] (navsystem) StderrLine: {'line': b'      |                                                                                                                               \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.813238] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/topic_statistics/subscription_topic_statistics.hpp:31\x1b[m\x1b[K,\n'}
+[1.813275] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/subscription.hpp:50\x1b[m\x1b[K,\n'}
+[1.813308] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:25\x1b[m\x1b[K,\n'}
+[1.813341] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.813374] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.813406] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.813438] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.813471] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.813511] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.813551] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.813585] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.813624] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/publisher.hpp:77:7:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class MessageT, class AllocatorT> Publisher(rclcpp::Publisher<MessageT, AllocatorT>)-> rclcpp::Publisher<MessageT, AllocatorT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.813659] (navsystem) StderrLine: {'line': b'   77 | class \x1b[01;36m\x1b[KPublisher\x1b[m\x1b[K : public PublisherBase\n'}
+[1.813693] (navsystem) StderrLine: {'line': b'      |       \x1b[01;36m\x1b[K^~~~~~~~~\x1b[m\x1b[K\n'}
+[1.813727] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/publisher.hpp:77:7:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.813763] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:732:127:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  \xe2\x80\x98\x1b[01m\x1b[Kstd::shared_ptr<rclcpp::Publisher<navigation_interfaces::msg::Bearing_<std::allocator<void> >, std::allocator<void> > >\x1b[m\x1b[K\xe2\x80\x99 is not derived from \xe2\x80\x98\x1b[01m\x1b[Krclcpp::Publisher<MessageT, AllocatorT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.813804] (navsystem) StderrLine: {'line': b'  732 |             rclcpp::Publisher bearingPublisher = this->create_publisher<navigation_interfaces::msg::Bearing>("bearingTopic", 1\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.813838] (navsystem) StderrLine: {'line': b'      |                                                                                                                               \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.813885] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:733:135:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kclass template argument deduction failed:\n'}
+[1.813927] (navsystem) StderrLine: {'line': b'  733 |             rclcpp::Publisher positionPublisher = this->create_publisher<navigation_interfaces::msg::Position>("currentCoordinates", 1\x1b[01;31m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.813961] (navsystem) StderrLine: {'line': b'      |                                                                                                                                       \x1b[01;31m\x1b[K^\x1b[m\x1b[K\n'}
+[1.813995] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:733:135:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kno matching function for call to \xe2\x80\x98\x1b[01m\x1b[KPublisher(std::shared_ptr<rclcpp::Publisher<navigation_interfaces::msg::Position_<std::allocator<void> >, std::allocator<void> > >)\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.814030] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/topic_statistics/subscription_topic_statistics.hpp:31\x1b[m\x1b[K,\n'}
+[1.814064] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/subscription.hpp:50\x1b[m\x1b[K,\n'}
+[1.814097] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:25\x1b[m\x1b[K,\n'}
+[1.814131] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.814163] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.814203] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.814237] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.814275] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.814323] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.814356] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.814388] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.814421] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/publisher.hpp:125:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class MessageT, class AllocatorT> Publisher(rclcpp::node_interfaces::NodeBaseInterface*, const string&, const rclcpp::QoS&, const rclcpp::PublisherOptionsWithAllocator<AllocatorT>&)-> rclcpp::Publisher<MessageT, AllocatorT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.814455] (navsystem) StderrLine: {'line': b'  125 |   \x1b[01;36m\x1b[KPublisher\x1b[m\x1b[K(\n'}
+[1.814487] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~~~\x1b[m\x1b[K\n'}
+[1.814519] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/publisher.hpp:125:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.814562] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:733:135:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 4 arguments, 1 provided\n'}
+[1.814606] (navsystem) StderrLine: {'line': b'  733 |             rclcpp::Publisher positionPublisher = this->create_publisher<navigation_interfaces::msg::Position>("currentCoordinates", 1\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.814645] (navsystem) StderrLine: {'line': b'      |                                                                                                                                       \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.814684] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/topic_statistics/subscription_topic_statistics.hpp:31\x1b[m\x1b[K,\n'}
+[1.814719] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/subscription.hpp:50\x1b[m\x1b[K,\n'}
+[1.814753] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:25\x1b[m\x1b[K,\n'}
+[1.814786] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.814819] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.814855] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.814902] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.814937] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.814971] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.815010] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.815053] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.815089] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/publisher.hpp:77:7:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class MessageT, class AllocatorT> Publisher(rclcpp::Publisher<MessageT, AllocatorT>)-> rclcpp::Publisher<MessageT, AllocatorT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.815124] (navsystem) StderrLine: {'line': b'   77 | class \x1b[01;36m\x1b[KPublisher\x1b[m\x1b[K : public PublisherBase\n'}
+[1.815158] (navsystem) StderrLine: {'line': b'      |       \x1b[01;36m\x1b[K^~~~~~~~~\x1b[m\x1b[K\n'}
+[1.815191] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/publisher.hpp:77:7:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.815224] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:733:135:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  \xe2\x80\x98\x1b[01m\x1b[Kstd::shared_ptr<rclcpp::Publisher<navigation_interfaces::msg::Position_<std::allocator<void> >, std::allocator<void> > >\x1b[m\x1b[K\xe2\x80\x99 is not derived from \xe2\x80\x98\x1b[01m\x1b[Krclcpp::Publisher<MessageT, AllocatorT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.815259] (navsystem) StderrLine: {'line': b'  733 |             rclcpp::Publisher positionPublisher = this->create_publisher<navigation_interfaces::msg::Position>("currentCoordinates", 1\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.815293] (navsystem) StderrLine: {'line': b'      |                                                                                                                                       \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.824111] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:736:118:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kclass template argument deduction failed:\n'}
+[1.824580] (navsystem) StderrLine: {'line': b'  736 |             rclcpp::Service getNavServer = this->create_service<navigation_interfaces::srv::GetNav>("GetNav", &getNav\x1b[01;31m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.824656] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;31m\x1b[K^\x1b[m\x1b[K\n'}
+[1.824699] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:736:118:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kno matching function for call to \xe2\x80\x98\x1b[01m\x1b[KService(rclcpp::Service<navigation_interfaces::srv::GetNav>::SharedPtr)\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.824742] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/context.hpp:35\x1b[m\x1b[K,\n'}
+[1.824782] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:34\x1b[m\x1b[K,\n'}
+[1.824821] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.824876] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.824919] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.824958] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.824996] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:498:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(const rclcpp::Service<ServiceT>&)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.825049] (navsystem) StderrLine: {'line': b'  498 |   \x1b[01;36m\x1b[KRCLCPP_DISABLE_COPY\x1b[m\x1b[K(Service)\n'}
+[1.825101] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.825142] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:498:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.825187] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:736:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  \xe2\x80\x98\x1b[01m\x1b[Krclcpp::Service<navigation_interfaces::srv::GetNav>::SharedPtr\x1b[m\x1b[K\xe2\x80\x99 {aka \xe2\x80\x98\x1b[01m\x1b[Kstd::shared_ptr<rclcpp::Service<navigation_interfaces::srv::GetNav> >\x1b[m\x1b[K\xe2\x80\x99} is not derived from \xe2\x80\x98\x1b[01m\x1b[Kconst rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.825228] (navsystem) StderrLine: {'line': b'  736 |             rclcpp::Service getNavServer = this->create_service<navigation_interfaces::srv::GetNav>("GetNav", &getNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.825268] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.825305] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.825343] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.825381] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.825420] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.825457] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.825494] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.825531] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.825568] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.825604] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.825640] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.825678] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:431:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service()-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.825718] (navsystem) StderrLine: {'line': b'  431 |   \x1b[01;36m\x1b[KService\x1b[m\x1b[K() = delete;\n'}
+[1.825755] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.825790] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:431:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.825827] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:736:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 0 arguments, 1 provided\n'}
+[1.825889] (navsystem) StderrLine: {'line': b'  736 |             rclcpp::Service getNavServer = this->create_service<navigation_interfaces::srv::GetNav>("GetNav", &getNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.825931] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.825968] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.826008] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.826045] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.826082] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.826118] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.826154] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.826191] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.826228] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.826265] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.826302] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.826339] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:404:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(std::shared_ptr<rcl_node_s>, rcl_service_t*, rclcpp::AnyServiceCallback<ServiceT>)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.826378] (navsystem) StderrLine: {'line': b'  404 |   \x1b[01;36m\x1b[KService\x1b[m\x1b[K(\n'}
+[1.826415] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.826453] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:404:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.826497] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:736:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 3 arguments, 1 provided\n'}
+[1.826541] (navsystem) StderrLine: {'line': b'  736 |             rclcpp::Service getNavServer = this->create_service<navigation_interfaces::srv::GetNav>("GetNav", &getNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.826578] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.826615] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.826651] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.826688] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.826724] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.826766] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.826803] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.826840] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.826887] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.826927] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.826964] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.827000] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:369:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(std::shared_ptr<rcl_node_s>, std::shared_ptr<rcl_service_s>, rclcpp::AnyServiceCallback<ServiceT>)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.827039] (navsystem) StderrLine: {'line': b'  369 |   \x1b[01;36m\x1b[KService\x1b[m\x1b[K(\n'}
+[1.827074] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.827109] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:369:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.827151] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:736:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 3 arguments, 1 provided\n'}
+[1.827195] (navsystem) StderrLine: {'line': b'  736 |             rclcpp::Service getNavServer = this->create_service<navigation_interfaces::srv::GetNav>("GetNav", &getNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.827232] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.827283] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.827320] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.827356] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.827393] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.827429] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.827475] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.827513] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.827561] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.827598] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.827634] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.827680] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:305:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(std::shared_ptr<rcl_node_s>, const string&, rclcpp::AnyServiceCallback<ServiceT>, rcl_service_options_t&)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.827722] (navsystem) StderrLine: {'line': b'  305 |   \x1b[01;36m\x1b[KService\x1b[m\x1b[K(\n'}
+[1.827758] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.827794] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:305:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.827830] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:736:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 4 arguments, 1 provided\n'}
+[1.827884] (navsystem) StderrLine: {'line': b'  736 |             rclcpp::Service getNavServer = this->create_service<navigation_interfaces::srv::GetNav>("GetNav", &getNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.827928] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.827966] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:36\x1b[m\x1b[K,\n'}
+[1.828002] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.828039] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.828075] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.828111] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.828147] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.828182] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.828218] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.828254] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.828289] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.828324] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.828360] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_service_callback.hpp:55:7:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(rclcpp::Service<ServiceT>)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.828397] (navsystem) StderrLine: {'line': b'   55 | class \x1b[01;36m\x1b[KService\x1b[m\x1b[K;\n'}
+[1.828438] (navsystem) StderrLine: {'line': b'      |       \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.828475] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_service_callback.hpp:55:7:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.828513] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:736:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  \xe2\x80\x98\x1b[01m\x1b[Kstd::shared_ptr<rclcpp::Service<navigation_interfaces::srv::GetNav> >\x1b[m\x1b[K\xe2\x80\x99 is not derived from \xe2\x80\x98\x1b[01m\x1b[Krclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.828564] (navsystem) StderrLine: {'line': b'  736 |             rclcpp::Service getNavServer = this->create_service<navigation_interfaces::srv::GetNav>("GetNav", &getNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.828601] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.836751] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:737:118:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kclass template argument deduction failed:\n'}
+[1.837153] (navsystem) StderrLine: {'line': b'  737 |             rclcpp::Service setNavServer = this->create_service<navigation_interfaces::srv::SetNav>("SetNav", &setNav\x1b[01;31m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.837202] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;31m\x1b[K^\x1b[m\x1b[K\n'}
+[1.837396] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:737:118:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kno matching function for call to \xe2\x80\x98\x1b[01m\x1b[KService(rclcpp::Service<navigation_interfaces::srv::SetNav>::SharedPtr)\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.837437] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/context.hpp:35\x1b[m\x1b[K,\n'}
+[1.837475] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:34\x1b[m\x1b[K,\n'}
+[1.837515] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.837553] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.837589] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.837623] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.837660] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:498:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(const rclcpp::Service<ServiceT>&)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.837697] (navsystem) StderrLine: {'line': b'  498 |   \x1b[01;36m\x1b[KRCLCPP_DISABLE_COPY\x1b[m\x1b[K(Service)\n'}
+[1.837731] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.837765] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:498:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.837810] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:737:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  \xe2\x80\x98\x1b[01m\x1b[Krclcpp::Service<navigation_interfaces::srv::SetNav>::SharedPtr\x1b[m\x1b[K\xe2\x80\x99 {aka \xe2\x80\x98\x1b[01m\x1b[Kstd::shared_ptr<rclcpp::Service<navigation_interfaces::srv::SetNav> >\x1b[m\x1b[K\xe2\x80\x99} is not derived from \xe2\x80\x98\x1b[01m\x1b[Kconst rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.837865] (navsystem) StderrLine: {'line': b'  737 |             rclcpp::Service setNavServer = this->create_service<navigation_interfaces::srv::SetNav>("SetNav", &setNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.837911] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.837948] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.837993] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.838030] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.838067] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.838105] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.838141] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.838179] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.838235] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.838277] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.838312] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.838348] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:431:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service()-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.838384] (navsystem) StderrLine: {'line': b'  431 |   \x1b[01;36m\x1b[KService\x1b[m\x1b[K() = delete;\n'}
+[1.838418] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.838451] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:431:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.838487] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:737:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 0 arguments, 1 provided\n'}
+[1.838521] (navsystem) StderrLine: {'line': b'  737 |             rclcpp::Service setNavServer = this->create_service<navigation_interfaces::srv::SetNav>("SetNav", &setNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.838557] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.838592] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.838626] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.838660] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.838694] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.838729] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.838763] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.838803] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.838837] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.838880] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.838919] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.838955] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:404:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(std::shared_ptr<rcl_node_s>, rcl_service_t*, rclcpp::AnyServiceCallback<ServiceT>)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.838993] (navsystem) StderrLine: {'line': b'  404 |   \x1b[01;36m\x1b[KService\x1b[m\x1b[K(\n'}
+[1.839028] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.839062] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:404:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.839097] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:737:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 3 arguments, 1 provided\n'}
+[1.839138] (navsystem) StderrLine: {'line': b'  737 |             rclcpp::Service setNavServer = this->create_service<navigation_interfaces::srv::SetNav>("SetNav", &setNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.839178] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.839213] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.839257] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.839291] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.839327] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.839369] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.839403] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.839437] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.839476] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.839519] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.839552] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.839586] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:369:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(std::shared_ptr<rcl_node_s>, std::shared_ptr<rcl_service_s>, rclcpp::AnyServiceCallback<ServiceT>)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.839628] (navsystem) StderrLine: {'line': b'  369 |   \x1b[01;36m\x1b[KService\x1b[m\x1b[K(\n'}
+[1.839661] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.839695] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:369:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.839728] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:737:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 3 arguments, 1 provided\n'}
+[1.839763] (navsystem) StderrLine: {'line': b'  737 |             rclcpp::Service setNavServer = this->create_service<navigation_interfaces::srv::SetNav>("SetNav", &setNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.839798] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.839833] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.839887] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.839926] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.839959] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.839992] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.840025] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.840058] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.840092] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.840125] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.840159] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.840193] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:305:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(std::shared_ptr<rcl_node_s>, const string&, rclcpp::AnyServiceCallback<ServiceT>, rcl_service_options_t&)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.840229] (navsystem) StderrLine: {'line': b'  305 |   \x1b[01;36m\x1b[KService\x1b[m\x1b[K(\n'}
+[1.840263] (navsystem) StderrLine: {'line': b'      |   \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.840296] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:305:3:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.840330] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:737:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  candidate expects 4 arguments, 1 provided\n'}
+[1.840364] (navsystem) StderrLine: {'line': b'  737 |             rclcpp::Service setNavServer = this->create_service<navigation_interfaces::srv::SetNav>("SetNav", &setNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.840404] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.840450] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/service.hpp:36\x1b[m\x1b[K,\n'}
+[1.840488] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/callback_group.hpp:28\x1b[m\x1b[K,\n'}
+[1.840523] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_executable.hpp:20\x1b[m\x1b[K,\n'}
+[1.840557] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategy.hpp:25\x1b[m\x1b[K,\n'}
+[1.840591] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/memory_strategies.hpp:18\x1b[m\x1b[K,\n'}
+[1.840624] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor_options.hpp:20\x1b[m\x1b[K,\n'}
+[1.840657] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executor.hpp:37\x1b[m\x1b[K,\n'}
+[1.840696] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/multi_threaded_executor.hpp:25\x1b[m\x1b[K,\n'}
+[1.840731] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:21\x1b[m\x1b[K,\n'}
+[1.840765] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.840799] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.840833] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_service_callback.hpp:55:7:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class ServiceT> Service(rclcpp::Service<ServiceT>)-> rclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.840880] (navsystem) StderrLine: {'line': b'   55 | class \x1b[01;36m\x1b[KService\x1b[m\x1b[K;\n'}
+[1.840925] (navsystem) StderrLine: {'line': b'      |       \x1b[01;36m\x1b[K^~~~~~~\x1b[m\x1b[K\n'}
+[1.840964] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/any_service_callback.hpp:55:7:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.840999] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:737:118:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  \xe2\x80\x98\x1b[01m\x1b[Kstd::shared_ptr<rclcpp::Service<navigation_interfaces::srv::SetNav> >\x1b[m\x1b[K\xe2\x80\x99 is not derived from \xe2\x80\x98\x1b[01m\x1b[Krclcpp::Service<ServiceT>\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.841039] (navsystem) StderrLine: {'line': b'  737 |             rclcpp::Service setNavServer = this->create_service<navigation_interfaces::srv::SetNav>("SetNav", &setNav\x1b[01;36m\x1b[K)\x1b[m\x1b[K;\n'}
+[1.841078] (navsystem) StderrLine: {'line': b'      |                                                                                                                      \x1b[01;36m\x1b[K^\x1b[m\x1b[K\n'}
+[1.841172] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:743:21:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[KTimerBasetimer_\x1b[m\x1b[K\xe2\x80\x99 is not a member of \xe2\x80\x98\x1b[01m\x1b[Krclcpp\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.841274] (navsystem) StderrLine: {'line': b'  743 |             rclcpp::\x1b[01;31m\x1b[KTimerBasetimer_\x1b[m\x1b[K = this->create_publisher<string>(1000ms, std::bind(&GPSnode::timer_callback, this));\n'}
+[1.841312] (navsystem) StderrLine: {'line': b'      |                     \x1b[01;31m\x1b[K^~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.841355] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:743:69:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kno matching function for call to \xe2\x80\x98\x1b[01m\x1b[KGPSnode::create_publisher<std::string>(std::chrono::milliseconds, std::_Bind_helper<false, void (GPSnode::*)(), GPSnode*>::type)\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.841393] (navsystem) StderrLine: {'line': b'  743 |             rclcpp::TimerBasetimer_ = \x1b[01;31m\x1b[Kthis->create_publisher<string>(1000ms, std::bind(&GPSnode::timer_callback, this))\x1b[m\x1b[K;\n'}
+[1.841428] (navsystem) StderrLine: {'line': b'      |                                       \x1b[01;31m\x1b[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.841463] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/node.hpp:1321\x1b[m\x1b[K,\n'}
+[1.841497] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors/single_threaded_executor.hpp:28\x1b[m\x1b[K,\n'}
+[1.841530] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:22\x1b[m\x1b[K,\n'}
+[1.841564] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.841597] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.841631] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/node_impl.hpp:73:1:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Ktemplate<class MessageT, class AllocatorT, class PublisherT> std::shared_ptr<PublisherT> rclcpp::Node::create_publisher(const string&, const rclcpp::QoS&, const rclcpp::PublisherOptionsWithAllocator<AllocatorT>&)\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.841677] (navsystem) StderrLine: {'line': b'   73 | \x1b[01;36m\x1b[KNode\x1b[m\x1b[K::create_publisher(\n'}
+[1.841711] (navsystem) StderrLine: {'line': b'      | \x1b[01;36m\x1b[K^~~~\x1b[m\x1b[K\n'}
+[1.841745] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/node_impl.hpp:73:1:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  template argument deduction/substitution failed:\n'}
+[1.841784] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:743:70:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  cannot convert \xe2\x80\x98\x1b[01m\x1b[Kstd::literals::chrono_literals::operator""ms<\'1\', \'0\', \'0\', \'0\'>()\x1b[m\x1b[K\xe2\x80\x99 (type \xe2\x80\x98\x1b[01m\x1b[Kstd::chrono::milliseconds\x1b[m\x1b[K\xe2\x80\x99 {aka \xe2\x80\x98\x1b[01m\x1b[Kstd::chrono::duration<long int, std::ratio<1, 1000> >\x1b[m\x1b[K\xe2\x80\x99}) to type \xe2\x80\x98\x1b[01m\x1b[Kconst string&\x1b[m\x1b[K\xe2\x80\x99 {aka \xe2\x80\x98\x1b[01m\x1b[Kconst std::__cxx11::basic_string<char>&\x1b[m\x1b[K\xe2\x80\x99}\n'}
+[1.841826] (navsystem) StderrLine: {'line': b'  743 |             rclcpp::TimerBasetimer_ = this->create_publisher<string>(\x1b[01;36m\x1b[K1000ms\x1b[m\x1b[K, std::bind(&GPSnode::timer_callback, this));\n'}
+[1.841897] (navsystem) StderrLine: {'line': b'      |                                                                      \x1b[01;36m\x1b[K^~~~~~\x1b[m\x1b[K\n'}
+[1.848201] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:\x1b[m\x1b[K In member function \xe2\x80\x98\x1b[01m\x1b[Kvoid GPSnode::timer_callback()\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[1.848360] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:761:13:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[KbearingPublisher\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[1.848465] (navsystem) StderrLine: {'line': b'  761 |             \x1b[01;31m\x1b[KbearingPublisher\x1b[m\x1b[K->publish(bearingMessage);\n'}
+[1.848540] (navsystem) StderrLine: {'line': b'      |             \x1b[01;31m\x1b[K^~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.854163] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:762:13:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[K\xe2\x80\x98\x1b[01m\x1b[KpositionPublisher\x1b[m\x1b[K\xe2\x80\x99 was not declared in this scope\n'}
+[1.854288] (navsystem) StderrLine: {'line': b'  762 |             \x1b[01;31m\x1b[KpositionPublisher\x1b[m\x1b[K->publish(positionMessage);\n'}
+[1.854418] (navsystem) StderrLine: {'line': b'      |             \x1b[01;31m\x1b[K^~~~~~~~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.854505] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:\x1b[m\x1b[K In function \xe2\x80\x98\x1b[01m\x1b[Kint main(int, char**)\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[1.854583] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:784:17:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kno matching function for call to \xe2\x80\x98\x1b[01m\x1b[Kspin(GPSnode)\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.854660] (navsystem) StderrLine: {'line': b'  784 |     \x1b[01;31m\x1b[Krclcpp::spin(GPSnode())\x1b[m\x1b[K;\n'}
+[1.854733] (navsystem) StderrLine: {'line': b'      |     \x1b[01;31m\x1b[K~~~~~~~~~~~~^~~~~~~~~~~\x1b[m\x1b[K\n'}
+[1.854906] (navsystem) StderrLine: {'line': b'In file included from \x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/rclcpp.hpp:155\x1b[m\x1b[K,\n'}
+[1.855007] (navsystem) StderrLine: {'line': b'                 from \x1b[01m\x1b[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:23\x1b[m\x1b[K:\n'}
+[1.855083] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:45:1:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Kvoid rclcpp::spin(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr)\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.855154] (navsystem) StderrLine: {'line': b'   45 | \x1b[01;36m\x1b[Kspin\x1b[m\x1b[K(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);\n'}
+[1.855223] (navsystem) StderrLine: {'line': b'      | \x1b[01;36m\x1b[K^~~~\x1b[m\x1b[K\n'}
+[1.855291] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:45:60:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  no known conversion for argument 1 from \xe2\x80\x98\x1b[01m\x1b[KGPSnode\x1b[m\x1b[K\xe2\x80\x99 to \xe2\x80\x98\x1b[01m\x1b[Krclcpp::node_interfaces::NodeBaseInterface::SharedPtr\x1b[m\x1b[K\xe2\x80\x99 {aka \xe2\x80\x98\x1b[01m\x1b[Kstd::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>\x1b[m\x1b[K\xe2\x80\x99}\n'}
+[1.855365] (navsystem) StderrLine: {'line': b'   45 | spin(\x1b[01;36m\x1b[Krclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr\x1b[m\x1b[K);\n'}
+[1.855432] (navsystem) StderrLine: {'line': b'      |      \x1b[01;36m\x1b[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~\x1b[m\x1b[K\n'}
+[1.855498] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:49:1:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[Kcandidate: \xe2\x80\x98\x1b[01m\x1b[Kvoid rclcpp::spin(rclcpp::Node::SharedPtr)\x1b[m\x1b[K\xe2\x80\x99\n'}
+[1.855565] (navsystem) StderrLine: {'line': b'   49 | \x1b[01;36m\x1b[Kspin\x1b[m\x1b[K(rclcpp::Node::SharedPtr node_ptr);\n'}
+[1.855631] (navsystem) StderrLine: {'line': b'      | \x1b[01;36m\x1b[K^~~~\x1b[m\x1b[K\n'}
+[1.855695] (navsystem) StderrLine: {'line': b'\x1b[01m\x1b[K/opt/ros/humble/include/rclcpp/rclcpp/executors.hpp:49:30:\x1b[m\x1b[K \x1b[01;36m\x1b[Knote: \x1b[m\x1b[K  no known conversion for argument 1 from \xe2\x80\x98\x1b[01m\x1b[KGPSnode\x1b[m\x1b[K\xe2\x80\x99 to \xe2\x80\x98\x1b[01m\x1b[Krclcpp::Node::SharedPtr\x1b[m\x1b[K\xe2\x80\x99 {aka \xe2\x80\x98\x1b[01m\x1b[Kstd::shared_ptr<rclcpp::Node>\x1b[m\x1b[K\xe2\x80\x99}\n'}
+[1.855780] (navsystem) StderrLine: {'line': b'   49 | spin(\x1b[01;36m\x1b[Krclcpp::Node::SharedPtr node_ptr\x1b[m\x1b[K);\n'}
+[1.855853] (navsystem) StderrLine: {'line': b'      |      \x1b[01;36m\x1b[K~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~\x1b[m\x1b[K\n'}
+[1.906388] (-) TimerEvent: {}
+[2.006861] (-) TimerEvent: {}
+[2.107222] (-) TimerEvent: {}
+[2.207567] (-) TimerEvent: {}
+[2.307903] (-) TimerEvent: {}
+[2.408198] (-) TimerEvent: {}
+[2.508509] (-) TimerEvent: {}
+[2.535615] (navsystem) StderrLine: {'line': b'gmake[2]: *** [CMakeFiles/GPSnode.dir/build.make:76: CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o] Error 1\n'}
+[2.535962] (navsystem) StderrLine: {'line': b'gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/GPSnode.dir/all] Error 2\n'}
+[2.536348] (navsystem) StderrLine: {'line': b'gmake: *** [Makefile:146: all] Error 2\n'}
+[2.539085] (navsystem) CommandEnded: {'returncode': 2}
+[2.546958] (navsystem) JobEnded: {'identifier': 'navsystem', 'rc': 2}
+[2.557472] (-) EventReactorShutdown: {}

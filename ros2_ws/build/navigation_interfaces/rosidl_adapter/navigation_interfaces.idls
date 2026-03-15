@@ -1,0 +1,4 @@
+/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces:msg/Bearing.idl
+/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces:msg/Position.idl
+/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces:srv/GetNav.idl
+/home/isaac/Documents/D.A.V.E./ros2_ws/build/navigation_interfaces/rosidl_adapter/navigation_interfaces:srv/SetNav.idl

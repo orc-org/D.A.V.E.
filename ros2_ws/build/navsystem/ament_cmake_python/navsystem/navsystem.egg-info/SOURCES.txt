@@ -1,0 +1,6 @@
+setup.py
+navsystem/__init__.py
+navsystem.egg-info/PKG-INFO
+navsystem.egg-info/SOURCES.txt
+navsystem.egg-info/dependency_links.txt
+navsystem.egg-info/top_level.txt

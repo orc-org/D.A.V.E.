@@ -1,0 +1,15 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from navsystem/srv/SetNav.srv
+// generated code does not contain a copyright notice
+
+
+module navsystem {
+  module srv {
+    struct SetNav_Request {
+      string function;
+    };
+    struct SetNav_Response {
+      string returned;
+    };
+  };
+};

@@ -1,0 +1,15 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from dave_interfaces/srv/GetSetNav.srv
+// generated code does not contain a copyright notice
+
+
+module dave_interfaces {
+  module srv {
+    struct GetSetNav_Request {
+      string function2call;
+    };
+    struct GetSetNav_Response {
+      string returnedmessage;
+    };
+  };
+};

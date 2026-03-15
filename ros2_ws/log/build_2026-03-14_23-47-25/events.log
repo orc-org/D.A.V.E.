@@ -1,0 +1,81 @@
+[0.000000] (-) TimerEvent: {}
+[0.000334] (-) JobUnselected: {'identifier': 'navigation_interfaces'}
+[0.000385] (navsystem) JobQueued: {'identifier': 'navsystem', 'dependencies': OrderedDict([('navigation_interfaces', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces')])}
+[0.000425] (navsystem) JobStarted: {'identifier': 'navsystem'}
+[0.008998] (navsystem) JobProgress: {'identifier': 'navsystem', 'progress': 'cmake'}
+[0.010269] (navsystem) JobProgress: {'identifier': 'navsystem', 'progress': 'build'}
+[0.010330] (navsystem) Command: {'cmd': ['/usr/bin/cmake', '--build', '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem', '--', '-j16', '-l16'], 'cwd': '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_CA:en'), ('USER', 'isaac'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/lib:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/isaac'), ('OLDPWD', '/home/isaac'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1869'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'isaac'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'isaac'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/The-Computationeer:@/tmp/.ICE-unix/1545,unix/The-Computationeer:/tmp/.ICE-unix/1545'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/82bc2af6_d3c2_406a_839d_36821c402083'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.7M3HM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.145'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/home/isaac/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/local/lib/python3.10/dist-packages:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble')]), 'shell': False}
+[0.053979] (navsystem) StdoutLine: {'line': b'\x1b[35m\x1b[1mConsolidate compiler generated dependencies of target GPSnode\x1b[0m\n'}
+[0.073358] (navsystem) StdoutLine: {'line': b'[ 50%] \x1b[32mBuilding CXX object CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o\x1b[0m\n'}
+[0.099552] (-) TimerEvent: {}
+[0.199939] (-) TimerEvent: {}
+[0.300276] (-) TimerEvent: {}
+[0.400972] (-) TimerEvent: {}
+[0.501348] (-) TimerEvent: {}
+[0.601684] (-) TimerEvent: {}
+[0.702008] (-) TimerEvent: {}
+[0.802348] (-) TimerEvent: {}
+[0.902697] (-) TimerEvent: {}
+[1.003050] (-) TimerEvent: {}
+[1.103375] (-) TimerEvent: {}
+[1.203709] (-) TimerEvent: {}
+[1.304057] (-) TimerEvent: {}
+[1.404387] (-) TimerEvent: {}
+[1.505047] (-) TimerEvent: {}
+[1.605366] (-) TimerEvent: {}
+[1.706014] (-) TimerEvent: {}
+[1.806336] (-) TimerEvent: {}
+[1.906675] (-) TimerEvent: {}
+[2.007039] (-) TimerEvent: {}
+[2.107379] (-) TimerEvent: {}
+[2.207720] (-) TimerEvent: {}
+[2.308046] (-) TimerEvent: {}
+[2.408377] (-) TimerEvent: {}
+[2.508692] (-) TimerEvent: {}
+[2.609164] (-) TimerEvent: {}
+[2.709510] (-) TimerEvent: {}
+[2.809874] (-) TimerEvent: {}
+[2.910299] (-) TimerEvent: {}
+[3.010663] (-) TimerEvent: {}
+[3.111030] (-) TimerEvent: {}
+[3.211360] (-) TimerEvent: {}
+[3.311663] (-) TimerEvent: {}
+[3.411944] (-) TimerEvent: {}
+[3.512264] (-) TimerEvent: {}
+[3.612614] (-) TimerEvent: {}
+[3.713112] (-) TimerEvent: {}
+[3.813450] (-) TimerEvent: {}
+[3.913781] (-) TimerEvent: {}
+[4.014130] (-) TimerEvent: {}
+[4.114462] (-) TimerEvent: {}
+[4.214808] (-) TimerEvent: {}
+[4.315164] (-) TimerEvent: {}
+[4.415497] (-) TimerEvent: {}
+[4.440549] (navsystem) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable GPSnode\x1b[0m\n'}
+[4.515640] (-) TimerEvent: {}
+[4.615961] (-) TimerEvent: {}
+[4.633944] (navsystem) StdoutLine: {'line': b'[100%] Built target GPSnode\n'}
+[4.646514] (navsystem) CommandEnded: {'returncode': 0}
+[4.647217] (navsystem) JobProgress: {'identifier': 'navsystem', 'progress': 'install'}
+[4.655116] (navsystem) Command: {'cmd': ['/usr/bin/cmake', '--install', '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem'], 'cwd': '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem', 'env': OrderedDict([('LESSOPEN', '| /usr/bin/lesspipe %s'), ('LANGUAGE', 'en_CA:en'), ('USER', 'isaac'), ('XDG_SESSION_TYPE', 'wayland'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/lib:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib'), ('HOME', '/home/isaac'), ('OLDPWD', '/home/isaac'), ('DESKTOP_SESSION', 'ubuntu'), ('ROS_PYTHON_VERSION', '3'), ('GNOME_SHELL_SESSION_MODE', 'ubuntu'), ('GTK_MODULES', 'gail:atk-bridge'), ('SYSTEMD_EXEC_PID', '1869'), ('DBUS_SESSION_BUS_ADDRESS', 'unix:path=/run/user/1000/bus'), ('COLORTERM', 'truecolor'), ('IM_CONFIG_PHASE', '1'), ('WAYLAND_DISPLAY', 'wayland-0'), ('COLCON_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install'), ('ROS_DISTRO', 'humble'), ('LOGNAME', 'isaac'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('XDG_SESSION_CLASS', 'user'), ('USERNAME', 'isaac'), ('TERM', 'xterm-256color'), ('GNOME_DESKTOP_SESSION_ID', 'this-is-deprecated'), ('ROS_LOCALHOST_ONLY', '0'), ('PATH', '/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/snap/bin'), ('SESSION_MANAGER', 'local/The-Computationeer:@/tmp/.ICE-unix/1545,unix/The-Computationeer:/tmp/.ICE-unix/1545'), ('XDG_MENU_PREFIX', 'gnome-'), ('GNOME_TERMINAL_SCREEN', '/org/gnome/Terminal/screen/82bc2af6_d3c2_406a_839d_36821c402083'), ('GNOME_SETUP_DISPLAY', ':1'), ('XDG_RUNTIME_DIR', '/run/user/1000'), ('DISPLAY', ':0'), ('LANG', 'en_US.UTF-8'), ('XDG_CURRENT_DESKTOP', 'ubuntu:GNOME'), ('XMODIFIERS', '@im=ibus'), ('XDG_SESSION_DESKTOP', 'ubuntu'), ('XAUTHORITY', '/run/user/1000/.mutter-Xwaylandauth.7M3HM3'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('GNOME_TERMINAL_SERVICE', ':1.145'), ('SSH_AGENT_LAUNCHER', 'gnome-keyring'), ('SSH_AUTH_SOCK', '/run/user/1000/keyring/ssh'), ('AMENT_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble'), ('SHELL', '/bin/bash'), ('QT_ACCESSIBILITY', '1'), ('GDMSESSION', 'ubuntu'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('QT_IM_MODULE', 'ibus'), ('PWD', '/home/isaac/Documents/D.A.V.E./ros2_ws/build/navsystem'), ('LC_ALL', 'en_US.UTF-8'), ('XDG_CONFIG_DIRS', '/etc/xdg/xdg-ubuntu:/etc/xdg'), ('XDG_DATA_DIRS', '/usr/share/ubuntu:/home/isaac/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop'), ('PYTHONPATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces/local/lib/python3.10/dist-packages:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('COLCON', '1'), ('VTE_VERSION', '6800'), ('CMAKE_PREFIX_PATH', '/home/isaac/Documents/D.A.V.E./ros2_ws/install/navigation_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem:/home/isaac/Documents/D.A.V.E./ros2_ws/install/custom_interfaces:/home/isaac/Documents/D.A.V.E./ros2_ws/install/NAVsystem:/opt/ros/humble')]), 'shell': False}
+[4.661802] (navsystem) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[4.661964] (navsystem) StdoutLine: {'line': b'-- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/lib/navsystem/GPSnode\n'}
+[4.664720] (navsystem) StdoutLine: {'line': b'-- Set runtime path of "/home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/lib/navsystem/GPSnode" to ""\n'}
+[4.664879] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/ament_index/resource_index/package_run_dependencies/navsystem\n'}
+[4.665114] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/ament_index/resource_index/parent_prefix_path/navsystem\n'}
+[4.665202] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/ament_prefix_path.sh\n'}
+[4.665303] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/ament_prefix_path.dsv\n'}
+[4.665407] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/path.sh\n'}
+[4.665500] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/environment/path.dsv\n'}
+[4.665553] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.bash\n'}
+[4.665607] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.sh\n'}
+[4.665659] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.zsh\n'}
+[4.665712] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/local_setup.dsv\n'}
+[4.665791] (navsystem) StdoutLine: {'line': b'-- Installing: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/package.dsv\n'}
+[4.665837] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/ament_index/resource_index/packages/navsystem\n'}
+[4.665890] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/cmake/navsystemConfig.cmake\n'}
+[4.665932] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/cmake/navsystemConfig-version.cmake\n'}
+[4.665970] (navsystem) StdoutLine: {'line': b'-- Up-to-date: /home/isaac/Documents/D.A.V.E./ros2_ws/install/navsystem/share/navsystem/package.xml\n'}
+[4.667161] (navsystem) CommandEnded: {'returncode': 0}
+[4.678431] (navsystem) JobEnded: {'identifier': 'navsystem', 'rc': 0}
+[4.679030] (-) EventReactorShutdown: {}
