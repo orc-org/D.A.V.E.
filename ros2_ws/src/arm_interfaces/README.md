@@ -2,8 +2,6 @@
 
 This package contains the ROS2 interface definitions for the arm system, outside of the standard interfaces (Point, Twist JointState e.t.c). 
 
-By keeping these in a separate package, any other module (Python or C++) can interact with the arm by agreed-upon standards.
-
 ## Contents
 
 ### Messages (`msg/`)

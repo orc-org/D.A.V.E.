@@ -9,9 +9,9 @@ Physical dimensions (column height, arm length, etc.) are stored in:
 **(So far) Both the 3D Model and the Python IK math read from this file.** Change it here to update the entire rover.
 
 ## Contents
-*   **`urdf/rover.urdf.xacro`**: The 3D blueprint. It processes the YAML config to generate the final model.
+*   **`urdf/rover.urdf.xacro`**: It processes the YAML config to generate the final model as a urdf model.
 *   **`launch/view_robot.launch.py`**: Starts the robot state publisher and RViz2.
-*   **`rviz/default.rviz`**: Saved camera and display settings for a "one-click" setup.
+*   **`rviz/default.rviz`**: Saved camera and display settings.
 
 ## Visualization
 To see the robot in 3D (rviz):
