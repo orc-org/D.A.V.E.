@@ -1,0 +1,11 @@
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/uninstall.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/enigma_machine_uninstall.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/ament_cmake_python_copy_enigma_machine.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/ament_cmake_python_build_enigma_machine_egg.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/test.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/edit_cache.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/rebuild_cache.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/list_install_components.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/install.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/install/local.dir
+/home/isaac/D.A.V.E./ros2_ws/build/enigma_machine/CMakeFiles/install/strip.dir

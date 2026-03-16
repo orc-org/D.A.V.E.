@@ -1,0 +1,7 @@
+setup.py
+enigma_machine/__init__.py
+enigma_machine/module_to_import.py
+enigma_machine.egg-info/PKG-INFO
+enigma_machine.egg-info/SOURCES.txt
+enigma_machine.egg-info/dependency_links.txt
+enigma_machine.egg-info/top_level.txt

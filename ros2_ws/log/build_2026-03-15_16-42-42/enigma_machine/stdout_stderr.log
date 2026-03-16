@@ -1,0 +1,44 @@
+-- Found ament_cmake: 1.3.14 (/home/isaac/ros2_humble/install/ament_cmake/share/ament_cmake/cmake)
+-- Found rclcpp: 16.0.18 (/home/isaac/ros2_humble/install/rclcpp/share/rclcpp/cmake)
+-- Found rosidl_generator_c: 3.1.8 (/home/isaac/ros2_humble/install/rosidl_generator_c/share/rosidl_generator_c/cmake)
+-- Found rosidl_adapter: 3.1.8 (/home/isaac/ros2_humble/install/rosidl_adapter/share/rosidl_adapter/cmake)
+-- Found rosidl_generator_cpp: 3.1.8 (/home/isaac/ros2_humble/install/rosidl_generator_cpp/share/rosidl_generator_cpp/cmake)
+-- Using all available rosidl_typesupport_c: rosidl_typesupport_introspection_c;rosidl_typesupport_fastrtps_c
+-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_introspection_cpp;rosidl_typesupport_fastrtps_cpp
+-- Found rmw_implementation_cmake: 6.1.2 (/home/isaac/ros2_humble/install/rmw_implementation_cmake/share/rmw_implementation_cmake/cmake)
+-- Found rmw_fastrtps_cpp: 6.2.10 (/home/isaac/ros2_humble/install/rmw_fastrtps_cpp/share/rmw_fastrtps_cpp/cmake)
+-- Using RMW implementation 'rmw_fastrtps_cpp' as default
+-- Found rclpy: 3.3.21 (/home/isaac/ros2_humble/install/rclpy/share/rclpy/cmake)
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/isaac/D.A.V.E./ros2_ws/build/enigma_machine
+Built target ament_cmake_python_copy_enigma_machine
+running egg_info
+creating enigma_machine.egg-info
+writing enigma_machine.egg-info/PKG-INFO
+writing dependency_links to enigma_machine.egg-info/dependency_links.txt
+writing top-level names to enigma_machine.egg-info/top_level.txt
+writing manifest file 'enigma_machine.egg-info/SOURCES.txt'
+reading manifest file 'enigma_machine.egg-info/SOURCES.txt'
+writing manifest file 'enigma_machine.egg-info/SOURCES.txt'
+Built target ament_cmake_python_build_enigma_machine_egg
+-- Install configuration: ""
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/share/enigma_machine/environment/pythonpath.sh
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/share/enigma_machine/environment/pythonpath.dsv
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine-0.0.0-py3.10.egg-info
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine-0.0.0-py3.10.egg-info/PKG-INFO
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine-0.0.0-py3.10.egg-info/top_level.txt
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine-0.0.0-py3.10.egg-info/dependency_links.txt
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine-0.0.0-py3.10.egg-info/SOURCES.txt
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine/module_to_import.py
+-- Installing: /home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine/__init__.py
+Listing '/home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine'...
+Compiling '/home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine/__init__.py'...
+Compiling '/home/isaac/D.A.V.E./ros2_ws/install/enigma_machine/local/lib/python3.10/dist-packages/enigma_machine/module_to_import.py'...
+[31mCMake Error at cmake_install.cmake:70 (file):
+  file INSTALL cannot find
+  "/home/isaac/D.A.V.E./ros2_ws/src/enigma_machine/sripts/py_node.py": No
+  such file or directory.
+
+[0m

@@ -1,0 +1,8 @@
+source;share/enigma_machine/hook/cmake_prefix_path.ps1
+source;share/enigma_machine/hook/cmake_prefix_path.dsv
+source;share/enigma_machine/hook/cmake_prefix_path.sh
+source;share/enigma_machine/local_setup.bash
+source;share/enigma_machine/local_setup.dsv
+source;share/enigma_machine/local_setup.ps1
+source;share/enigma_machine/local_setup.sh
+source;share/enigma_machine/local_setup.zsh
