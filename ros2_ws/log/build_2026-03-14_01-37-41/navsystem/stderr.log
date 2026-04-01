@@ -1,7 +1,0 @@
-[01m[K/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem/src/GPSnode.cpp:14:10:[m[K [01;31m[Kfatal error: [m[Krclcpp: No such file or directory
-   14 | #include [01;31m[K<rclcpp>[m[K
-      |          [01;31m[K^~~~~~~~[m[K
-compilation terminated.
-gmake[2]: *** [CMakeFiles/GPSnode.dir/build.make:76: CMakeFiles/GPSnode.dir/src/GPSnode.cpp.o] Error 1
-gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/GPSnode.dir/all] Error 2
-gmake: *** [Makefile:146: all] Error 2

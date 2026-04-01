@@ -1,8 +1,0 @@
-msg/Bearing.idl
-msg/Bearing.msg
-msg/Position.idl
-msg/Position.msg
-srv/GetSetNav.idl
-srv/GetSetNav.srv
-srv/GetSetNav_Request.msg
-srv/GetSetNav_Response.msg

@@ -1,2 +1,0 @@
-Invoking command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/NAVsystem': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/NAVsystem -- -j16 -l16
-Invoked command in '/home/isaac/Documents/D.A.V.E./ros2_ws/build/NAVsystem' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/isaac/Documents/D.A.V.E./ros2_ws/build/NAVsystem -- -j16 -l16

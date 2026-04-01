@@ -1,8 +1,0 @@
-{
-  "package_name": "navsystem",
-  "non_idl_tuples": [
-    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem:msg/Message.msg",
-    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem:srv/GetNav.srv",
-    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/navsystem:srv/SetNav.srv"
-  ]
-}

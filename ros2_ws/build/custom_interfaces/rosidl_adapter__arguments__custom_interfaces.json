@@ -1,8 +1,0 @@
-{
-  "package_name": "custom_interfaces",
-  "non_idl_tuples": [
-    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/custom_interfaces:msg/Message.msg",
-    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/custom_interfaces:srv/GetNav.srv",
-    "/home/isaac/Documents/D.A.V.E./ros2_ws/src/custom_interfaces:srv/SetNav.srv"
-  ]
-}

@@ -1,4 +1,0 @@
-[0.000000] (-) TimerEvent: {}
-[0.000129] (-) JobUnselected: {'identifier': 'navigation_interfaces'}
-[0.000146] (-) JobUnselected: {'identifier': 'navsystem'}
-[0.000375] (-) EventReactorShutdown: {}
