@@ -1,0 +1,5 @@
+enigma_machine_interfaces/Morse message
+---
+int8 decode_status
+---
+bool success

@@ -1,0 +1,4 @@
+---
+int8 stage_of_detection
+---
+enigma_machine_interfaces/MorseSignal message

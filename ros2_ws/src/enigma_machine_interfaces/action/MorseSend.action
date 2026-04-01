@@ -1,0 +1,5 @@
+string pwm
+---
+int8 morse_transmission_status
+---
+bool success
