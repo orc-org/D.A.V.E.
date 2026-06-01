@@ -1,3 +1,15 @@
+//////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+// NOTE: NODE IS DEPRECATED
+
+// this code is being reworked and repackaged as the NAV node
+
+// do not use
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
+
 // used for functions
 #include <cstdio>
 #include <string>
@@ -347,6 +359,7 @@ string getHome() {
 void setTarget(string coordinates) {
     // Sets target from either local string or GPS string depending on preference
     g_target = translate(coordinates);
+    g_goingHome = false;
 }
 
 void setHome(string coordinates) {
@@ -624,7 +637,7 @@ int getArgumentsCase(string arguments){ //used with the setNav function
 }
 
 //////////////////////////////////////////////////////////////////////////
-// Define Ros Related stuff
+// Define Ros Related stuff (Service functiions)
 //////////////////////////////////////////////////////////////////////////
 
 void getNav(const std::shared_ptr<navigation_interfaces::srv::GetNav::Request> request, std::shared_ptr<navigation_interfaces::srv::GetNav::Response> response){
@@ -708,7 +721,7 @@ void setNav(const std::shared_ptr<navigation_interfaces::srv::SetNav::Request> r
                 RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending Response: '%s'", response->returnedmessage.c_str());
                 break;
 
-            case 5: //toggleSisplayTopicInfo
+            case 5: //toggleDisplayTopicInfo
                 toggleDisplayTopicInfo();
                 response->returnedmessage = "done";
                 RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending Response: '%s'", response->returnedmessage.c_str());
@@ -736,6 +749,16 @@ class GPSnode : public rclcpp::Node {
             getNavServer = this->create_service<navigation_interfaces::srv::GetNav>("GetNav", &getNav);
             setNavServer = this->create_service<navigation_interfaces::srv::SetNav>("SetNav", &setNav);
 
+            getHomeServer = this->create_service<navigation_interfaces::srv::GetHome>("GetHome", &getHome);
+            getTargetServer = this->create_service<navigation_interfaces::srv::GetTarget>("GetTarget", &getTarget);
+            setHomeServer = this->create_service<navigation_interfaces::srv::SetHome>("SetHome", &setHome);
+            setTargetServer = this->create_service<navigation_interfacecs::srv::SetTarget>("SetTarget", &setTarget);
+
+            goHomeServer = this->create_service<navigation_interfaces::srv::GoHome>("goHome", &goHome);
+            serialSendServer = this->create_service<navigation_interfaces::srv::SerialSend>("SerialSend", &serialSend);
+            toggleDisplayTopicInfoServer = this->create_service<navigation_interfaces::srv::ToggleDisplayTopicInfo>("ToggleDisplayTopicInfo", &toggleDisplayTopicInfo);
+            togglePreferenceServer = this->create_service<navigation_interfaces::srv::TogglePreference>("TogglePreferece", &togglePreference);
+
             RCLCPP_INFO(this->get_logger(), "GPS node ready for input");
 
             //set the publishing period and bind to callback
@@ -753,7 +776,7 @@ class GPSnode : public rclcpp::Node {
             positionMessage.position = translate(g_currentPosition);
 
             // Display what is being published
-            if (g_displayTopicInfo) {
+            if (g_displayTopicInfo) {he year,
                 RCLCPP_INFO(this->get_logger(), "Current Coordinates: '%s'   Bearing to Target: '%s'", positionMessage.position.c_str(), bearingMessage.bearing.c_str());
             } 
             
@@ -765,8 +788,12 @@ class GPSnode : public rclcpp::Node {
         //assign pointers to the publisher and server objects
         
         rclcpp::TimerBase::SharedPtr timer_;
+
+        //Topics
         rclcpp::Publisher<navigation_interfaces::msg::BearingString>::SharedPtr bearingPublisher;
         rclcpp::Publisher<navigation_interfaces::msg::PositionString>::SharedPtr positionPublisher;
+
+        //Services
         rclcpp::Service<navigation_interfaces::srv::GetNav>::SharedPtr getNavServer;
         rclcpp::Service<navigation_interfaces::srv::SetNav>::SharedPtr setNavServer;
         
@@ -784,6 +811,7 @@ int main(int argc, char** argv) {
     rclcpp::init(argc, argv);
     rclcpp::spin(std::make_shared<GPSnode>());
     rclcpp::shutdown();
+    
     /*
     
     printf("GPS processor node prototype running.\n");

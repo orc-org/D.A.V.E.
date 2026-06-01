@@ -12,8 +12,22 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BearingString.msg"
   "msg/PositionString.msg"
+  
   "srv/GetNav.srv"
   "srv/SetNav.srv"
+  
+  "srv/GetHome.srv"
+  "srv/SetHome.srv"
+  
+  "srv/GetTarget.srv"
+  "srv/SetTarget.srv"
+
+  "srv/GoHome.srv"
+  "srv/SerialSend.srv"
+
+  "srv/ToggleDisplayTopicInfo.srv"
+  "srv/TogglePreference.srv"
+
 )
 
 ament_export_dependencies(rosidl_default_runtime)
