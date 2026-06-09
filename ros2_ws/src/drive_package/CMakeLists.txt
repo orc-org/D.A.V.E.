@@ -11,20 +11,35 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 # -----------------------------
 # C++ joystick drive node
 # -----------------------------
 add_executable(drive_node src/drive_node.cpp)
-
 ament_target_dependencies(drive_node
   rclcpp
   sensor_msgs
+  std_msgs
+  geometry_msgs
+)
+
+add_executable(stepper_driver_node src/stepper_driver_node.cpp)
+ament_target_dependencies(stepper_driver_node
+  rclcpp
+  std_msgs
+)
+
+add_executable(vesc_driver_node src/vesc_driver_node.cpp)
+ament_target_dependencies(vesc_driver_node
+  rclcpp
   std_msgs
 )
 
 install(TARGETS
   drive_node
+  stepper_driver_node
+  vesc_driver_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
