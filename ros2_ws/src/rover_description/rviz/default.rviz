@@ -1,6 +1,6 @@
 Panels:
   - Class: rviz_common/Displays
-    Help Height: 78
+    Help Height: 138
     Name: Displays
     Property Tree Widget:
       Expanded:
@@ -9,7 +9,7 @@ Panels:
         - /RobotModel1
         - /TF1
       Splitter Ratio: 0.5
-    Tree Height: 617
+    Tree Height: 442
 Visualization Manager:
   Class: ""
   Displays:
@@ -17,7 +17,7 @@ Visualization Manager:
       Cell Size: 1
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
-      Enabled: true
+      Enabled: false
       Line Style:
         Line Width: 0.029999999329447746
         Value: Lines
@@ -30,7 +30,7 @@ Visualization Manager:
       Plane: XY
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz_default_plugins/RobotModel
       Collision Enabled: false
@@ -64,7 +64,37 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        front_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        front_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        left_finger_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         mount_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_left_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        rear_right_wheel_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        right_finger_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -93,7 +123,19 @@ Visualization Manager:
           Value: true
         column_link:
           Value: true
+        front_left_wheel_link:
+          Value: true
+        front_right_wheel_link:
+          Value: true
+        left_finger_link:
+          Value: true
         mount_link:
+          Value: true
+        rear_left_wheel_link:
+          Value: true
+        rear_right_wheel_link:
+          Value: true
+        right_finger_link:
           Value: true
         tool_link:
           Value: true
@@ -111,7 +153,18 @@ Visualization Manager:
               mount_link:
                 actual_arm_link:
                   tool_link:
-                    {}
+                    left_finger_link:
+                      {}
+                    right_finger_link:
+                      {}
+            front_left_wheel_link:
+              {}
+            front_right_wheel_link:
+              {}
+            rear_left_wheel_link:
+              {}
+            rear_right_wheel_link:
+              {}
       Update Interval: 0
       Value: true
   Enabled: true
@@ -160,7 +213,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 62.116966247558594
+      Distance: 24.58742332458496
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -186,7 +239,7 @@ Window Geometry:
   Height: 846
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd000000010000000000000156000002f4fc0200000001fb000000100044006900730070006c006100790073010000003d000002f4000000c900ffffff00000354000002f400000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000100000000000001f7000002b2fc0200000001fb000000100044006900730070006c006100790073010000006e000002b20000018200ffffff000002ad000002b200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Width: 1200
-  X: 674
-  Y: 111
+  X: 1172
+  Y: 167
