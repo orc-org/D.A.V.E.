@@ -160,7 +160,6 @@ function connectROS() {
         
         // Advertise and Subscribe topics
         setupROSInterfaces();
-
         // Load camera streams
         loadCameraStreams();
     });
@@ -173,7 +172,6 @@ function connectROS() {
         connectBtn.className = "neon-btn-blue";
         console.error('Error connecting to Rosbridge: ', error);
         hudLatency.innerText = "-- ms";
-
         // Stop camera streams
         stopStreams();
     });
@@ -187,7 +185,6 @@ function connectROS() {
         console.log('Connection to Rosbridge closed.');
         hudLatency.innerText = "-- ms";
         cleanupROSInterfaces();
-
         // Stop camera streams
         stopStreams();
     });

@@ -1,6 +1,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 #include "std_msgs/msg/float32.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 #include <algorithm>
 
 class JoyDrive : public rclcpp::Node
@@ -12,9 +13,14 @@ public:
             "/joy", 10,
             std::bind(&JoyDrive::joyCallback, this, std::placeholders::_1));
 
-        left_pub_  = this->create_publisher<std_msgs::msg::Float32>("/left_motor_cmd", 10); 
-        right_pub_ = this->create_publisher<std_msgs::msg::Float32>("/right_motor_cmd", 10);
-        //Eventually Publish to virtual controller as well -> (Just made it its own thing in python because c++ is mean)
+        cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+            "/cmd_vel", 10,
+            std::bind(&JoyDrive::cmdVelCallback, this, std::placeholders::_1));
+
+        front_left_pub_  = this->create_publisher<std_msgs::msg::Float32>("/motor/front_left", 10); 
+        front_right_pub_ = this->create_publisher<std_msgs::msg::Float32>("/motor/front_right", 10);
+        rear_left_pub_   = this->create_publisher<std_msgs::msg::Float32>("/motor/rear_left", 10);
+        rear_right_pub_  = this->create_publisher<std_msgs::msg::Float32>("/motor/rear_right", 10);
 
         RCLCPP_INFO(this->get_logger(), "Drive node running");
     }
@@ -77,23 +83,57 @@ private:
         // (Would just cap acceleration to like 50%, make it so bumpers inc/dec the clamp values)
 
         // Send stuff to the topics
-        std_msgs::msg::Float32 lmsg, rmsg;
-        lmsg.data = left;
-        rmsg.data = right;
+        std_msgs::msg::Float32 flmsg, frmsg, rlmsg, rrmsg;
+        flmsg.data = left;
+        rlmsg.data = left;
+        frmsg.data = right;
+        rrmsg.data = right;
 
-        // Publishes to ros2 topic echo /left_motor_cmd (hopefully)
-        left_pub_->publish(lmsg);
-        // Publishes to ros2 topic echo /right_motor_cmd (hopefully)
-        right_pub_->publish(rmsg);
+        front_left_pub_->publish(flmsg);
+        front_right_pub_->publish(frmsg);
+        rear_left_pub_->publish(rlmsg);
+        rear_right_pub_->publish(rrmsg);
         
-        // Tells user the power % to each side (so you dont have to echo the topics)
-        RCLCPP_INFO(this->get_logger(), "\n\n\tMotor Power Levels: \n\nLeft Side Motor Power: %d%% | Right Side Motor Power: %d%%\n", static_cast<int>(left*100.0), static_cast<int>(right*100.0));
+        // Tells user the power % to each motor
+        RCLCPP_INFO(this->get_logger(), "\n\n\tMotor Power Levels: \n\nFront Left: %d%% | Front Right: %d%%\nRear Left:  %d%% | Rear Right:  %d%%\n", 
+                    static_cast<int>(left*100.0), static_cast<int>(right*100.0),
+                    static_cast<int>(left*100.0), static_cast<int>(right*100.0));
 
     }
 
+    void cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
+    {
+        float throttle = msg->linear.x;
+        float steering = msg->angular.z;
+
+        // Simple skid-steer mixing
+        float left = throttle - steering;
+        float right = throttle + steering;
+
+        left  = std::clamp(left,  -1.0f, 1.0f);
+        right = std::clamp(right, -1.0f, 1.0f);
+
+        std_msgs::msg::Float32 flmsg, frmsg, rlmsg, rrmsg;
+        flmsg.data = left;
+        rlmsg.data = left;
+        frmsg.data = right;
+        rrmsg.data = right;
+
+        front_left_pub_->publish(flmsg);
+        front_right_pub_->publish(frmsg);
+        rear_left_pub_->publish(rlmsg);
+        rear_right_pub_->publish(rrmsg);
+
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+            "cmd_vel -> Left Wheels: %.2f | Right Wheels: %.2f", left, right);
+    }
+
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr left_pub_;
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr right_pub_;
+    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr front_left_pub_;
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr front_right_pub_;
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr rear_left_pub_;
+    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr rear_right_pub_;
 };
 
 int main(int argc, char **argv)
