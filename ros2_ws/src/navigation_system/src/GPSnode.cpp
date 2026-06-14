@@ -601,7 +601,7 @@ int getArgumentsCase(string arguments){ //used with the setNav function
         argCase = 0;
     } 
     //check if there are 1 or 2 arguments 
-    else if (arguments.find(",") != string::npos) { //no comma present (i.e. only one argument is passed and it must be our password)
+    else if (arguments.find(",") == string::npos) { //no comma present (i.e. only one argument is passed and it must be our password)
             argCase = 1;
     }
     else{ //there's a comma present (i.e. it could contain a string or a string and a password)
@@ -651,9 +651,26 @@ void setNav(const std::shared_ptr<navigation_interfaces::srv::SetNav::Request> r
     //determine what arguments were passed (needed to deal with overloaded functions, but also helps to catch errors before they occur)
     int argumentCase = getArgumentsCase(request->arguments);
 
-    if ((selection != 1 && argumentCase !=0) || ((selection == 0 || selection == 3) && (argumentCase !=2))){ // check for errors (since not all function can take all arguments)
+    bool has_error = false;
+    if (selection == -1) {
+        has_error = true;
+    } else if (selection == 0 || selection == 3) {
+        if (argumentCase != 2) {
+            has_error = true;
+        }
+    } else if (selection == 1) {
+        if (argumentCase < 0 || argumentCase > 3) {
+            has_error = true;
+        }
+    } else {
+        if (argumentCase != 0) {
+            has_error = true;
+        }
+    }
+
+    if (has_error){ // check for errors (since not all function can take all arguments)
         response->returnedmessage = "error";
-            RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "error in request");
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "error in request");
     }
     else{
         switch (selection) {
@@ -671,8 +688,12 @@ void setNav(const std::shared_ptr<navigation_interfaces::srv::SetNav::Request> r
                         break;
 
                     case (1): //just a password is passed
-                        setHome(stoi(request->arguments));
-                        response->returnedmessage = "done";
+                        try {
+                            setHome(stoi(request->arguments));
+                            response->returnedmessage = "done";
+                        } catch (const std::exception& e) {
+                            response->returnedmessage = "error";
+                        }
                         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending Response: '%s'", response->returnedmessage.c_str());
                         break;
 
@@ -683,8 +704,19 @@ void setNav(const std::shared_ptr<navigation_interfaces::srv::SetNav::Request> r
                         break;
 
                     case (3): //a string of coordinates and a password
-                        setHome(request->arguments, stoi(request->arguments));
-                        response->returnedmessage = "done";
+                        try {
+                            size_t lastcomma = request->arguments.rfind(",");
+                            if (lastcomma != string::npos) {
+                                string coords = request->arguments.substr(0, lastcomma);
+                                int pwd = stoi(request->arguments.substr(lastcomma + 1));
+                                setHome(coords, pwd);
+                                response->returnedmessage = "done";
+                            } else {
+                                response->returnedmessage = "error";
+                            }
+                        } catch (const std::exception& e) {
+                            response->returnedmessage = "error";
+                        }
                         RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Sending Response: '%s'", response->returnedmessage.c_str());
                         break;
                 }

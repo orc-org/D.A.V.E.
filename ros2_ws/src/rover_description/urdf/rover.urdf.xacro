@@ -130,6 +130,7 @@
       </geometry>
       <material name="red"/>
     </visual>
+    <!-- visual crossbar pinion indicator to see the rotation -->
     <visual>
       <origin xyz="0 0 0.05" rpy="0 0 0"/>
       <geometry>

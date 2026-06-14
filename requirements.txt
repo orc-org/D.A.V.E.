@@ -1,0 +1,4 @@
+# Python dependencies for the D.A.V.E. rover system
+numpy
+matplotlib
+pyyaml
