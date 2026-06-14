@@ -2,7 +2,20 @@
 #include <string>
 #include <array>
 #include <chrono>
+#include <thread>
+#include <functional>
+#include <memory>
 
+#include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
+
+#include "enigma_machine_interfaces/msg/morse.hpp"
+#include "enigma_machine_interfaces/msg/morse_signal.hpp"
+#include "enigma_machine_interfaces/srv/get_password.hpp"
+#include "enigma_machine_interfaces/srv/set_message.hpp"
+#include "enigma_machine_interfaces/action/decode.hpp"
+#include "enigma_machine_interfaces/action/encode.hpp"
+#include "arm_interfaces/action/gripper_command.hpp"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -122,7 +135,7 @@ Description:
 */
 
 
-class EnigmaMachine {
+class EnigmaMachine : public rclcpp::Node {
 //////////////////////////////////////////////////////////////////////////
 // Attributes
 /////////////////////////////////////////////////////////////////////////
@@ -148,40 +161,215 @@ int largeSpaceLength;  // to store how long in between words (not sure if this i
 int decodeCase = 1;    // to allow us to switch between decoding methods (just incase there's a formatting issue with the terminal password)
 int encodeCase = 1;    // to allow us to switch between encoding methods (just incase there's a formatting issue with the vault password)
 
+// ROS 2 Interfaces
+rclcpp_action::Server<enigma_machine_interfaces::action::Decode>::SharedPtr decode_action_server_;
+rclcpp_action::Server<enigma_machine_interfaces::action::Encode>::SharedPtr encode_action_server_;
+rclcpp::Service<enigma_machine_interfaces::srv::GetPassword>::SharedPtr get_password_srv_;
+rclcpp::Service<enigma_machine_interfaces::srv::SetMessage>::SharedPtr set_message_srv_;
+rclcpp::Subscription<enigma_machine_interfaces::msg::Morse>::SharedPtr morse_sub_;
+rclcpp_action::Client<arm_interfaces::action::GripperCommand>::SharedPtr gripper_client_;
+
+public:
+    EnigmaMachine() : Node("enigma_machine"), treeRoot(nullptr) {
+        setupMorseTable();
+
+        // Subscribe to /morse_code published by morse_recorder node
+        morse_sub_ = this->create_subscription<enigma_machine_interfaces::msg::Morse>(
+            "/morse_code", 10,
+            std::bind(&EnigmaMachine::morseCallback, this, std::placeholders::_1)
+        );
+
+        // GetPassword service returns the current decoded terminalPassword
+        get_password_srv_ = this->create_service<enigma_machine_interfaces::srv::GetPassword>(
+            "get_password",
+            std::bind(&EnigmaMachine::handleGetPassword, this, std::placeholders::_1, std::placeholders::_2)
+        );
+
+        // SetMessage service sets the message and encodes it to morse
+        set_message_srv_ = this->create_service<enigma_machine_interfaces::srv::SetMessage>(
+            "set_message",
+            std::bind(&EnigmaMachine::handleSetMessage, this, std::placeholders::_1, std::placeholders::_2)
+        );
+
+        // Action servers
+        decode_action_server_ = rclcpp_action::create_server<enigma_machine_interfaces::action::Decode>(
+            this,
+            "decode",
+            std::bind(&EnigmaMachine::handle_decode_goal, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&EnigmaMachine::handle_decode_cancel, this, std::placeholders::_1),
+            std::bind(&EnigmaMachine::handle_decode_accepted, this, std::placeholders::_1)
+        );
+
+        encode_action_server_ = rclcpp_action::create_server<enigma_machine_interfaces::action::Encode>(
+            this,
+            "encode",
+            std::bind(&EnigmaMachine::handle_encode_goal, this, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&EnigmaMachine::handle_encode_cancel, this, std::placeholders::_1),
+            std::bind(&EnigmaMachine::handle_encode_accepted, this, std::placeholders::_1)
+        );
+
+        gripper_client_ = rclcpp_action::create_client<arm_interfaces::action::GripperCommand>(
+            this,
+            "gripper_command"
+        );
+
+        RCLCPP_INFO(this->get_logger(), "Enigma Machine Node initialized.");
+    }
+
+    ~EnigmaMachine() {
+        deleteTree(treeRoot);
+    }
+
+    void deleteTree(TrieNode *node) {
+        if (node == nullptr) return;
+        deleteTree(node->leftChild);
+        deleteTree(node->rightChild);
+        delete node;
+    }
 
 //////////////////////////////////////////////////////////////////////////
 // Getters
 /////////////////////////////////////////////////////////////////////////
 
-string getPassword(){
-    return terminalPassword;
-}
+    string getPassword(){
+        return terminalPassword;
+    }
 
-string getMessage(){
-    return message;
-}
+    string getMessage(){
+        return message;
+    }
 
-string getMorseMessage(){
-    return morseMessage;
-}
+    string getMorseMessage(){
+        return morseMessage;
+    }
 
 //////////////////////////////////////////////////////////////////////////
 // Setters
 /////////////////////////////////////////////////////////////////////////
 
-void setMessage(string message){
-    message = message;
-}
+    void setMessage(string msg){
+        message = msg;
+    }
 
-void setMorseMessage(string message){
-    morseMessage = message;
-}
+    void setMorseMessage(string msg){
+        morseMessage = msg;
+    }
+
+    // --- ROS 2 Callback Implementations ---
+
+    // Services
+    void handleGetPassword(
+        const std::shared_ptr<enigma_machine_interfaces::srv::GetPassword::Request> request,
+        std::shared_ptr<enigma_machine_interfaces::srv::GetPassword::Response> response)
+    {
+        (void)request;
+        response->password = terminalPassword;
+    }
+
+    void handleSetMessage(
+        const std::shared_ptr<enigma_machine_interfaces::srv::SetMessage::Request> request,
+        std::shared_ptr<enigma_machine_interfaces::srv::SetMessage::Response> response)
+    {
+        (void)response;
+        message = request->message;
+        morseMessage = encode(message);
+        RCLCPP_INFO(this->get_logger(), "Message set to '%s' | Encoded: %s", message.c_str(), morseMessage.c_str());
+    }
+
+    // Subscription
+    void morseCallback(const enigma_machine_interfaces::msg::Morse::SharedPtr msg)
+    {
+        string decoded = decode(msg->message);
+        terminalPassword = decoded;
+        RCLCPP_INFO(this->get_logger(), "Received Morse: '%s' | Decoded: '%s'", msg->message.c_str(), decoded.c_str());
+    }
+
+    // Decode Action
+    rclcpp_action::GoalResponse handle_decode_goal(
+        const rclcpp_action::GoalUUID & uuid,
+        std::shared_ptr<const enigma_machine_interfaces::action::Decode::Goal> goal)
+    {
+        (void)uuid;
+        (void)goal;
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    }
+
+    rclcpp_action::CancelResponse handle_decode_cancel(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<enigma_machine_interfaces::action::Decode>> goal_handle)
+    {
+        (void)goal_handle;
+        return rclcpp_action::CancelResponse::ACCEPT;
+    }
+
+    void handle_decode_accepted(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<enigma_machine_interfaces::action::Decode>> goal_handle)
+    {
+        std::thread{std::bind(&EnigmaMachine::execute_decode, this, std::placeholders::_1), goal_handle}.detach();
+    }
+
+    void execute_decode(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<enigma_machine_interfaces::action::Decode>> goal_handle)
+    {
+        auto goal = goal_handle->get_goal();
+        auto feedback = std::make_shared<enigma_machine_interfaces::action::Decode::Feedback>();
+        auto result = std::make_shared<enigma_machine_interfaces::action::Decode::Result>();
+
+        feedback->success = true; // running/active
+        goal_handle->publish_feedback(feedback);
+
+        string decoded = decode(goal->message.message);
+        terminalPassword = decoded;
+
+        result->decode_status = 1;
+        goal_handle->succeed(result);
+        RCLCPP_INFO(this->get_logger(), "Decode action succeeded. Decoded: '%s'", decoded.c_str());
+    }
+
+    // Encode Action
+    rclcpp_action::GoalResponse handle_encode_goal(
+        const rclcpp_action::GoalUUID & uuid,
+        std::shared_ptr<const enigma_machine_interfaces::action::Encode::Goal> goal)
+    {
+        (void)uuid;
+        (void)goal;
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    }
+
+    rclcpp_action::CancelResponse handle_encode_cancel(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<enigma_machine_interfaces::action::Encode>> goal_handle)
+    {
+        (void)goal_handle;
+        return rclcpp_action::CancelResponse::ACCEPT;
+    }
+
+    void handle_encode_accepted(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<enigma_machine_interfaces::action::Encode>> goal_handle)
+    {
+        std::thread{std::bind(&EnigmaMachine::execute_encode, this, std::placeholders::_1), goal_handle}.detach();
+    }
+
+    void execute_encode(
+        const std::shared_ptr<rclcpp_action::ServerGoalHandle<enigma_machine_interfaces::action::Encode>> goal_handle)
+    {
+        auto goal = goal_handle->get_goal();
+        auto feedback = std::make_shared<enigma_machine_interfaces::action::Encode::Feedback>();
+        auto result = std::make_shared<enigma_machine_interfaces::action::Encode::Result>();
+
+        feedback->success = true; // running/active
+        goal_handle->publish_feedback(feedback);
+
+        morseMessage = encode(goal->message.message);
+
+        result->encode_status = 1;
+        goal_handle->succeed(result);
+        RCLCPP_INFO(this->get_logger(), "Encode action succeeded. Morse: '%s'", morseMessage.c_str());
+    }
 
 //////////////////////////////////////////////////////////////////////////
 // Other Functions
 /////////////////////////////////////////////////////////////////////////
 
-void testingProtocol1(string message);
+    void testingProtocol1(string message);
 
 string decode(string message){
     //look for where the word "stop" appears in the message and work back from there
@@ -201,7 +389,7 @@ string decode(string message){
         
         //implementation for if we assume a 1 word password ("stop" to end password)
         case 1:
-
+        {
             // set up start and end indices so we are looking inbetween two occurances of the word "stop"
             int start = message.find(stop) + stop.length() + 1; // +1 to account for space after stop
             int end = message.find(stop, start);
@@ -226,11 +414,12 @@ string decode(string message){
                 }
             }
             break;
+        }
 
             //implementation for a multi word password with "stop" to denote the end of a password (will also work for single word password with "stop")
         case 2: 
-
-            for (int j = 0; j < message.length(); j++){
+        {
+            for (unsigned int j = 0; j < message.length(); j++){
 
                 // set up start and end indices so we are looking inbetween two occurances of the word "stop"
                 int start = message.find(stop) + stop.length() + 1; // +1 to account for space after stop
@@ -262,7 +451,7 @@ string decode(string message){
 
                 // find first word of password
                 if (!firstWordFound){
-                    firstWordFound == true;
+                    firstWordFound = true;
                     firstWord = nextWord;
                     decodedMessage.append(firstWord);
                 } 
@@ -278,18 +467,20 @@ string decode(string message){
 
             }
             break;
+        }
 
         
         
         //implementation for a multi word password without "stop" (will also work for single word password without "stop")
         case 3:
+        {
             int start = message.find("  ") + 1;  // since multiple spaces will be denote separate word (+1 to account for indexing of the second space)
             int end = message.find("  ", start); // find the end of the next word
             
             // we're using a for loop here to avoid an infinite loop in the case that we misread the password
             // for example, if the first word was stored as _thing instead of thing, this might not detect when the password repeats
             // if its searching for a space that is never recorded
-            for (int j = 0; j < message.length(); j++){
+            for (unsigned int j = 0; j < message.length(); j++){
                 //find next word in password
                 string nextWord = "";
                 for (int  i = start; i < end; i++){
@@ -316,7 +507,7 @@ string decode(string message){
 
                 // find first word of password
                 if (!firstWordFound){
-                    firstWordFound == true;
+                    firstWordFound = true;
                     firstWord = nextWord;
                     decodedMessage.append(firstWord);
                 } 
@@ -333,13 +524,15 @@ string decode(string message){
             }
             break;
         }
+        }
     }
-    current = 0;
+    current = nullptr;
 
     if (activateTestingProtocol2){
         encode (decodedMessage);
         sendToAppendage();
     }
+    return decodedMessage;
 }
 
 
@@ -348,6 +541,10 @@ string encode(string message){
     string stop = "*** - --- *--*";
     string encodedMessage = "";
     
+    // convert message to lowercase
+    for (char &c : message) {
+        c = tolower(c);
+    }
     
     //implementation for if we assume a 1 line password ("stop" to end password)
     for (unsigned int i = 0; i < message.length(); i++){
@@ -361,19 +558,24 @@ string encode(string message){
 
         switch (testCase){
             case 0: //letter
-                encodedMessage.append(letters[i - 97]);
+                encodedMessage.append(letters[letter - 97]);
+                encodedMessage.append(" ");
                 break;
             case 1: //number
-                encodedMessage.append(letters[i - 22]);
+                encodedMessage.append(letters[letter - 22]);
+                encodedMessage.append(" ");
                 break;
             case 2: //period
                 encodedMessage.append(letters[36]);
+                encodedMessage.append(" ");
                 break;
             case 3: //comma
                 encodedMessage.append(letters[37]);
+                encodedMessage.append(" ");
                 break;
             case 4: //Question mark
                 encodedMessage.append(letters[38]);
+                encodedMessage.append(" ");
                 break;
             case 5: //space
                 encodedMessage.append(" ");
@@ -395,55 +597,90 @@ string encode(string message){
         case 2:
             //add code here if it is needed
             break;
-
+        
         //blank case for if CIRC throws us a curve ball
         case 3: 
             //add code if needed
             break;
     }
-    
+    return encodedMessage;
+}
+
+void sendGripperGoal(double position) {
+    auto goal_msg = arm_interfaces::action::GripperCommand::Goal();
+    goal_msg.position = position;
+    gripper_client_->async_send_goal(goal_msg);
 }
 
 void sendToAppendage(){
     // send the translated message to the appendage
+    // Run in a separate thread to avoid blocking the main spinner
+    std::thread([this]() {
+        if (!gripper_client_->wait_for_action_server(std::chrono::seconds(2))) {
+            RCLCPP_ERROR(this->get_logger(), "Gripper action server not available in sendToAppendage");
+            return;
+        }
 
+        RCLCPP_INFO(this->get_logger(), "Tapping out Morse Message: %s", morseMessage.c_str());
+
+        for (char c : morseMessage) {
+            if (c == '*') {
+                RCLCPP_INFO(this->get_logger(), "Tapping DIT (*)");
+                sendGripperGoal(1.0); // tap down
+                std::this_thread::sleep_for(1200ms); // 1.0s to close + 200ms hold
+                sendGripperGoal(0.0); // release
+                std::this_thread::sleep_for(1200ms); // 1.0s to open + 200ms rest
+            } else if (c == '-') {
+                RCLCPP_INFO(this->get_logger(), "Tapping DAW (-)");
+                sendGripperGoal(1.0); // tap down
+                std::this_thread::sleep_for(1600ms); // 1.0s to close + 600ms hold
+                sendGripperGoal(0.0); // release
+                std::this_thread::sleep_for(1200ms); // 1.0s to open + 200ms rest
+            } else if (c == ' ') {
+                RCLCPP_INFO(this->get_logger(), "Resting (space)");
+                std::this_thread::sleep_for(600ms); // space rest
+            }
+        }
+        RCLCPP_INFO(this->get_logger(), "Finished tapping out message.");
+    }).detach();
 }
 
-void testingProtocol1(string message){
-    /* this method will be used when testing the capabilities of this node to accurately decode morse code
-       I will make 2 practice morse keys that will illuminate an LED, one for the tester and one for D.A.V.E to use
-       
-       to test, first call the toggleTestMode() method to enable test mode (disabled by default)
 
-       the tester can input some message onto their morse key, 
-       D.A.V.E will then detect the flashing LED, decipher the message and then reply with a specified response phrase
-       
-       since we're not simply having the rover repeat what we said to it, but reply with something else
-       we're testing how well it interperets morse, not just its ability to replicate it
 
-       example tests:
-            Tester:  "HelloThere"
-            D.A.V.E: "GeneralKenobi"
-            
-            Tester:  "apple"
-            D.A.V.E: "fruit"
+void setupMorseTable();
 
-            Tester:  "WhatYou"
-            D.A.V.E: "egg"
+void toggleTestMode1(){
+    activateTestingProtocol1 = !activateTestingProtocol1;
+}
 
-            Tester:  "1468"
-            D.A.V.E: "8641"
+void toggleTestMode2(){
+    activateTestingProtocol2 = !activateTestingProtocol2;
+}
 
-        the only downside to this testing method is that the tester must be able to use morse code (or atleast decifer it given enough time)
-     */
+// 3 separate decode cases
+void toggleDecodeCase(){
+    decodeCase++;
+    if (decodeCase == 4)
+        decodeCase = 1;
+}
 
-    // generate an integer based on which message is received to allow us to switch on strings
+// 3 separate encode cases 
+void toggleEncodeCase(){
+    encodeCase++;
+    if (encodeCase == 4)
+        encodeCase = 1;
+}
+
+
+
+};
+
+void EnigmaMachine::testingProtocol1(string message){
     int testCase = (message == "Hello There") ? 0 : 
                     (message == "apple") ? 1 :
                     (message == "WhatYou") ? 2 :
                     (message == "1468") ? 3 : -1;
 
-    // select appropriate response based on the message received
     switch (testCase){
         case 0:
             setMessage("General Kenobi");
@@ -465,31 +702,7 @@ void testingProtocol1(string message){
     sendToAppendage();    
 }
 
-void setupMorseTable();
-
-void toggleTestMode1(){
-    activateTestingProtocol1 = !activateTestingProtocol1;
-}
-
-void toggleTestMode2(){
-    activateTestingProtocol2 = !activateTestingProtocol2;
-}
-
-// 3 separate decode cases
-void toggleDecodeCase(){
-    decodeCase++;
-    if (decodeCase == 4)
-        decodeCase == 1;
-}
-
-// 3 separate encode cases 
-void toggleEncodeCase(){
-    encodeCase++;
-    if (encodeCase == 4)
-        encodeCase == 1;
-}
-
-void setupMorseTable(){
+void EnigmaMachine::setupMorseTable(){
     // setup for translating from letter to morse code
     letters[0]  = "*-";     //a
     letters[1]  = "-***";   //b
@@ -618,8 +831,6 @@ void setupMorseTable(){
 
 }
 
-};
-
 
 //////////////////////////////////////////////////////////////////////////
 // TO-DO
@@ -646,9 +857,8 @@ void setupMorseTable(){
 
 int main(int argc, char ** argv)
 {
-  (void) argc;
-  (void) argv;
-
-
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<EnigmaMachine>());
+  rclcpp::shutdown();
   return 0;
 }
