@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>D.A.V.E. Rover Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script>
+        // Diagnostic error logging directly inside the page viewport
+        window.addEventListener('error', function(e) {
+            const container = document.getElementById('urdf-viewer') || document.body || document.documentElement;
+            if (!container) return;
+            const errDiv = document.createElement('div');
+            errDiv.style.cssText = 'color: #ff3366; font-family: monospace; font-size: 0.85rem; padding: 15px; background: rgba(15,0,0,0.95); border-left: 3px solid #ff3366; margin: 10px; z-index: 9999; position: relative; width: calc(100% - 20px); text-align: left;';
+            if (e.target && (e.target.src || e.target.href)) {
+                errDiv.innerText = '⚠️ RESOURCE LOAD ERROR: Failed to fetch ' + (e.target.src || e.target.href);
+            } else {
+                errDiv.innerText = '❌ JS RUNTIME ERROR: ' + e.message + '\nSource: ' + e.filename + ':' + e.lineno;
+            }
+            container.appendChild(errDiv);
+        }, true);
+
+        // Redirect console outputs to onscreen diagnostic console
+        (function() {
+            const originalLog = console.log;
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            
+            function appendToDiag(type, args) {
+                const consoleDiv = document.getElementById('diagnostic-console');
+                if (!consoleDiv) return;
+
+                const msg = Array.from(args).map(x => {
+                    if (typeof x === 'object') {
+                        try { return JSON.stringify(x); } catch(e) { return String(x); }
+                    }
+                    return String(x);
+                }).join(' ');
+
+                // Ignore projector warnings that flood the console
+                if (msg.includes('THREE.Projector') || msg.includes('unprojectVector')) {
+                    return;
+                }
+
+                const entry = document.createElement('div');
+                entry.style.borderBottom = '1px solid rgba(255, 204, 0, 0.1)';
+                entry.style.padding = '2px 0';
+                if (type === 'error') {
+                    entry.style.color = '#ff3366';
+                } else if (type === 'warn') {
+                    entry.style.color = '#ffaa00';
+                } else {
+                    entry.style.color = '#00ffcc';
+                }
+                entry.innerText = `[${new Date().toLocaleTimeString()}] [${type.toUpperCase()}] ${msg}`;
+                consoleDiv.appendChild(entry);
+                consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            }
+
+            console.log = function() {
+                originalLog.apply(console, arguments);
+                appendToDiag('log', arguments);
+            };
+            console.warn = function() {
+                originalWarn.apply(console, arguments);
+                appendToDiag('warn', arguments);
+            };
+            console.error = function() {
+                originalError.apply(console, arguments);
+                appendToDiag('error', arguments);
+            };
+            
+            window.addEventListener('unhandledrejection', function(event) {
+                appendToDiag('error', ['Unhandled Promise Rejection:', event.reason]);
+            });
+        })();
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <!-- EventEmitter2 & ROSlibJS & ThreeJS & ROS3DJS CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/eventemitter2@6.4.9/lib/eventemitter2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.89.0/build/three.min.js"></script>
+    <script>
+        // Polyfill EventDispatcher.apply for compatibility between Three.js >= r84 and ros3djs
+        if (typeof THREE !== 'undefined' && THREE.EventDispatcher && !THREE.EventDispatcher.prototype.apply) {
+            THREE.EventDispatcher.prototype.apply = function (target) {
+                target.addEventListener = THREE.EventDispatcher.prototype.addEventListener;
+                target.hasEventListener = THREE.EventDispatcher.prototype.hasEventListener;
+                target.removeEventListener = THREE.EventDispatcher.prototype.removeEventListener;
+                target.dispatchEvent = THREE.EventDispatcher.prototype.dispatchEvent;
+            };
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/ros3d@0.17.0/build/ros3d.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- HEADER -->
+        <header class="dashboard-header" style="justify-content: flex-end;">
+            <!-- Gamepad Live Input Display -->
+            <div id="gamepad-inputs-display" class="connection-panel glass-panel hidden" style="margin-right: 15px; font-family: monospace; font-size: 0.75rem; color: var(--text-muted); gap: 12px; padding: 10px 18px; align-items: center; justify-content: center; height: 38px; box-sizing: border-box; min-width: 320px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: var(--accent-blue); font-weight: bold;">L-STICK:</span>
+                    <span id="gamepad-val-l" style="color: var(--text-main); min-width: 90px; display: inline-block;">X: 0.00 Y: 0.00</span>
+                </div>
+                <div style="border-left: 1px solid var(--border-color); height: 16px;"></div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: var(--accent-blue); font-weight: bold;">R-STICK Y:</span>
+                    <span id="gamepad-val-r" style="color: var(--text-main); min-width: 40px; display: inline-block;">0.00</span>
+                </div>
+                <div style="border-left: 1px solid var(--border-color); height: 16px;"></div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: var(--accent-blue); font-weight: bold;">BTNS:</span>
+                    <span id="gamepad-val-btns" style="color: var(--accent-amber); font-weight: bold; min-width: 50px; display: inline-block; text-align: center;">-</span>
+                </div>
+            </div>
+
+            <!-- Gamepad Status Panel -->
+            <div class="connection-panel glass-panel" style="margin-right: 15px;">
+                <span class="status-indicator disconnected" id="gamepad-status-dot"></span>
+                <span class="status-text" id="gamepad-status-text">NO GAMEPAD</span>
+            </div>
+            
+            <!-- Connection Control Panel -->
+            <div class="connection-panel glass-panel">
+                <span class="status-indicator disconnected" id="connection-status-dot"></span>
+                <span class="status-text" id="connection-status-text">DISCONNECTED</span>
+                <input type="text" id="rosbridge-url" value="ws://localhost:9090" placeholder="ws://localhost:9090">
+                <button id="btn-connect" class="neon-btn-blue">CONNECT</button>
+            </div>
+        </header>
+
+        <!-- MAIN GRID -->
+        <main class="dashboard-grid">
+            
+            <!-- LEFT COLUMN: Live Feed Viewport -->
+            <section class="viewport-section glass-panel">
+                <div class="panel-header">
+                    <h2>CAMERA VIEWPORT</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <button id="btn-toggle-view" class="neon-btn-blue" style="padding: 4px 8px; font-size: 0.75rem;">SHOW 3D VIEW</button>
+                        <select id="camera-view-mode" class="neon-select hidden" style="padding: 4px 8px; font-size: 0.75rem; background: var(--bg-secondary); color: var(--accent-blue); border: 1px solid var(--border-color); border-radius: 4px; font-family: monospace; cursor: pointer; outline: none;">
+                            <option value="free">FREECAM</option>
+                            <option value="orbit">ORBIT LOCK</option>
+                            <option value="chase">CHASE CAM</option>
+                        </select>
+                        <span class="system-tag">CAM_FEED_01</span>
+                    </div>
+                </div>
+                
+                <!-- Simple Viewport container -->
+                <div class="camera-viewport" id="viewport-container" style="display: flex; align-items: center; justify-content: center; background: #000; color: #8fa0ba; font-family: monospace; font-size: 1rem; letter-spacing: 1.5px;">
+                    NO CAMERA FEED
+                </div>
+
+                <!-- 3D URDF Viewer container -->
+                <div class="camera-viewport hidden" id="urdf-viewer-container" style="background: #000; position: relative; min-height: 350px; flex-grow: 1; display: flex; flex-direction: column;">
+                    <div id="urdf-viewer" style="width: 100%; height: 100%; flex-grow: 1;"></div>
+                    <!-- Diagnostic Console Overlay -->
+                    <div id="diagnostic-console" style="position: absolute; bottom: 10px; right: 10px; width: calc(100% - 20px); max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.85); border: 1px solid #ffcc00; font-family: monospace; font-size: 0.65rem; color: #ffcc00; padding: 5px; z-index: 1000; pointer-events: auto; text-align: left; box-sizing: border-box;">
+                        [Diagnostics console active]
+                    </div>
+                </div>
+
+                <!-- Hidden elements to satisfy JS references safely -->
+                <div style="display: none;">
+                    <span id="hud-latency"></span>
+                    <span id="hud-fps"></span>
+                    <span id="hud-mode"></span>
+                    <span id="hud-target-coords"></span>
+                    <span id="hud-pitch"></span>
+                    <span id="hud-roll"></span>
+                </div>
+            </section>
+
+            <!-- RIGHT COLUMN: Telemetry & Controls -->
+            <div class="controls-column">
+                
+                <!-- Panel 1: Telemetry Data -->
+                <section class="telemetry-section glass-panel">
+                    <div class="panel-header">
+                        <h2>SYSTEM TELEMETRY</h2>
+                        <span class="system-tag">SENSORS</span>
+                    </div>
+                    <div class="telemetry-grid">
+                        <div class="telemetry-card">
+                            <span class="card-label">TOOL TIP POSITION</span>
+                            <span class="card-value" id="val-tooltip-pos">X: --, Y: --, Z: --</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="card-label">BASE POSITION</span>
+                            <span class="card-value" id="val-base-pos">X: 0.00, Y: 0.00</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="card-label">BASE HEADING</span>
+                            <span class="card-value" id="val-base-yaw">0.00 rad (0.0°)</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="card-label">ARM JOINT ANGLE</span>
+                            <span class="card-value" id="val-arm-joint">0.000 rad</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="card-label">GRIPPER POSITION</span>
+                            <span class="card-value" id="val-gripper-spacing">0.200 m (OPEN)</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="card-label">WHEEL SPEED RATIO</span>
+                            <span class="card-value" id="val-wheel-speed">FL: 0%, FR: 0%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Panel 1.5: Wheel Power Monitor -->
+                <section class="wheel-power-section glass-panel">
+                    <div class="panel-header">
+                        <h2>WHEEL POWER MONITOR</h2>
+                        <span class="system-tag">ACTUATORS</span>
+                    </div>
+                    <div class="wheel-power-monitor">
+                        <!-- Left Wheels -->
+                        <span class="wheel-label label-fl">FL</span>
+                        <div class="rover-wheel wheel-fl">
+                            <div class="wheel-power-fill" id="wheel-fill-fl"></div>
+                        </div>
+                        <span class="wheel-power-val val-fl" id="wheel-val-fl">0%</span>
+
+                        <span class="wheel-label label-rl">RL</span>
+                        <div class="rover-wheel wheel-rl">
+                            <div class="wheel-power-fill" id="wheel-fill-rl"></div>
+                        </div>
+                        <span class="wheel-power-val val-rl" id="wheel-val-rl">0%</span>
+
+                        <!-- Right Wheels -->
+                        <span class="wheel-label label-fr">FR</span>
+                        <div class="rover-wheel wheel-fr">
+                            <div class="wheel-power-fill" id="wheel-fill-fr"></div>
+                        </div>
+                        <span class="wheel-power-val val-fr" id="wheel-val-fr">0%</span>
+
+                        <span class="wheel-label label-rr">RR</span>
+                        <div class="rover-wheel wheel-rr">
+                            <div class="wheel-power-fill" id="wheel-fill-rr"></div>
+                        </div>
+                        <span class="wheel-power-val val-rr" id="wheel-val-rr">0%</span>
+
+                        <!-- Rover Chassis Box -->
+                        <div class="chassis-box">
+                            <div class="chassis-telemetry">
+                                <span style="font-size: 0.55rem; letter-spacing: 1.5px; color: var(--accent-blue); font-weight: bold; margin-bottom: 5px;">D.A.V.E. ROVER</span>
+                                <div>LINEAR VEL</div>
+                                <div class="telemetry-val" id="wheel-mon-linear">0.00 m/s</div>
+                                <div style="margin-top: 8px;">ANGULAR VEL</div>
+                                <div class="telemetry-val" id="wheel-mon-angular">0.00 rad/s</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Panel 2: Mode Selection -->
+                <section class="mode-section glass-panel">
+                    <div class="panel-header">
+                        <h2>CONTROL MODE SELECTION</h2>
+                        <span class="system-tag">DECISION_LOGIC</span>
+                    </div>
+                    <div class="mode-toggles">
+                        <button id="btn-mode-auto" class="mode-btn">AUTO (IK ON)</button>
+                        <button id="btn-mode-manual" class="mode-btn active">MANUAL (IK OFF)</button>
+                    </div>
+                    <p class="mode-description" id="mode-desc-text">
+                        Manual Mode: Directly steer the rover using keyboard (WASD / Arrows) or the virtual joystick. The motion coordinator solver is disabled.
+                    </p>
+                </section>
+
+                <!-- Panel 2.2: System Process Manager -->
+                <section class="module-manager-section glass-panel">
+                    <div class="panel-header collapsible-header" id="btn-toggle-modules" style="cursor: pointer; user-select: none;">
+                        <h2>SYSTEM PROCESS MONITOR</h2>
+                        <span class="collapse-icon" id="modules-collapse-icon">▼</span>
+                    </div>
+                    <div class="module-list" id="modules-drawer">
+                        <!-- Populated dynamically from ROS process status topic -->
+                    </div>
+                </section>
+
+                <!-- Panel 2.5: Sensitivity Settings (Submenu) -->
+                <section class="sensitivity-section glass-panel">
+                    <div class="panel-header collapsible-header" id="btn-toggle-sensitivity" style="cursor: pointer; user-select: none;">
+                        <h2>SENSITIVITY SETTINGS</h2>
+                        <span class="collapse-icon collapsed" id="sensitivity-collapse-icon">▼</span>
+                    </div>
+                    <div class="sensitivity-content collapsed" id="sensitivity-drawer">
+                        <div class="slider-wrapper" style="margin-bottom: 12px;">
+                            <label for="slider-linear-sens">LINEAR SPEED SCALE: <span id="lbl-linear-sens">0.8</span></label>
+                            <input type="range" id="slider-linear-sens" min="0.1" max="2.0" step="0.1" value="0.8">
+                        </div>
+                        <div class="slider-wrapper" style="margin-bottom: 12px;">
+                            <label for="slider-angular-sens">ANGULAR SPEED SCALE: <span id="lbl-angular-sens">1.0</span></label>
+                            <input type="range" id="slider-angular-sens" min="0.1" max="2.0" step="0.1" value="1.0">
+                        </div>
+                        <div class="slider-wrapper">
+                            <label for="slider-target-speed">ARM TARGET SHIFT SCALE: <span id="lbl-target-speed">1.0</span></label>
+                            <input type="range" id="slider-target-speed" min="0.1" max="5.0" step="0.1" value="1.0">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Panel 3: Interactive Controls (Dynamic depending on mode) -->
+                <section class="control-actions-section glass-panel">
+                    <div class="panel-header">
+                        <h2 id="control-panel-title">CONTROLS</h2>
+                        <span class="system-tag" id="control-panel-tag">DRIVE_ACTUATE</span>
+                    </div>
+                    
+                    <!-- AUTO MODE SLIDERS -->
+                    <div id="auto-controls-container" class="control-group hidden">
+                        <div class="slider-wrapper">
+                            <label for="slider-target-x">TARGET X (Distance): <span id="lbl-target-x">25.0</span></label>
+                            <input type="range" id="slider-target-x" min="-10000" max="10000" step="0.5" value="25.0">
+                        </div>
+                        <div class="slider-wrapper">
+                            <label for="slider-target-y">TARGET Y (Horizontal Shift): <span id="lbl-target-y">0.0</span></label>
+                            <input type="range" id="slider-target-y" min="-10000" max="10000" step="0.5" value="0.0">
+                        </div>
+                        <div class="slider-wrapper">
+                            <label for="slider-target-z">TARGET Z (Elevation Height): <span id="lbl-target-z">2.0</span></label>
+                            <input type="range" id="slider-target-z" min="-10000" max="10000" step="0.5" value="2.0">
+                        </div>
+                        <div class="info-bubble">
+                            <p>💡 <strong>Tip:</strong> You can also use <strong>W/S</strong> (X axis), <strong>A/D</strong> (Y axis), and <strong>Q/E</strong> (Z axis) on your keyboard to shift the target point!</p>
+                        </div>
+                    </div>
+
+                    <!-- MANUAL MODE CONTROLS -->
+                    <div id="manual-controls-container" class="control-group">
+                        <!-- Hidden DOM elements to prevent app.js from throwing exceptions -->
+                        <div style="display: none;">
+                            <div id="joystick-pad"><div id="joystick-handle"></div></div>
+                            <div id="key-up"></div>
+                            <div id="key-down"></div>
+                            <div id="key-left"></div>
+                            <div id="key-right"></div>
+                        </div>
+
+                        <!-- Clean Text Explanation of the Controls -->
+                        <div class="control-explanation" style="margin-bottom: 20px; padding: 15px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; text-align: center;">
+                            <span class="keyboard-label" style="display: block; font-size: 0.95rem; font-weight: bold; color: var(--neon-blue); text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px;">Driving Controls</span>
+                            <span class="keyboard-label" style="display: block; font-size: 0.9rem; color: #a0aec0; line-height: 1.4;">Use <strong>W, A, S, D</strong> or the <strong>Arrow Keys</strong> to drive the rover.</span>
+                        </div>
+                        
+                        <!-- Arm manual action buttons -->
+                        <div class="gripper-action-bar" style="margin-bottom: 12px;">
+                            <button id="btn-arm-up" class="neon-btn-blue">ARM UP (PageUp/Q)</button>
+                            <button id="btn-arm-down" class="neon-btn-blue">ARM DOWN (PageDown/E)</button>
+                        </div>
+                        
+                        <!-- Gripper manual action buttons -->
+                        <div class="gripper-action-bar">
+                            <button id="btn-gripper-open" class="neon-btn-amber">OPEN GRIPPER</button>
+                            <button id="btn-gripper-close" class="neon-btn-green">CLOSE GRIPPER</button>
+                        </div>
+                        <div class="slider-wrapper" style="margin-top: 10px;">
+                            <label for="slider-gripper">MANUAL GRIPPER STEPPER: <span id="lbl-gripper-val">0.00</span></label>
+                            <input type="range" id="slider-gripper" min="0.0" max="1.0" step="0.05" value="0.0">
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+    <script src="app.js?v=33"></script>
+</body>
+</html>

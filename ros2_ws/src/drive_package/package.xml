@@ -16,6 +16,7 @@
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
 
   <!-- Python + RViz visualization dependencies -->
   <exec_depend>rclpy</exec_depend>
