@@ -39,6 +39,10 @@ class MultiCameraNode : public rclcpp::Node
 public:
     MultiCameraNode() : Node("multi_camera_node")
     {
+    }
+
+    void init()
+    {
         this->declare_parameter<bool>("csi_0_enable", true);
         this->declare_parameter<bool>("csi_1_enable", true);
         this->declare_parameter<bool>("usb_enable", true);
@@ -280,7 +284,9 @@ private:
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<MultiCameraNode>());
+    auto node = std::make_shared<MultiCameraNode>();
+    node->init();
+    rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
 }

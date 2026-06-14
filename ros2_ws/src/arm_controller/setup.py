@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'motion_coordinator = arm_controller.motion_coordinator_node:main',
+            'dashboard_helper = arm_controller.dashboard_helper_node:main',
         ],
     },
 )
