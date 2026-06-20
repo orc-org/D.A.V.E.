@@ -43,16 +43,18 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+#Shouldn't need the stuff commented out anymore.
+
 # Python visualizer thingy
-install(PROGRAMS
-  scripts/input_viewer.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+##install(PROGRAMS
+#  scripts/input_viewer.py
+#DESTINATION lib/${PROJECT_NAME}
+#)
 
 # Install the ps5 png to use for background
-install(DIRECTORY resource/
-  DESTINATION share/${PROJECT_NAME}/resource
-)
+##install(DIRECTORY resource/
+#  DESTINATION share/${PROJECT_NAME}/resource
+#)
 
 # -----------------------------
 # Linting
