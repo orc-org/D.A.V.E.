@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
-//#include <rclcpp>
+#include <rclcpp>
 
 // used for ros publishers and servers
 #include <chrono>
@@ -17,13 +17,13 @@
 #include <iomanip>
 
 //custom defined interface for use with topics and services
-//#include "navigation_interfaces/msg/bearing_string.hpp"
-//#include "navigation_interfaces/msg/position_string.hpp"
-//#include "navigation_interfaces/srv/get_nav.hpp"
-//#include "navigation_interfaces/srv/set_nav.hpp"
+#include "navigation_interfaces/msg/bearing_string.hpp"
+#include "navigation_interfaces/msg/position_string.hpp"
+#include "navigation_interfaces/srv/get_nav.hpp"
+#include "navigation_interfaces/srv/set_nav.hpp"
 
 //interfaces needed to work with ros
-//#include "rclcpp/rclcpp.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 
 using namespace std;
@@ -69,7 +69,7 @@ protected:
     static double home_ECEF_y;      // Earth Centered Earth Fixed Y coordinate of home base
     static double home_ECEF_z;      // Earth Centered Earth Fixed Z coordinate of home base
 
-    static bool homeIsSet;         // boolean to stop home position from being accidentally reset
+    static bool homeIsSet;          // boolean to stop home position from being accidentally reset
 
 
     // Constants
@@ -78,7 +78,7 @@ protected:
     static constexpr double f = 1.0 / 298.257223565;     // Flattening
     static constexpr double e2 = f * (2.0 - f);          // Eccentricity squared
     static constexpr double pi = 3.14159265358979323846; // pi
-    static const int password = 741021; // Password for resetting home waypoint
+    static const int password = 741021;                  // Password for resetting home waypoint
 
     // Constructors
 
@@ -113,7 +113,7 @@ public:
     }
 
     // Getters and Setters
-
+public:
     void set(Waypoint* point) {
         x = point->getX();
         y = point->getY();
@@ -126,7 +126,7 @@ public:
         ECEF_y = point->getECEF_y();
         ECEF_z = point->getECEF_z();
     }
-public:
+
     void setX(double newX) { x = newX; } 
     void setY(double newY) { y = newY; }
 
@@ -174,6 +174,8 @@ private:
         home_ECEF_x = point->ECEF_x;
         home_ECEF_y = point->ECEF_y;
         home_ECEF_z = point->ECEF_z;
+        
+        homeIsSet = true;
     }
 
     // Conversion Methods
@@ -384,8 +386,6 @@ class ListOfWaypoints{
         ListNode* tail;
 
     public:
-        //ListNode* current;
-        
         ListOfWaypoints() : head(nullptr), tail(nullptr) {}
         
         ~ListOfWaypoints() { clear(); }
@@ -721,7 +721,7 @@ class ListOfWaypoints{
 // Navigation Class
 //////////////////////////////////////////////////////////////////////////
 
-class NavigationSystem {
+class NavigationSystem : public rclcpp::Node{
 
     // Attributes
 private:
@@ -812,7 +812,7 @@ private:
             for (int i = 0; i < obstacleCount; i++) {
                 double dx = current->point->getX() - obstacles[i]->getX();
                 double dy = current->point->getY() - obstacles[i]->getY();
-                if (sqrt(dx*dx +dy*dy) < obstacles[i]->getRadius()) {
+                if (sqrt(dx*dx + dy*dy) < obstacles[i]->getRadius()) {
                     waypointCollisionDetected(current, obstacles[i]);
                     break; // No need to check other obstacles if a collision is detected
                 }
@@ -822,14 +822,39 @@ private:
     }
 
     /*
+        findWaypointCollision(Waypoint* collidingWaypoint)
+        --------------------------------------------------
+        this method returns the index of the obstacle that is colliding with our waypoint
+    */
+    int findWaypointCollision(Waypoint* collidingWaypoint){
+        for (int i = 0; i < obstacleCount; i++) {
+                double dx = collidingWaypoint->getX() - obstacles[i]->getX();
+                double dy = collidingWaypoint->getY() - obstacles[i]->getY();
+                if (sqrt(dx*dx + dy*dy) < obstacles[i]->getRadius()) {
+                    return i;
+                }
+            }
+        return -1;
+    }
+
+    /*
         isWaypointColliding(ListNode* node)
         ---------------------------------
         checks if the given node is within the radius of any of the obstacles currently stored in the system.
     */
     bool isWaypointColliding(ListNode* node){
+        return isWaypointColliding(node->point);
+    }
+
+     /*
+        isWaypointColliding(Waypoint* point)
+        ---------------------------------
+        checks if the given point is within the radius of any of the obstacles currently stored in the system.
+    */
+    bool isWaypointColliding(Waypoint* point){
         for (int i = 0; i < obstacleCount; i++) {
-            double dx = node->point->getX() - obstacles[i]->getX();
-            double dy = node->point->getY() - obstacles[i]->getY();
+            double dx = point->getX() - obstacles[i]->getX();
+            double dy = point->getY() - obstacles[i]->getY();
             if (sqrt(dx*dx + dy*dy) < obstacles[i]->getRadius()) {
                 return true;
             }
@@ -847,7 +872,7 @@ private:
                 double dy = obstacles[i]->getY() - pointOfInterest[1];
                 double distanceToCenter = sqrt(dx * dx + dy * dy);
                 if (distanceToCenter < obstacles[i]->getRadius()){
-                    trackCollisionDetected(current, obstacles[i], distanceToCenter);
+                    trackCollisionDetected(current, obstacles[i]);
                 }
             }
             current = current->next;
@@ -918,9 +943,9 @@ private:
                 auto pointOfInterest = calculatePointOfInterest(node->previous, node, obstacle);
                 
                 /* create a new node to store another waypoint
-                   to get this new waypoint, we will move back 1 Radii + 1m from the POI towards the previous waypoint
+                   to get this new waypoint, we will move back 1 Radii + 1m from the Point if Interest (POI) towards the previous waypoint
                    if the POI is the centre of the waypoint, this will make a new waypoint 1m from the edge of the obstacle
-                   if not, the new waypoint will e further from the edge of the obstacle
+                   if not, the new waypoint will be further from the edge of the obstacle
                    this was done for simplicity, but it really doesn't matter because the further the POI is from the centre, the less drastic the course correction anyway
                    so we'll still be following the original route reasonably closely
                 */ 
@@ -945,7 +970,7 @@ private:
 
                 delete unitVectorToNextWaypoint;
                 newWaypoint = nullptr;
-            };
+            }; break;
             case(automatic_Circumnavigation_Off): cout << "collision Detected at waypoint (" << node->point->getX() << ", " << node->point->getY() << ")" << endl; break;
         };
     }
@@ -956,10 +981,33 @@ private:
         this method is called when a collision is detected along the route 
         it handles the collision based on the selected circumnavigation style
     */
-    void trackCollisionDetected(ListNode* nextNode, Obstacle* obstacle, double distance){
+    void trackCollisionDetected(ListNode* nextNode, Obstacle* obstacle){
+        auto pointOfInterest = calculatePointOfInterest(nextNode->previous, nextNode, obstacle);
         switch (circumnavigationStyle){
-            case(reroute): ;
-            case(trackCrawling): ;
+            case(reroute): generateDetour(pointOfInterest[0], pointOfInterest[1], nextNode, obstacle); break;
+            case(trackCrawling): {
+                // to start, the process is identical to when a waypoint collision is detected, but it's even simpler since we know that there isn't a turn or a bend
+                // in the route midway through the obstacle
+                
+                /* create a new node to store another waypoint
+                   to get this new waypoint, we will move back 1 Radii + 1m from the Point if Interest (POI) towards the previous waypoint
+                   if the POI is the centre of the waypoint, this will make a new waypoint 1m from the edge of the obstacle
+                   if not, the new waypoint will be further from the edge of the obstacle
+                   this was done for simplicity, but it really doesn't matter because the further the POI is from the centre, the less drastic the course correction anyway
+                   so we'll still be following the original route reasonably closely
+                */ 
+                ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
+                    new Waypoint(pointOfInterest[0] - (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] - (obstacle->getRadius() + 1) * pointOfInterest[3]));
+                
+                routes[routeSelected].addBefore(newWaypoint, nextNode);
+
+                newWaypoint = new ListNode(nullptr, nullptr, 
+                    new Waypoint(pointOfInterest[0] + (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] + (obstacle->getRadius() + 1) * pointOfInterest[3]));
+                
+                routes[routeSelected].addBefore(newWaypoint, nextNode);
+
+                newWaypoint = nullptr;
+            }; break;
             case(automatic_Circumnavigation_Off): cout << "collision Detected with Obstacle (" << obstacle->getX() << ", " << obstacle->getY() << ")" << endl; break;
         };
     }
@@ -981,32 +1029,152 @@ private:
         double dy = obstacle->getY() - pointOfInterest_Y;
         double length = sqrt(dx * dx + dy * dy);
         double* unitVector = new double[2]{dx / length, dy / length};
-                
+
+        // following obstacles are used in the worst case scenario of chaining obstacles
+        int obstacle1_index;
+        int obstacle2_index;
+    
+        // try to put new waypoint 1m past the nearest apex
         ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
                     new Waypoint(pointOfInterest_X - (obstacle->getRadius() + 1) * unitVector[0], pointOfInterest_Y - (obstacle->getRadius() + 1) * unitVector[1]));
         
-        // try to put new waypoint 1m past the apex
         if (!isWaypointColliding(newWaypoint)){
+            // putting it 1m past the nearest apex works fine
+            routes[routeSelected].addBefore(newWaypoint, nextNode);\
+
+            // check if the new waypoint created other track collisions. 
+            // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
             checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
+            checkTrackCollisions(newWaypoint, nextNode, obstacle);
         }
         else {
-            // try to put the new waypoint at the apex
+            // try to put the new waypoint at the nearest apex
+            obstacle1_index = findWaypointCollision(newWaypoint->point);
             delete newWaypoint;
             newWaypoint = new ListNode(nullptr, nullptr, 
                     new Waypoint(pointOfInterest_X - (obstacle->getRadius()) * unitVector[0], pointOfInterest_Y - (obstacle->getRadius()) * unitVector[1]));
             
             if (!isWaypointColliding(newWaypoint)){
-                // putting it at the apex works fine
+                // putting it at the nearest apex works fine
+                routes[routeSelected].addBefore(newWaypoint, nextNode);
+                
+                // check if the new waypoint created other track collisions. 
+                // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
+                checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
+                checkTrackCollisions(newWaypoint, nextNode, obstacle);
             }
             else {
-                //repeat process for other apex
+                // try putting it 1m past the far apex
+                delete newWaypoint;
+                newWaypoint = new ListNode(nullptr, nullptr, 
+                    new Waypoint(pointOfInterest_X + (obstacle->getRadius() + 1) * unitVector[0], pointOfInterest_Y + (obstacle->getRadius() + 1) * unitVector[1]));
+                
+                if (!isWaypointColliding(newWaypoint)){
+                    // putting it 1m past the far apex works fine
+                    routes[routeSelected].addBefore(newWaypoint, nextNode);
+                    
+                    // check if the new waypoint created other track collisions. 
+                    // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
+                    checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
+                    checkTrackCollisions(newWaypoint, nextNode, obstacle);
+                }
+                else {
+                    // try putting it at the far apex
+                    obstacle2_index = findWaypointCollision(newWaypoint->point);
+                    delete newWaypoint;
+                    newWaypoint = new ListNode(nullptr, nullptr, 
+                        new Waypoint(pointOfInterest_X + (obstacle->getRadius()) * unitVector[0], pointOfInterest_Y + (obstacle->getRadius()) * unitVector[1]));
+                
+                    if (!isWaypointColliding(newWaypoint)){
+                        // putting it at the far apex works fine
+                        routes[routeSelected].addBefore(newWaypoint, nextNode);
+                        
+                        // check if the new waypoint created other track collisions. 
+                        // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
+                        checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
+                        checkTrackCollisions(newWaypoint, nextNode, obstacle);
+                    }
+                    else {
+                        /*
+                            At this point, we are dealing with a chain of obstacles where the first obstacle we looked at is not at the end
+                            This means that we must change our strategy
+                            now, we will leap frog along to find the ends of the chain and we will create 2 new waypointsd at either end
+                            we will then compare these to the POI to find out which one is the shortest detour
+                            the waypoint that takes us the least off track will be added and the other will be removed
+                        */
+                        int originalObstacleIndex = getIndexOfObstacle(obstacle);
+                        Waypoint* alternative1 = findAlternateRoute(originalObstacleIndex, obstacle1_index);
+                        Waypoint* alternative2 = findAlternateRoute(originalObstacleIndex, obstacle2_index);
+                        delete newWaypoint;
+                        
+                        // calculate the distance to alternative 1
+                        dx = alternative1->getX() - pointOfInterest_X;
+                        dy = alternative1->getY() - pointOfInterest_Y;
+                        double length1 = sqrt(dx * dx + dy * dy);
 
-                //if that fails, find a way to recursively check the next closest apex of the overlapping obstacles
+                        // calculate the distancec to alternative 2
+                        dx = alternative2->getX() - pointOfInterest_X;
+                        dy = alternative2->getY() - pointOfInterest_Y;
+                        double length2 = sqrt(dx * dx + dy * dy);
+
+                        // compare and keep the nearest one
+                        if(length1 <= length2){
+                            newWaypoint = new ListNode(nullptr, nullptr, alternative1);
+                            delete alternative2;
+                        }
+                        else {
+                            newWaypoint = new ListNode(nullptr, nullptr, alternative2);
+                            delete alternative1;
+                        }
+                        routes[routeSelected].addBefore(newWaypoint, nextNode);
+                        
+                        // check if the new waypoint created other track collisions. 
+                        // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
+                        checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
+                        checkTrackCollisions(newWaypoint, nextNode, obstacle);
+                    }
+                }
             }
 
         }
         delete[] unitVector;
     }
+
+    Waypoint* findAlternateRoute(int first, int second){
+        // define unit vector going from the centre of the original obstacle to the next one
+        double dx = obstacles[second]->getX() - obstacles[first]->getX();
+        double dy = obstacles[second]->getY() - obstacles[first]->getY();
+        double length = sqrt(dx * dx + dy * dy);
+        double* unitVector = new double[2]{dx / length, dy / length};
+
+        Waypoint* possibleWaypoint = new Waypoint(obstacles[second]->getX() + (obstacles[second]->getRadius() + 1) * unitVector[0], obstacles[second]->getY() + (obstacles[second]->getRadius() + 1) * unitVector[2]);
+
+        if(!isWaypointColliding(possibleWaypoint)){
+            // We found a potential waypoint
+            delete unitVector;
+            return possibleWaypoint;
+        }
+        else {
+            //try the same trick as before where we put the new point right on the edge of the obstacle to thread the nedle between 2 adjacent obstacles
+            delete possibleWaypoint;
+            possibleWaypoint = new Waypoint(obstacles[second]->getX() + obstacles[second]->getRadius() * unitVector[0], obstacles[second]->getY() + obstacles[second]->getRadius() * unitVector[2]);
+            
+            if(!isWaypointColliding(possibleWaypoint)){
+                // we found a potential waypoint
+                delete unitVector;
+                return possibleWaypoint;
+            }
+
+            else {
+                //the chain continues. if this is the case, we recursively call this function until we get to the end
+                delete unitVector;
+                int indexOfNextObstacle = findWaypointCollision(possibleWaypoint);
+                delete possibleWaypoint;
+                return findAlternateRoute(second, indexOfNextObstacle);
+            }
+        }
+    }
+
 
 
     /*
@@ -1050,9 +1218,17 @@ private:
         return {x, y, unitVectorToNextWaypoint[0], unitVectorToNextWaypoint[1]};
     }
 
+    int getIndexOfObstacle(Obstacle* thing){
+        for(int i = 0; i < obstacleCount; i++){
+            if(thing->getX() == obstacles[i]->getX() && thing->getY() == obstacles[i]->getY())
+                return i;
+        }
+        return -1;
+    }
+
     // Constructor
 public:
-    NavigationSystem() : debug(false), returnToBase(false), obstacleCount(0), obstacleLimit(10),
+    NavigationSystem() : Node("NAVnode"), count_(0), debug(false), returnToBase(false), obstacleCount(0), obstacleLimit(10),
                          northernMapLimit(100), southernMapLimit(-100), westernMapLimit(-100), easternMapLimit(100),
                          preference(local), circumnavigationStyle(reroute), routeSelected(Route1) {
         currentPosition = new Waypoint(0.0, 0.0);
@@ -1073,11 +1249,13 @@ public:
 /*
     - finish logic behind the Velocity class
 
-    - finish logic behind the Navsystem class -> add more checks for when rerouting around obstacle
+    - finish logic behind the Navsystem class -> add checks for track craling method to ensure any new waypoints created are not colliding with obstacles
 
     - define our ros related stuff
 
     - add logic to the main function to create the node and spin it
+
+    - add a serial bridge to communicate with the GNSS module
 
     - add functionality to allow the array of obstacles to be dynamically resized (currently set to 10 for simplicity)
 
