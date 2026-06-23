@@ -244,7 +244,7 @@ class input_viewer_class(Node):
         m.type = Marker.MESH_RESOURCE
         m.action = Marker.ADD
 
-        pkg_path = get_package_share_directory('drive_package')
+        pkg_path = get_package_share_directory('input_viewer_package')
         mesh_path = os.path.join(pkg_path, 'resource', 'controller_plane.dae')
 
         m.mesh_resource = f"file://{mesh_path}"
