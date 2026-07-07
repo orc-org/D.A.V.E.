@@ -776,7 +776,7 @@ class GPSnode : public rclcpp::Node {
             positionMessage.position = translate(g_currentPosition);
 
             // Display what is being published
-            if (g_displayTopicInfo) {he year,
+            if (g_displayTopicInfo) {
                 RCLCPP_INFO(this->get_logger(), "Current Coordinates: '%s'   Bearing to Target: '%s'", positionMessage.position.c_str(), bearingMessage.bearing.c_str());
             } 
             

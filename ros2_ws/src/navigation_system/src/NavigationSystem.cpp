@@ -16,11 +16,34 @@
 #include <memory>
 #include <iomanip>
 
-//custom defined interface for use with topics and services
+//custom defined interface for use with topics and services (defined in GPS node implementation)
 #include "navigation_interfaces/msg/bearing_string.hpp"
 #include "navigation_interfaces/msg/position_string.hpp"
 #include "navigation_interfaces/srv/get_nav.hpp"
 #include "navigation_interfaces/srv/set_nav.hpp"
+
+//custom defined interfaces for use with topics, services and actions
+
+#include "navigation_interfaces/action/navigation_action.hpp"
+
+#include "navigation_interfaces/msg/velocity.hpp"
+
+#include "navigation_interfaces/srv/void_service.hpp"
+#include "navigation_interfaces/srv/reset_home.hpp"
+#include "navigation_interfaces/srv/select_route.hpp"
+
+#include "navigation_interfaces/srv/add_local_waypoint.hpp"
+#include "navigation_interfaces/srv/add_local_waypoint_at_index.hpp"
+#include "navigation_interfaces/srv/add_local_obstacle.hpp"
+
+#include "navigation_interfaces/srv/add_geodetic_waypoint.hpp"
+#include "navigation_interfaces/srv/add_geodetic_waypoint_at_index.hpp"
+#include "navigation_interfaces/srv/add_geodetic_obstacle.hpp"
+
+#include "navigation_interfaces/srv/add_earth_centred_waypoint.hpp"
+#include "navigation_interfaces/srv/add_earth_centred_waypoint_at_index.hpp"
+#include "navigation_interfaces/srv/add_earth_centred_obstacle.hpp"
+
 
 //interfaces needed to work with ros
 #include "rclcpp/rclcpp.hpp"
@@ -34,317 +57,6 @@ using namespace std::chrono_literals;
 //////////////////////////////////////////////////////////////////////////
 
 /*
-    Waypoint
-    --------
-    Represents a LOCAL 2D waypoint in meters relative to home.
-    
-    Convention:
-    - +ve x = East
-    - +ve y = North
-*/
-class Waypoint {
-
-    // Attributes
-
-protected:
-    double x;           // Local east/west coordinate (east is in the +ve direction)
-    double y;           // Local north/south coordinate (north is in the +ve direction)
-    
-    double longitude;   // Geodetic Longitude
-    double latitude;    // Geodetic Latitude
-    double altitude;    // Geodetic Altitude
-
-    double ECEF_x;      // Earth Centered Earth Fixed X coordinate
-    double ECEF_y;      // Earth Centered Earth Fixed Y coordinate
-    double ECEF_z;      // Earth Centered Earth Fixed Z coordinate
-
-    static constexpr double home_x = 0.0;          // local coordinates of the home base
-    static constexpr double home_y = 0.0;          // local coordinates of the home base
-
-    static double home_longitude;  // geodetic coordinates of the home base
-    static double home_latitude;   // geodetic coordinates of the home base
-    static double home_altitude;   // geodetic coordinates of the home base
-
-    static double home_ECEF_x;      // Earth Centered Earth Fixed X coordinate of home base
-    static double home_ECEF_y;      // Earth Centered Earth Fixed Y coordinate of home base
-    static double home_ECEF_z;      // Earth Centered Earth Fixed Z coordinate of home base
-
-    static bool homeIsSet;          // boolean to stop home position from being accidentally reset
-
-
-    // Constants
-
-    static constexpr double a = 6378137.0;               // Semi-major axis (meters)
-    static constexpr double f = 1.0 / 298.257223565;     // Flattening
-    static constexpr double e2 = f * (2.0 - f);          // Eccentricity squared
-    static constexpr double pi = 3.14159265358979323846; // pi
-    static const int password = 741021;                  // Password for resetting home waypoint
-
-    // Constructors
-
-public:
-    //Waypoint() : x(0.0), y(0.0) {}
-
-    // constructor for when using local coordinates
-    Waypoint(double newX, double newY) : x(newX), y(newY) {
-        local_To_EarthCentred();
-        EarthCentred_To_GeodeticApprox();
-    }
-
-    // constructor for when using geodetic or Earth Centred coordinates
-    Waypoint(double coordinateA, double coordinateB, double coordinateC, bool geodeticCoordinate) {
-        if (geodeticCoordinate){
-            longitude = coordinateA;
-            latitude = coordinateB;
-            altitude = coordinateC;
-
-            geodetic_To_EarthCentred();
-            EarthCentred_To_Local();
-        }
-
-        else {
-            ECEF_x = coordinateA;
-            ECEF_y = coordinateB;
-            ECEF_z = coordinateC;
-
-            EarthCentred_To_Local();
-            EarthCentred_To_GeodeticApprox();
-        }
-    }
-
-    // Getters and Setters
-public:
-    void set(Waypoint* point) {
-        x = point->getX();
-        y = point->getY();
-        
-        longitude = point->getLongitude();
-        latitude = point->getLatitude();
-        altitude = point->getAltitude();
-        
-        ECEF_x = point->getECEF_x();
-        ECEF_y = point->getECEF_y();
-        ECEF_z = point->getECEF_z();
-    }
-
-    void setX(double newX) { x = newX; } 
-    void setY(double newY) { y = newY; }
-
-    void setLongitude(double newLongitude) { longitude = newLongitude; }
-    void setLatitude(double newLatitude) { latitude = newLatitude; }
-    void setAltitude(double newAltitude) { altitude = newAltitude; }
-
-    void setECEF_x(double newECEF_x) { ECEF_x = newECEF_x;}
-    void setECEF_y(double newECEF_y) { ECEF_y = newECEF_y;}
-    void setECEF_z(double newECEF_z) { ECEF_z = newECEF_z;}
-
-    double getX() { return x; }
-    double getY() { return y; }
-
-    double getLongitude() { return longitude; }
-    double getLatitude() { return latitude; }
-    double getAltitude() { return altitude; }
-
-    double getECEF_x() { return ECEF_x; }
-    double getECEF_y() { return ECEF_y; }
-    double getECEF_z() { return ECEF_z; }
-
-    /*
-        setHome(Waypoint point, int password)
-        ------------------------------------
-        method to reset home base position
-        it checks the password provided password to prevent to prevent it being used accidentally (no need for correct password if home is not set)
-
-        returns false if home was not reset
-    */
-    bool setHome(Waypoint* point, int password){
-        if (password = this->password || !homeIsSet) {
-            setHome(point);
-            return true;
-        }
-        return false;
-    }
-
-private: 
-    void setHome(Waypoint* point){
-        home_longitude = point->longitude;
-        home_latitude  = point->latitude;
-        home_altitude  = point->altitude;
-
-        home_ECEF_x = point->ECEF_x;
-        home_ECEF_y = point->ECEF_y;
-        home_ECEF_z = point->ECEF_z;
-        
-        homeIsSet = true;
-    }
-
-    // Conversion Methods
-
-public:
-    double degToRad(double degrees) {
-        return degrees * pi / 180.0;
-    }
-
-    double radToDeg(double radians) {
-        return radians * 180.0 / pi;
-    }
-
-    double calcPrimeVerticalRadius(double latRad) {
-        return a / sqrt(1.0 - e2 * sin(latRad) * sin(latRad));
-    }
-
-    /*
-        geodetic_To_EarthCentered
-        ----------------
-        Converts latitude, longitude, altitude to ECEF coordinates.
-    */
-    void geodetic_To_EarthCentred() {
-        double N = a / sqrt(1.0 - e2 * sin(latitude) * sin(latitude));
-
-        ECEF_x = (N + altitude) * cos(latitude) * cos(longitude);
-        ECEF_y = (N + altitude) * cos(latitude) * sin(longitude);
-        ECEF_z = (N * (1.0 - e2) + altitude) * sin(latitude);
-    }
-
-    /*
-        EarthCentered_To_Local
-        ------------------
-        Converts an ECEF point into local ENU coordinates relative to home.
-    */
-    void EarthCentred_To_Local() {
-        double dX = ECEF_x - home_ECEF_x;
-        double dY = ECEF_y - home_ECEF_y;
-        double dZ = ECEF_z - home_ECEF_z;
-        
-        x = -sin(home_longitude) * dX 
-            +cos(home_latitude) * dY;
-
-        y = -sin(home_latitude) * cos(home_longitude) * dX 
-            -sin(home_latitude) * sin(home_longitude) * dY 
-            +cos(home_latitude) * dZ;
-    }
-
-    /*
-        local_To_EarthCentered
-        ------------------
-        Converts a local 2D waypoint (East, North) back into an ECEF point.
-    */
-    void local_To_EarthCentred() {
-        double dX =
-            -sin(home_longitude) * x
-            -sin(home_latitude) * cos(home_longitude) * y;
-
-        double dY =
-             cos(home_longitude) * x
-            -sin(home_latitude) * sin(home_longitude) * y;
-
-        double dZ =
-            cos(home_latitude) * y;
-
-        ECEF_x = home_ECEF_x + dX;
-        ECEF_y = home_ECEF_y + dY;
-        ECEF_z = home_ECEF_z + dZ;
-    }
-    
-    /*
-    EarthCentered_To_Geodetic()
-    ----------------------
-    Converts ECEF back to approximate geodetic coordinates.
-
-    This uses an iterative latitude update.
-    Good enough for this project skeleton.
-    */
-    void EarthCentred_To_GeodeticApprox() {
-        double lonRad = atan2(ECEF_y, ECEF_x);
-
-        double p = sqrt(ECEF_x * ECEF_x + ECEF_y * ECEF_y);
-        double latRad = atan2(ECEF_z, p * (1.0 - e2));
-        double h;
-
-        for (int i = 0; i < 5; i++) {
-           double N = calcPrimeVerticalRadius(latRad);
-          h = p / cos(latRad) - N;
-           latRad = atan2(ECEF_z, p * (1.0 - e2 * N / (N + h)));
-        }
-    }
-};
-
-/*
-    Obstacle
-    ---------
-    represents areas that the rover is to avoid which will be approximated as circular areas to simplify calculations
-    it's just a way point with a "keep out" radius
-    for example, if we knew there was a big hole at (73,89) on the map, we could use an obstacle to ensure our planned route doesn't take us within 5m of it
-*/
-class Obstacle : Waypoint{
-
-    // Attributes
-public:
-    static const int defaultRadius = 5;
-    static int largestObstacle;
-
-private:
-    int radius; // specifies how far we must stay away from the obstacle's location    
-
-    // Getters and Setters
-
-public:
-    void setRadius(int radius){
-        this->radius = radius;
-    }
-    int getRadius(){
-        return radius;
-    }
-    double getX() { return x; }
-    double getY() { return y; }
-
-    int getLargestObstacle(){
-        return largestObstacle;
-    }
-
-    // constructors
-    Obstacle() : Waypoint(0.0, 0.0), radius(defaultRadius) {
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
-
-
-    Obstacle(double newX, double newY, int radius): Waypoint(newX, newY){
-        this->radius = radius;
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
-
-    Obstacle(double coordinateA, double coordinateB, double coordinateC, int radius, bool geodeticCoordinate): Waypoint(coordinateA, coordinateB, coordinateC, geodeticCoordinate){
-        this->radius = radius;
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
-
-    Obstacle(double newX, double newY): Waypoint(newX, newY){
-        this->radius = defaultRadius;
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
-
-    Obstacle(double coordinateA, double coordinateB, double coordinateC, bool geodeticCoordinate): Waypoint(coordinateA, coordinateB, coordinateC, geodeticCoordinate){
-        this->radius = defaultRadius;
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
-
-    bool operator<(const Obstacle& other) const {
-        return this->x < other.x;
-    }
-
-};
-
-/*
     Velocity
     --------
     Stores the most recent speed and direction of travel of the rover
@@ -355,366 +67,6 @@ struct Velocity {
 private: 
     double speed;     // stored in m/s
     double direction; // cardinal direction that the rover is facing
-};
-
-/*
-    ListNode
-    --------
-    the core part of my doubly linked list implementation
-*/
-class ListNode{
-    public:
-        Waypoint* point;
-        ListNode* next;
-        ListNode* previous;
-
-        ListNode(ListNode* next, ListNode* previous,Waypoint* newPoint) : point(newPoint), next(next), previous(previous) {}
-        
-        ~ListNode() { delete point; }
-};
-
-
-/*
-    ListOfWaypoints
-    ---------------
-    a simple pointer based implementation of a doubly linked list
-    I couldn't get the standard list and iterator to play nicely, so this is the work around
-*/
-class ListOfWaypoints{
-    private:
-        ListNode* head;
-        ListNode* tail;
-
-    public:
-        ListOfWaypoints() : head(nullptr), tail(nullptr) {}
-        
-        ~ListOfWaypoints() { clear(); }
-
-        ListNode* getHead(){
-            return head;
-        }
-
-        ListNode* getTail(){
-            return tail;
-        }
-
-        ListNode* getPoint(int position){
-            if (position < 0) return nullptr;
-
-            ListNode* current = head;
-            int index = 0;
-
-            while (current != nullptr && index < position) {
-                current = current->next;
-                index++;
-            }
-
-            return current;
-        }
-
-        ListNode* getPoint(Waypoint* point){
-            ListNode* current = head;
-
-            while (current != nullptr) {
-                if (areEqual(current->point, point)) {
-                    return current;
-                }
-                current = current->next;
-            }
-            return nullptr;
-        }
-
-        ListNode* getPoint(double x, double y){
-            ListNode* current = head;
-
-            while (current != nullptr) {
-                if (current->point->getX() == x && current->point->getY() == y) {
-                    return current;
-                }
-                current = current->next;
-            }
-            return nullptr;
-        }
-
-        ListNode* getGeodeticPoint(double longitude, double latitude){
-            ListNode* current = head;
-
-            while (current != nullptr) {
-                if (current->point->getLongitude() == longitude && current->point->getLatitude() == latitude) {
-                    return current;
-                }
-                current = current->next;
-            }
-            return nullptr;
-        }
-
-        ListNode* getEarthCentredPoint(double x, double y, double z){
-            ListNode* current = head;
-    
-            while (current != nullptr) {
-                if (current->point->getECEF_x() == x && current->point->getECEF_y() == y && current->point->getECEF_z() == z) {
-                    return current;
-                }
-                current = current->next;
-            }
-            return nullptr;
-        }
-
-        void add(Waypoint* newPoint){
-            ListNode* newNode = new ListNode(nullptr, tail, newPoint);
-            if (tail != nullptr) {
-                tail->next = newNode;
-            }
-            tail = newNode;
-            if (head == nullptr) {
-                head = newNode;
-            }
-        }
-
-        void addFirst(Waypoint* newPoint){
-            ListNode* newNode = new ListNode(head, nullptr, newPoint);
-            if (head != nullptr) {
-                head->previous = newNode;
-            }
-            head = newNode;
-            if (tail == nullptr) {
-                tail = newNode;
-            }
-        }
-
-        void add(Waypoint* newPoint, int position){
-            if (position <= 0) {
-                addFirst(newPoint);
-                return;
-            }
-
-            ListNode* current = head;
-            int index = 0;
-
-            while (current != nullptr && index < position) {
-                current = current->next;
-                index++;
-            }
-
-            if (current == nullptr) {
-                add(newPoint);
-            } else {
-                ListNode* newNode = new ListNode(current, current->previous, newPoint);
-                if (current->previous != nullptr) {
-                    current->previous->next = newNode;
-                }
-                current->previous = newNode;
-                if (current == head) {
-                    head = newNode;
-                }
-            }
-        }
-
-        void addBefore(ListNode* newNode, ListNode* existingNode){
-            
-            if (existingNode == head) {
-                head = newNode;
-                newNode->previous = nullptr;
-            }
-            else{
-                existingNode->previous->next = newNode;
-                newNode->previous = existingNode->previous;
-            }
-            existingNode->previous = newNode;
-            newNode->next = existingNode;
-        }
-
-        void printList() {
-            ListNode* current = head;
-            while (current != nullptr) {
-                cout << "(" << current->point->getX() << ", " << current->point->getY() << ") -> ";
-                current = current->next;
-            }
-            cout << "End of Route" << endl;
-        }
-
-        void clear() {
-            ListNode* current = head;
-            while (current != nullptr) {
-                ListNode* next = current->next;
-                delete current;
-                current = next;
-            }
-            head = nullptr;
-            tail = nullptr;
-        }
-
-        void removeFirst() {
-            if (head == nullptr) return;
-
-            ListNode* temp = head;
-            head = head->next;
-            if (head != nullptr) {
-                head->previous = nullptr;
-            } else {
-                tail = nullptr;
-            }
-            delete temp;
-        }
-
-        void removeLast() {
-            if (tail == nullptr) return;
-
-            ListNode* temp = tail;
-            tail = tail->previous;
-            if (tail != nullptr) {
-                tail->next = nullptr;
-            } else {
-                head = nullptr;
-            }
-            delete temp;
-        }
-
-        void removeAt(int position) {
-            if (position < 0) return;
-
-            ListNode* current = head;
-            int index = 0;
-
-            while (current != nullptr && index < position) {
-                current = current->next;
-                index++;
-            }
-
-            if (current == nullptr) return;
-
-            if (current->previous != nullptr) {
-                current->previous->next = current->next;
-            } else {
-                head = current->next;
-            }
-
-            if (current->next != nullptr) {
-                current->next->previous = current->previous;
-            } else {
-                tail = current->previous;
-            }
-
-            delete current;
-        }
-
-        void remove(Waypoint* point) {
-            ListNode* current = head;
-
-            while (current != nullptr) {
-                if (areEqual(current->point, point)) {
-                    if (current->previous != nullptr) {
-                        current->previous->next = current->next;
-                    } else {
-                        head = current->next;
-                    }
-
-                    if (current->next != nullptr) {
-                        current->next->previous = current->previous;
-                    } else {
-                        tail = current->previous;
-                    }
-
-                    delete current;
-                    return;
-                }
-                current = current->next;
-            }
-        }
-
-        void remove(ListNode* node) {
-            if (node == nullptr) return;
-
-            if (node->previous != nullptr) {
-                node->previous->next = node->next;
-            } else {
-                head = node->next;
-            }
-
-            if (node->next != nullptr) {
-                node->next->previous = node->previous;
-            } else {
-                tail = node->previous;
-            }
-
-            delete node;
-        }
-
-        void removePoint(double x, double y) {
-            ListNode* current = head;
-
-            while (current != nullptr) {
-                if (current->point->getX() == x && current->point->getY() == y) {
-                    if (current->previous != nullptr) {
-                        current->previous->next = current->next;
-                    } else {
-                        head = current->next;
-                    }
-
-                    if (current->next != nullptr) {
-                        current->next->previous = current->previous;
-                    } else {
-                        tail = current->previous;
-                    }
-
-                    delete current;
-                    return;
-                }
-                current = current->next;
-            }
-        }
-
-        void removeGeodeticPoint(double longitude, double latitude) {
-            ListNode* current = head;
-
-            while (current != nullptr) {
-                if (current->point->getLongitude() == longitude && current->point->getLatitude() == latitude) {
-                    if (current->previous != nullptr) {
-                        current->previous->next = current->next;
-                    } else {
-                        head = current->next;
-                    }
-
-                    if (current->next != nullptr) {
-                        current->next->previous = current->previous;
-                    } else {
-                        tail = current->previous;
-                    }
-
-                    delete current;
-                    return;
-                }
-                current = current->next;
-            }
-        }
-
-        void removeEarthCentredPoint(double x, double y, double z) {
-            ListNode* current = head;
-
-            while (current != nullptr) {
-                if (current->point->getECEF_x() == x && current->point->getECEF_y() == y && current->point->getECEF_z() == z) {
-                    if (current->previous != nullptr) {
-                        current->previous->next = current->next;
-                    } else {
-                        head = current->next;
-                    }
-
-                    if (current->next != nullptr) {
-                        current->next->previous = current->previous;
-                    } else {
-                        tail = current->previous;
-                    }
-
-                    delete current;
-                    return;
-                }
-                current = current->next;
-            }
-        }
-
-        bool areEqual(Waypoint* point1, Waypoint* point2) {
-            return (point1->getX() == point2->getX()) && (point1->getY() == point2->getY());
-        }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -760,40 +112,8 @@ private:
     
     // Getters and Setters
 public:
-
-    void toggleDebug(){ debug = !debug; }
     
     void toggleReturnToBase(){ returnToBase = !returnToBase; }
-    
-    void toggleCoordinatePreference(){
-        switch(preference){
-            case(local): preference = geodetic;
-            case(geodetic): preference = earthCentered;
-            default: preference = local;
-        }
-    }
-
-    void toggleCircumnavigationStyle(){
-        switch(circumnavigationStyle){
-            case(reroute): circumnavigationStyle = trackCrawling;
-            case(trackCrawling): circumnavigationStyle = automatic_Circumnavigation_Off;
-            default: circumnavigationStyle = reroute;
-        }
-    }
-
-    void toggleRouteSelected(){
-        switch(routeSelected){
-            case(Route1): routeSelected = Route2;
-            case(Route2): routeSelected = Route3;
-            case(Route3): routeSelected = Route4;
-            case(Route4): routeSelected = Route5;
-            default: routeSelected = Route1;
-        }
-    }
-
-    void selectRoute(preplannedRoute route){
-        routeSelected = route;
-    }
 
     // Other Methods
 
@@ -1233,13 +553,125 @@ public:
                          preference(local), circumnavigationStyle(reroute), routeSelected(Route1) {
         currentPosition = new Waypoint(0.0, 0.0);
         currentVelocity = new Velocity();
+
+        // define topics
+        // here, we're using a queue size of 1 because it is more desireable to lose some data
+        // than to be using outdated position data
+        VelocityPublisher = this->create_publisher<navigation_interfaces::msg::Velocity>("Velocity", 1);
+
+        // define services
+        StopNavigatingServer = this->create_service<navigation_interfaces::srv::VoidService>("StopNavigating", &stopNavigating);
+        SelectRouteServer = this->create_service<navigation_interfaces::srv::SelectRoute>("SelectRoute", &selectRoute);
+        ResetHomeServer = this->create_service<navigation_interfaces::srv::ResetHome>("ResetHome", &resetHome);
+        ClearRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("clearRoute", &clearRoute);
+        
+        ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
+        TogglePreferenceServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreference", &togglePreference);
+        ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
+        ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
+
+        AddLocalWaypointServer = this->create_service<navigation_interfaces::srv::AddLocalWaypoint>("AddLocalWaypoint", &addLocalWaypoint);
+        AddLocalWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", &addLocalWaypointAtIndex);
+        AddLocalObstacleServer = this->create_service<navigation_interfaces::srv::AddLocalObstacle>("AddLocalObstacle", &addLocalObstacle);
+
+        AddGeodeticWaypointServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypoint>("AddGeodeticWaypoint", &addGeodeticWaypoint);
+        AddGeodeticWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>("AddGeodeticWaypointAtIndex", &addGeodeticWaypointAtIndex);
+        AddGeodeticObstacleServer = this->create_service<navigation_interfaces::srv::AddGeodeticObstacle>("AddGeodeticObstacle", &addGeodeticObstacle);
+
+        AddEarthCentredWaypointServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypoint>("AddEarthCentredWaypoint", &addEarthCentredWaypoint);
+        AddEarthCentredWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", &addEarthCentredWaypointAtIndex);
+        AddEarthCentredObstacleServer = this->create_service<navigation_interfaces::srv::AddEarthCentredObstacle>("AddEarthCentredObstacle", &addEarthCentredObstacle);
     }
 
-    // Define Topics
+    // service callback functions
+    void stopNavigating(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
 
-    // Define Services
+    }
 
-    // Define Actions
+    void togglePreference(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
+        switch(preference){
+            case(local): preference = geodetic;
+            case(geodetic): preference = earthCentered;
+            default: preference = local;
+        }
+    }
+
+    void toggleRoute(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
+        switch(routeSelected){
+            case(Route1): routeSelected = Route2;
+            case(Route2): routeSelected = Route3;
+            case(Route3): routeSelected = Route4;
+            case(Route4): routeSelected = Route5;
+            default: routeSelected = Route1;
+        }
+    }
+
+    void toggleDebug(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
+        debug = !debug;
+    }
+
+    void toggleCircumnavigationStyle(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
+        switch(circumnavigationStyle){
+            case(reroute): circumnavigationStyle = trackCrawling;
+            case(trackCrawling): circumnavigationStyle = automatic_Circumnavigation_Off;
+            default: circumnavigationStyle = reroute;
+        }
+    }
+
+    void selectRoute(const std::shared_ptr<navigation_interfaces::srv::SelectRoute::Request> request, std::shared_ptr<navigation_interfaces::srv::SelectRoute::Response> response){
+
+    }
+
+    void resetHome(const std::shared_ptr<navigation_interfaces::srv::ResetHome::Request> request, std::shared_ptr<navigation_interfaces::srv::ResetHome::Response> response){
+
+    }
+
+    void clearRoute(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
+
+    }
+
+    void AddLocalWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Response> response){
+
+    }
+
+    void AddLocalWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Response> response){
+
+    }
+
+    void AddLocalObstacle(const std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Response> response){
+
+    }
+
+    void AddGeodeticWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Response> response){
+
+    }
+
+    void AddGeodeticWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Response> response){
+
+    }
+
+    void AddGeodeticObstacle(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Response> response){
+
+    }
+
+    void AddEarthCentredWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Response> response){
+
+    }
+
+    void AddEarthCentredWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Response> response){
+
+    }
+
+    void AddEarthCentredObstacle(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Response> response){
+
+    }
+
+
+
+
+
+
+    // action callback functions
 };
 
 //////////////////////////////////////////////////////////////////////////
