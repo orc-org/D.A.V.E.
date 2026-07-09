@@ -147,7 +147,8 @@ private:
         if a collision is detected, it automatically calls the waypointCollisionDetected function to handle the collision based on the selected circumnavigation style
     */
     void checkWaypointCollisions(){
-        std::sort(obstacles, obstacles + sizeof(obstacles) / sizeof(obstacles[0]));
+        std::sort(obstacles, obstacles + obstacleCount); 
+        //std::sort(obstacles, obstacles + sizeof(obstacles) / sizeof(obstacles[0])); // obstacles is a pointer/dynamic array: So sizeof(obstacles) does not give the number of obstacles. It only gives the size of the pointer itself.
         ListNode* current = routes[routeSelected].getHead();
         while (current != nullptr) {
             for (int i = 0; i < obstacleCount; i++) {
@@ -368,7 +369,7 @@ private:
         double dx = obstacle->getX() - pointOfInterest_X;
         double dy = obstacle->getY() - pointOfInterest_Y;
         double length = sqrt(dx * dx + dy * dy);
-        double* unitVector = new double[2]{dx / length, dy / length};
+        double* unitVector = new double[2]{dx / length, dy / length}; // only has two places at index 0 and 1
 
         // following obstacles are used in the worst case scenario of chaining obstacles
         int obstacle1_index;
@@ -487,7 +488,7 @@ private:
         double length = sqrt(dx * dx + dy * dy);
         double* unitVector = new double[2]{dx / length, dy / length};
 
-        Waypoint* possibleWaypoint = new Waypoint(obstacles[second]->getX() + (obstacles[second]->getRadius() + 1) * unitVector[0], obstacles[second]->getY() + (obstacles[second]->getRadius() + 1) * unitVector[2]);
+        Waypoint* possibleWaypoint = new Waypoint(obstacles[second]->getX() + (obstacles[second]->getRadius() + 1) * unitVector[0], obstacles[second]->getY() + (obstacles[second]->getRadius() + 1) * unitVector[1]);
 
         if(!isWaypointColliding(possibleWaypoint)){
             // We found a potential waypoint
@@ -497,7 +498,7 @@ private:
         else {
             //try the same trick as before where we put the new point right on the edge of the obstacle to thread the nedle between 2 adjacent obstacles
             delete possibleWaypoint;
-            possibleWaypoint = new Waypoint(obstacles[second]->getX() + obstacles[second]->getRadius() * unitVector[0], obstacles[second]->getY() + obstacles[second]->getRadius() * unitVector[2]);
+            possibleWaypoint = new Waypoint(obstacles[second]->getX() + obstacles[second]->getRadius() * unitVector[0], obstacles[second]->getY() + obstacles[second]->getRadius() * unitVector[1]);
             
             if(!isWaypointColliding(possibleWaypoint)){
                 // we found a potential waypoint
@@ -607,9 +608,9 @@ public:
         
         ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
         TogglePreferenceServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreference", &togglePreference);
-        ToggleRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &togglePreference);
-        ToggleCircumnavigationStyleServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleCircumnavigationStyle);
-        ToggleDirectionServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDirection);
+        ToggleRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreferenc", &togglePreference);
+        ToggleCircumnavigationStyleServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleCircumnavigationStyle", &toggleCircumnavigationStyle);
+        ToggleDirectionServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDirection", &toggleDirection);
 
         AddLocalWaypointServer = this->create_service<navigation_interfaces::srv::AddLocalWaypoint>("AddLocalWaypoint", &addLocalWaypoint);
         AddLocalWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", &addLocalWaypointAtIndex);
