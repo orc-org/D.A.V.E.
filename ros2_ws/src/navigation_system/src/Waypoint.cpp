@@ -130,6 +130,13 @@ public:
         return false;
     }
 
+    static bool checkPassword(int password){
+        if(Waypoint::password == password){
+            return true;
+        }
+        return false;
+    }
+
 private: 
     void setHome(Waypoint* point){
         home_longitude = point->longitude;

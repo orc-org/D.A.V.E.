@@ -749,17 +749,17 @@ class GPSnode : public rclcpp::Node {
             getNavServer = this->create_service<navigation_interfaces::srv::GetNav>("GetNav", &getNav);
             setNavServer = this->create_service<navigation_interfaces::srv::SetNav>("SetNav", &setNav);
 
-            getHomeServer = this->create_service<navigation_interfaces::srv::GetHome>("GetHome", &getHome);
-            getTargetServer = this->create_service<navigation_interfaces::srv::GetTarget>("GetTarget", &getTarget);
-            setHomeServer = this->create_service<navigation_interfaces::srv::SetHome>("SetHome", &setHome);
-            setTargetServer = this->create_service<navigation_interfacecs::srv::SetTarget>("SetTarget", &setTarget);
+            //getHomeServer = this->create_service<navigation_interfaces::srv::GetHome>("GetHome", &getHome);
+            //getTargetServer = this->create_service<navigation_interfaces::srv::GetTarget>("GetTarget", &getTarget);
+            //setHomeServer = this->create_service<navigation_interfaces::srv::SetHome>("SetHome", &setHome);
+            //setTargetServer = this->create_service<navigation_interfacecs::srv::SetTarget>("SetTarget", &setTarget);
 
-            goHomeServer = this->create_service<navigation_interfaces::srv::GoHome>("goHome", &goHome);
-            serialSendServer = this->create_service<navigation_interfaces::srv::SerialSend>("SerialSend", &serialSend);
-            toggleDisplayTopicInfoServer = this->create_service<navigation_interfaces::srv::ToggleDisplayTopicInfo>("ToggleDisplayTopicInfo", &toggleDisplayTopicInfo);
-            togglePreferenceServer = this->create_service<navigation_interfaces::srv::TogglePreference>("TogglePreferece", &togglePreference);
+            //goHomeServer = this->create_service<navigation_interfaces::srv::GoHome>("goHome", &goHome);
+            //serialSendServer = this->create_service<navigation_interfaces::srv::SerialSend>("SerialSend", &serialSend);
+            //toggleDisplayTopicInfoServer = this->create_service<navigation_interfaces::srv::ToggleDisplayTopicInfo>("ToggleDisplayTopicInfo", &toggleDisplayTopicInfo);
+            //togglePreferenceServer = this->create_service<navigation_interfaces::srv::TogglePreference>("TogglePreferece", &togglePreference);
 
-            RCLCPP_INFO(this->get_logger(), "GPS node ready for input");
+            //RCLCPP_INFO(this->get_logger(), "GPS node ready for input");
 
             //set the publishing period and bind to callback
             //GPSnode is set to publish to all topics at a rate of 1Hz
@@ -777,7 +777,7 @@ class GPSnode : public rclcpp::Node {
 
             // Display what is being published
             if (g_displayTopicInfo) {
-                RCLCPP_INFO(this->get_logger(), "Current Coordinates: '%s'   Bearing to Target: '%s'", positionMessage.position.c_str(), bearingMessage.bearing.c_str());
+                //RCLCPP_INFO(this->get_logger(), "Current Coordinates: '%s'   Bearing to Target: '%s'", positionMessage.position.c_str(), bearingMessage.bearing.c_str());
             } 
             
             //publish the data

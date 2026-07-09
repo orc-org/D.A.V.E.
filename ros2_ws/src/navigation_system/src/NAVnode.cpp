@@ -3,12 +3,11 @@
 #include <string>
 #include <array>
 //#include <list>
-//#include <vector>
+#include <vector>
 #include <cmath>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
-#include <rclcpp>
 
 // used for ros publishers and servers
 #include <chrono>
@@ -22,10 +21,13 @@
 #include "navigation_interfaces/srv/get_nav.hpp"
 #include "navigation_interfaces/srv/set_nav.hpp"
 
+//All Data Structures and objects we've defined
+#include "ListOfWaypoints.cpp"
+#include "Waypoint.cpp"
+#include "Obstacle.cpp"
+
+
 //custom defined interfaces for use with topics, services and actions
-
-#include "navigation_interfaces/action/navigation_action.hpp"
-
 #include "navigation_interfaces/msg/velocity.hpp"
 
 #include "navigation_interfaces/srv/void_service.hpp"
@@ -44,36 +46,14 @@
 #include "navigation_interfaces/srv/add_earth_centred_waypoint_at_index.hpp"
 #include "navigation_interfaces/srv/add_earth_centred_obstacle.hpp"
 
+#include "navigation_interfaces/action/navigation_action.hpp"
 
 //interfaces needed to work with ros
 #include "rclcpp/rclcpp.hpp"
 
 
-using namespace std;
-using namespace std::chrono_literals;
 
-//////////////////////////////////////////////////////////////////////////
-// BASIC DATA STRUCTURES
-//////////////////////////////////////////////////////////////////////////
-
-/*
-    Velocity
-    --------
-    Stores the most recent speed and direction of travel of the rover
-    This will be calculated via a Finite difference approximation using the GPS position data
-
-*/
-struct Velocity {
-private: 
-    double speed;     // stored in m/s
-    double direction; // cardinal direction that the rover is facing
-};
-
-//////////////////////////////////////////////////////////////////////////
-// Navigation Class
-//////////////////////////////////////////////////////////////////////////
-
-class NavigationSystem : public rclcpp::Node{
+class NAVnode : public rclcpp::Node{
 
     // Attributes
 private:
@@ -81,7 +61,11 @@ private:
     bool returnToBase;          // boolean to select the direction of travel along selected route 
 
     int obstacleCount;          // keeps track of how many obstacles are currently stored in the system 
-    int obstacleLimit;          // maximum number of obstacles that can be stored in the system 
+    int obstacleLimit;          // maximum number of obstacles that can be stored in the system
+    int waypointCount;          // keeps track of the number of waypoints stored in the system accross all routes 
+
+    int timeSinceLastVelocityPublishing; // used in the numerical method for calculating the velocity of the rover
+
 
     /*
         Map Limits are used to define the available area that this node may reroute within. 
@@ -103,21 +87,58 @@ private:
     enum preplannedRoute routeSelected; // to allow the operator to select which preplanned route to follow
     
     Waypoint* currentPosition;    // Waypoint to store the current position of the rover (updated often)
-    Velocity* currentVelocity;    // Speed and direction of rover (calculated from positional data from GPS)
 
     ListOfWaypoints pointsVisited;   // Doubly linked list to store the path that the rover has actually taken (whether it was planned or not)
-    Obstacle* obstacles[10];         // Array to store Obstacles in the way of the rover. ordered by x coordinate
+    Obstacle** obstacles;            // Pointer to dynamic array to store Obstacles in the way of the rover. ordered by x coordinate
     ListOfWaypoints routes[5];       // Array to allow us to store multiple preplanned routes
                                      // each route will be a doubly linked list that will hold several waypoints in the order that they should be visited 
-    
-    // Getters and Setters
-public:
-    
-    void toggleReturnToBase(){ returnToBase = !returnToBase; }
+    Waypoint* lastFiveWaypoints[5];  // array to store the 5 most recent waypoints
+                                     // this will be used to estimate the rovers velocity
 
-    // Other Methods
+    //////////////////////////////////////////
+    // Ros Stuff Definition
+    //////////////////////////////////////////
 
-private:
+    // Topics
+    navigation_interfaces::msg::Velocity currentVelocity = navigation_interfaces::msg::Velocity();
+    rclcpp::Publisher<navigation_interfaces::msg::Velocity>::SharedPtr VelocityPublisher; 
+
+    // Services
+
+    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr StopNavigatingServer;
+    rclcpp::Service<navigation_interfaces::srv::SelectRoute>::SharedPtr SelectRouteServer;
+    rclcpp::Service<navigation_interfaces::srv::ResetHome>::SharedPtr ResetHomeServer;
+    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ClearRouteServer;
+        
+    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleDebugServer;
+    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr TogglePreferenceServer;
+    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleRouteServer;
+    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleCircumnavigationStyleServer;
+    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleDirectionServer;
+
+    rclcpp::Service<navigation_interfaces::srv::AddLocalWaypoint>::SharedPtr AddLocalWaypointServer;
+    rclcpp::Service<navigation_interfaces::srv::AddLocalWaypointAtIndex>::SharedPtr AddLocalWaypointAtIndexServer;
+    rclcpp::Service<navigation_interfaces::srv::AddLocalObstacle>::SharedPtr AddLocalObstacleServer;
+
+    rclcpp::Service<navigation_interfaces::srv::AddGeodeticWaypoint>::SharedPtr AddGeodeticWaypointServer;
+    rclcpp::Service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>::SharedPtr AddGeodeticWaypointAtIndexServer;
+    rclcpp::Service<navigation_interfaces::srv::AddGeodeticObstacle>::SharedPtr AddGeodeticObstacleServer;
+
+    rclcpp::Service<navigation_interfaces::srv::AddEarthCentredWaypoint>::SharedPtr AddEarthCentredWaypointServer;
+    rclcpp::Service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>::SharedPtr AddEarthCentredWaypointAtIndexServer;
+    rclcpp::Service<navigation_interfaces::srv::AddEarthCentredObstacle>::SharedPtr AddEarthCentredObstacleServer;
+
+    // Actions (work in progress)
+
+    //FollowRoute -> will begin the route (like hitting start on google maps)
+    //ConfirmRoute -> will check the route for collisions with obstacles
+
+    // Timers
+    rclcpp::TimerBase::SharedPtr timer;
+
+    ////////////////////////////////////////////
+    // End Ros stuff Definition
+    ////////////////////////////////////////////
 
     /*
         checkWaypointCollisions()
@@ -310,8 +331,7 @@ private:
                 // in the route midway through the obstacle
                 
                 /* create a new node to store another waypoint
-                   to get this new waypoint, we will move back 1 Radii + 1m from the Point if Interest (POI) towards the previous waypoint
-                   if the POI is the centre of the waypoint, this will make a new waypoint 1m from the edge of the obstacle
+                   to get this new waypoint, we will move back 1 Radii + 1m from the Point of Interest (POI) towards the previous waypoint
                    if not, the new waypoint will be further from the edge of the obstacle
                    this was done for simplicity, but it really doesn't matter because the further the POI is from the centre, the less drastic the course correction anyway
                    so we'll still be following the original route reasonably closely
@@ -360,7 +380,7 @@ private:
         
         if (!isWaypointColliding(newWaypoint)){
             // putting it 1m past the nearest apex works fine
-            routes[routeSelected].addBefore(newWaypoint, nextNode);\
+            routes[routeSelected].addBefore(newWaypoint, nextNode);
 
             // check if the new waypoint created other track collisions. 
             // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
@@ -513,7 +533,7 @@ private:
         Check the design guild for the associated drawing further breaking down the math
     */
     array<double, 4> calculatePointOfInterest(ListNode* start, ListNode* end, Obstacle* obstacle){
-        double x, y;
+        double x, y, x_hat, y_hat;
 
         // calculate vectors to the next waypoint and to the obstacle
         double* vectorToNextWaypoint = new double[2]{end->point->getX() - start->point->getX(), end->point->getY() - start->point->getY()};
@@ -526,16 +546,19 @@ private:
         // project one vector onto the other to find out how far along the route the POI is
         double projectionLength = vectorToObstacle[0] * unitVectorToNextWaypoint[0] + vectorToObstacle[1] * unitVectorToNextWaypoint[1];
         
-        // add use the projection length and the direction to get the coordinates of the POI
+        // use the projection length and the direction to get the coordinates of the POI
         x = start->point->getX() + projectionLength * unitVectorToNextWaypoint[0];
         y = start->point->getY() + projectionLength * unitVectorToNextWaypoint[1];
+        
+        x_hat = unitVectorToNextWaypoint[0];
+        y_hat = unitVectorToNextWaypoint[1];
 
         // free up memory
         delete vectorToNextWaypoint;
         delete vectorToObstacle;
         delete unitVectorToNextWaypoint;
 
-        return {x, y, unitVectorToNextWaypoint[0], unitVectorToNextWaypoint[1]};
+        return {x, y, x_hat, y_hat};
     }
 
     int getIndexOfObstacle(Obstacle* thing){
@@ -548,18 +571,35 @@ private:
 
     // Constructor
 public:
-    NavigationSystem() : Node("NAVnode"), count_(0), debug(false), returnToBase(false), obstacleCount(0), obstacleLimit(10),
-                         northernMapLimit(100), southernMapLimit(-100), westernMapLimit(-100), easternMapLimit(100),
-                         preference(local), circumnavigationStyle(reroute), routeSelected(Route1) {
+    NAVnode() : Node("NAVnode") {
+        
         currentPosition = new Waypoint(0.0, 0.0);
-        currentVelocity = new Velocity();
+        currentVelocity.speed = 0;
+        currentVelocity.heading = 0;
 
-        // define topics
+        debug = false;
+        returnToBase = false;
+        
+        obstacleCount = 0;
+        obstacleLimit = 10;
+        waypointCount = 0;
+        
+        northernMapLimit = 100;
+        southernMapLimit = 100;
+        westernMapLimit = 100;
+        easternMapLimit = 100;
+        
+        preference = local;
+        circumnavigationStyle = reroute;
+        routeSelected = Route1;
+
+        // create topics
         // here, we're using a queue size of 1 because it is more desireable to lose some data
         // than to be using outdated position data
         VelocityPublisher = this->create_publisher<navigation_interfaces::msg::Velocity>("Velocity", 1);
 
-        // define services
+
+        // create services
         StopNavigatingServer = this->create_service<navigation_interfaces::srv::VoidService>("StopNavigating", &stopNavigating);
         SelectRouteServer = this->create_service<navigation_interfaces::srv::SelectRoute>("SelectRoute", &selectRoute);
         ResetHomeServer = this->create_service<navigation_interfaces::srv::ResetHome>("ResetHome", &resetHome);
@@ -567,8 +607,9 @@ public:
         
         ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
         TogglePreferenceServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreference", &togglePreference);
-        ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
-        ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
+        ToggleRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &togglePreference);
+        ToggleCircumnavigationStyleServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleCircumnavigationStyle);
+        ToggleDirectionServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDirection);
 
         AddLocalWaypointServer = this->create_service<navigation_interfaces::srv::AddLocalWaypoint>("AddLocalWaypoint", &addLocalWaypoint);
         AddLocalWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", &addLocalWaypointAtIndex);
@@ -581,6 +622,87 @@ public:
         AddEarthCentredWaypointServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypoint>("AddEarthCentredWaypoint", &addEarthCentredWaypoint);
         AddEarthCentredWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", &addEarthCentredWaypointAtIndex);
         AddEarthCentredObstacleServer = this->create_service<navigation_interfaces::srv::AddEarthCentredObstacle>("AddEarthCentredObstacle", &addEarthCentredObstacle);
+        
+        // main timer will process gnss data once per second
+        timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
+
+        // velocity timer will calculate and publish current velocity vector every 5 seconds
+        //auto secondaryTimer = this->create_wall_timer(5s, std::bind(&NavigationSystem::velocityTimer, this));
+    }
+
+    // timers
+    void mainTimer(){
+        updatePositonData();
+        pointsVisited.add(currentPosition);
+
+        if (debug){
+            // debug mode will print the current value for all our variables to the ros terminal thatt the navigation node is active in
+            RCLCPP_INFO(this->getLogger(), 
+                "Current coordinates: %f N %f W \n\r" + 
+                "Current velocity: %f m/s @ %f degrees \n\r" +
+                "Route Selected: %s Coordinate Preference: %s Circumnavigation style: %s \n\r" +
+                "Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", 
+                currentPosition->getLatitude(), currentPosition->getLatitude(),
+                currentVelocity->speed, currentVelocity->direction,
+                routeSelected, preference, circumnavigationStyle,
+                waypointCount, obstacleCount, obstacleLimit);
+        }
+
+        lastFiveWaypoints[timeSinceLastVelocityPublishing] = currentPosition;
+
+        if (timeSinceLastVelocityPublishing >= 5){
+            updateVelocity();
+            VelocityPublisher->publish(currentVelocity);
+        }
+    }
+
+    //void velocityTimer(){}
+
+    /*
+        updatePositionData()
+        --------------------
+        method that will get the current position of the rover from the gnss module and update the "currentPosition" Waypoint
+    */
+    void updatePositonData(){
+        
+    }
+
+    /*
+        updateVelocity()
+        --------------------
+        method that will estimate the current velocity of the rover
+        it will use a vector average over the last 4 waypoints with respect to the position of the 5th to get the velocity
+
+        **NOTE** this calculates the average velocity of the rover over the last 5 seconds
+        (or more accurately its an average of the last 4 seconds and there's a 1 second gap between intervals where we calculate the velocity)
+        this is aweful, but since we are mainly going to be using the directional data to calibrate the heading indicator that is 
+        powered by the IMU, this is good enough
+    */
+    void updateVelocity(){
+        double x,y,dX,dY;
+
+        for(int i = 1; i < 5; i++){
+            dX += lastFiveWaypoints[i]->getX() - lastFiveWaypoints[0]->getX();
+            dY += lastFiveWaypoints[i]->getY() - lastFiveWaypoints[0]->getY();
+        }
+
+        x = abs(dX/4); 
+        y = abs(dY/4);
+
+        // calculate speed
+        currentVelocity.speed = sqrt(x*x + y*y)/4;
+
+        //calculate heading
+        if (dX == 0 && dY == 0);
+        else if (dX > 0 && dY > 0) // 1st quadrant
+            currentVelocity.heading = 90  - currentPosition->radToDeg(std::asin(y/x));
+        else if (dX < 0 && dY > 0) // 2nd quadrant
+            currentVelocity.heading = 270 + currentPosition->radToDeg(std::asin(y/x));
+        else if (dX < 0 && dY < 0) // 3rd quadrant
+            currentVelocity.heading = 270 - currentPosition->radToDeg(std::asin(y/x));
+        else if (dX > 0 && dY < 0) // 4th quadrant
+            currentVelocity.heading = 90  + currentPosition->radToDeg(std::asin(y/x));
+        
     }
 
     // service callback functions
@@ -610,6 +732,10 @@ public:
         debug = !debug;
     }
 
+    void toggleDirection(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
+        returnToBase = !returnToBase;
+    }
+
     void toggleCircumnavigationStyle(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
         switch(circumnavigationStyle){
             case(reroute): circumnavigationStyle = trackCrawling;
@@ -619,51 +745,124 @@ public:
     }
 
     void selectRoute(const std::shared_ptr<navigation_interfaces::srv::SelectRoute::Request> request, std::shared_ptr<navigation_interfaces::srv::SelectRoute::Response> response){
-
+        switch(request->route){
+            case Route1: routeSelected = Route1; break;
+            case Route2: routeSelected = Route2; break;
+            case Route3: routeSelected = Route3; break;
+            case Route4: routeSelected = Route4; break;
+            case Route5: routeSelected = Route5; break;
+            default: cout << "Error: invalid Route selection" << endl;
+        }
     }
 
     void resetHome(const std::shared_ptr<navigation_interfaces::srv::ResetHome::Request> request, std::shared_ptr<navigation_interfaces::srv::ResetHome::Response> response){
-
+        if (Waypoint::checkPassword(request->password))
+            response->success = true;
+        else 
+            response->success = false;
     }
 
     void clearRoute(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-
+        routes[routeSelected].clear();
     }
 
-    void AddLocalWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Response> response){
-
+    void addLocalWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Response> response){
+        routes[routeSelected].add(new Waypoint(request->x, request->y));
     }
 
-    void AddLocalWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Response> response){
-
+    void addLocalWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Response> response){
+        routes[routeSelected].add(new Waypoint(request->x, request->y), request->index);
     }
 
-    void AddLocalObstacle(const std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Response> response){
+    void addLocalObstacle(const std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Response> response){
+        // check if the array of obstacles is full
+        if (obstacleCount == obstacleLimit){
+            // increase make a larger array to store obstacles
+            obstacleLimit += 10;
+            Obstacle* biggerArray[obstacleLimit] = {};
 
+            // copy over existing obstacles (by iterating through existing array)
+            for(int i = 0; i < obstacleLimit - 10; i++){
+                biggerArray[i] = obstacles[i];
+                obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
+            }
+
+            // clean up memory and rename our new array (by reusing the old pointer);
+            delete obstacles;
+            obstacles = biggerArray;
+        }
+
+        // add new obstacle. post incrementing to handle indexing differences
+        if (request->radius <= 0)
+            obstacles[obstacleCount++] = new Obstacle(request->x, request->y); // use default radius if no radius is entered
+        else
+            obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->radius);
     }
 
-    void AddGeodeticWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Response> response){
-
+    void addGeodeticWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Response> response){
+        routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true));
     }
 
-    void AddGeodeticWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Response> response){
-
+    void addGeodeticWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Response> response){
+        routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true), request->index);
     }
 
-    void AddGeodeticObstacle(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Response> response){
+    void addGeodeticObstacle(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Response> response){
+        // check if the array of obstacles is full
+        if (obstacleCount == obstacleLimit){
+            // increase make a larger array to store obstacles
+            obstacleLimit += 10;
+            Obstacle* biggerArray[obstacleLimit] = {};
 
+            // copy over existing obstacles (by iterating through existing array)
+            for(int i = 0; i < obstacleLimit - 10; i++){
+                biggerArray[i] = obstacles[i];
+                obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
+            }
+
+            // clean up memory and rename our new array (by reusing the old pointer);
+            delete obstacles;
+            obstacles = biggerArray;
+        }
+
+        // add new obstacle. post incrementing to handle indexing differences
+        if (request->radius <= 0)
+            obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, true); // use default radius if no radius is entered
+        else
+            obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, request->radius, true);
     }
 
-    void AddEarthCentredWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Response> response){
-
+    void addEarthCentredWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Response> response){
+        routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false));
     }
 
-    void AddEarthCentredWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Response> response){
-
+    void addEarthCentredWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Response> response){
+        routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false), request->index);
     }
 
-    void AddEarthCentredObstacle(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Response> response){
+    void addEarthCentredObstacle(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Response> response){
+        // check if the array of obstacles is full
+        if (obstacleCount == obstacleLimit){
+            // increase make a larger array to store obstacles
+            obstacleLimit += 10;
+            Obstacle* biggerArray[obstacleLimit] = {};
 
+            // copy over existing obstacles (by iterating through existing array)
+            for(int i = 0; i < obstacleLimit - 10; i++){
+                biggerArray[i] = obstacles[i];
+                obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
+            }
+
+            // clean up memory and rename our new array (by reusing the old pointer);
+            delete obstacles;
+            obstacles = biggerArray;
+        }
+
+        // add new obstacle. post incrementing to handle indexing differences
+        if (request->radius <= 0)
+            obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, false); // use default radius if no radius is entered
+        else
+            obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, request->radius, false);
     }
 
 
@@ -679,8 +878,6 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 /*
-    - finish logic behind the Velocity class
-
     - finish logic behind the Navsystem class -> add checks for track craling method to ensure any new waypoints created are not colliding with obstacles
 
     - define our ros related stuff
@@ -688,8 +885,6 @@ public:
     - add logic to the main function to create the node and spin it
 
     - add a serial bridge to communicate with the GNSS module
-
-    - add functionality to allow the array of obstacles to be dynamically resized (currently set to 10 for simplicity)
 
     - update documentation
 */
@@ -702,7 +897,9 @@ int main(int argc, char** argv) {
     (void)argc;
     (void)argv;
 
-    cout<<"Hello World!!"<<endl;
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<NAVnode>());
+    rclcpp::shutdown();
 
     return 0;
 }
