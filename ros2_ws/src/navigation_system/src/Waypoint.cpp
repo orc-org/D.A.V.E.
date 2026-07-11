@@ -123,7 +123,7 @@ public:
         returns false if home was not reset
     */
     bool setHome(Waypoint* point, int password){
-        if (password = this->password || !homeIsSet) {
+        if (password == this->password || !homeIsSet) {
             setHome(point);
             return true;
         }
