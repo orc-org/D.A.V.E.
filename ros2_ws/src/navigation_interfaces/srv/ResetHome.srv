@@ -1,0 +1,5 @@
+float32 longitude
+float32 latitude
+int32 password
+---
+bool success

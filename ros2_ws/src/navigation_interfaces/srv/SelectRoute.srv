@@ -1,0 +1,10 @@
+#define enum
+uint8 ROUTE1 = 0
+uint8 ROUTE2 = 1
+uint8 ROUTE3 = 2
+uint8 ROUTE4 = 3
+uint8 ROUTE5 = 4
+
+#request
+uint8 route
+---

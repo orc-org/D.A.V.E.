@@ -12,8 +12,43 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/BearingString.msg"
   "msg/PositionString.msg"
+  
   "srv/GetNav.srv"
   "srv/SetNav.srv"
+  
+  "srv/GetHome.srv"
+  "srv/SetHome.srv"
+  
+  "srv/GetTarget.srv"
+  "srv/SetTarget.srv"
+
+  "srv/GoHome.srv"
+  "srv/SerialSend.srv"
+
+  "srv/ToggleDisplayTopicInfo.srv"
+  "srv/TogglePreference.srv"
+
+  "action/NavigationAction.action"
+
+  "msg/Velocity.msg"
+
+  "srv/SelectRoute.srv"
+  "srv/VoidService.srv"
+
+  "srv/ResetHome.srv"
+
+  "srv/AddLocalWaypoint.srv"
+  "srv/AddLocalWaypointAtIndex.srv"
+  "srv/AddLocalObstacle.srv"
+
+  "srv/AddGeodeticWaypoint.srv"
+  "srv/AddGeodeticWaypointAtIndex.srv"
+  "srv/AddGeodeticObstacle.srv"
+
+  "srv/AddEarthCentredWaypoint.srv"
+  "srv/AddEarthCentredWaypointAtIndex.srv"
+  "srv/AddEarthCentredObstacle.srv"
+
 )
 
 ament_export_dependencies(rosidl_default_runtime)
