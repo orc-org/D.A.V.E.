@@ -35,7 +35,7 @@ class VideoStreamer:
         # then, we use videoconvert to convert to the layout expected by the encoders.
         if self.use_mjpeg:
             # MJPEG pipeline: uses low CPU overhead since it only compresses frame by frame.
-            # Good if CPU is highly constrained, but consumes significantly more network bandwidth.
+            # good if CPU is highly constrained, but consumes significantly more network bandwidth. We can test which is better
             gst_pipeline = (
                 f"appsrc ! video/x-raw, format=BGR ! queue ! videoconvert ! "
                 f"jpegenc quality=80 ! rtpjpegpay ! "
@@ -125,24 +125,65 @@ if ROS2_AVAILABLE:
             super().destroy_node()
 
 
-def run_standalone_camera(streamer, device_id):
-    """Fallback runner that captures directly from a hardware camera index or device path."""
-    print(f"Starting standalone camera stream from device {device_id}...")
+def run_standalone_camera(streamer, device_id, camera_type='v4l2'):
+    """Captures from a hardware camera index or device path, using the selected backend."""
+    print(f"Starting standalone camera stream from device {device_id} using '{camera_type}' backend...")
     
-    try:
-        device = int(device_id)
-    except ValueError:
-        device = device_id
+    if camera_type == 'csi':
+        # CSI camera GStreamer source pipeline (using jetson ISP driver)
+        try:
+            sensor_id = int(device_id)
+        except ValueError:
+            sensor_id = 0
+            
+        gst_cap_pipeline = (
+            f"nvarguscamerasrc sensor-id={sensor_id} ! "
+            f"video/x-raw(memory:NVMM), width={streamer.width}, height={streamer.height}, format=NV12, framerate={streamer.fps}/1 ! "
+            f"nvvidconv ! "
+            f"video/x-raw, format=BGRx ! "
+            f"videoconvert ! "
+            f"video/x-raw, format=BGR ! "
+            f"appsink drop=true"
+        )
+        print(f"Opening CSI camera with GStreamer pipeline:\n{gst_cap_pipeline}")
+        cap = cv2.VideoCapture(gst_cap_pipeline, cv2.CAP_GSTREAMER)
         
-    cap = cv2.VideoCapture(device)
-    if not cap.isOpened():
-        print(f"ERROR: Could not open camera device {device_id}.")
-        return
+    elif camera_type == 'gstreamer':
+        # USB camera V4L2 GStreamer source pipeline (decodes MJPEG if supported)
+        try:
+            dev_num = int(device_id)
+            dev_path = f"/dev/video{dev_num}"
+        except ValueError:
+            dev_path = device_id
+            
+        gst_cap_pipeline = (
+            f"v4l2src device={dev_path} ! "
+            f"image/jpeg, width={streamer.width}, height={streamer.height}, framerate={streamer.fps}/1 ! "
+            f"jpegdec ! "
+            f"videoconvert ! "
+            f"video/x-raw, format=BGR ! "
+            f"appsink drop=true"
+        )
+        print(f"Opening USB camera with GStreamer pipeline:\n{gst_cap_pipeline}")
+        cap = cv2.VideoCapture(gst_cap_pipeline, cv2.CAP_GSTREAMER)
+        
+    else:  # 'v4l2' (Default direct V4L2 backend)
+        try:
+            device = int(device_id)
+        except ValueError:
+            device = device_id
+            
+        print(f"Opening V4L2 device {device_id} directly...")
+        cap = cv2.VideoCapture(device, cv2.CAP_V4L2)
+        
+        # request target resolution and frame rate
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, streamer.width)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, streamer.height)
+        cap.set(cv2.CAP_PROP_FPS, streamer.fps)
 
-    # request the resolution and fps from v4l2 device
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, streamer.width)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, streamer.height)
-    cap.set(cv2.CAP_PROP_FPS, streamer.fps)
+    if not cap.isOpened():
+        print(f"ERROR: Could not open camera device {device_id} with backend '{camera_type}'.")
+        return
 
     delay = 1.0 / streamer.fps
 
@@ -180,6 +221,8 @@ def main(args=None):
     parser.add_argument('--source', type=str, default='camera', choices=['camera', 'topic'], 
                         help='Input source: "camera" (V4L2) or "topic" (ROS 2 subscriber)')
     parser.add_argument('--device', type=str, default='0', help='Camera device index or V4L2 path (e.g. 0 or /dev/video0)')
+    parser.add_argument('--camera-type', type=str, default='v4l2', choices=['v4l2', 'csi', 'gstreamer'],
+                        help='Camera capture backend: "v4l2" (standard USB), "csi" (Jetson CSI), or "gstreamer" (custom USB pipeline)')
     parser.add_argument('--topic', type=str, default='/image_raw', help='ROS 2 image topic to subscribe to')
     parser.add_argument('--mjpeg', action='store_true', help='Use MJPEG compression instead of H.264')
     parser.add_argument('--standalone', action='store_true', help='Force standalone camera mode even if ROS 2 is sourced')
@@ -215,7 +258,7 @@ def main(args=None):
             rclpy.try_shutdown()
     else:
         # run standalone camera grabber
-        run_standalone_camera(streamer, parsed_args.device)
+        run_standalone_camera(streamer, parsed_args.device, parsed_args.camera_type)
 
 
 if __name__ == '__main__':
