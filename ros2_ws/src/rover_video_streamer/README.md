@@ -1,6 +1,6 @@
 # Rover Video Streamer
 
-This package implements a low-latency, raw UDP-based video streaming system for a ROS 2 rover. It is optimized for hardware like the **Nvidia Jetson Orin Nano**, which lacks an NVENC hardware encoder, by utilizing a highly optimized CPU-based software encoder (`x264enc`) tuned for zero latency.
+This package implements raw UDP-based video streaming system for a ROS 2 rover. It is good for hardware like the Jetson which lacks an NVENC hardware encoder, by utilizing an optimized CPU-based software encoder (`x264enc`).
 
 It supports two modes of operation:
 1. **Camera Mode** (default): Captures video frames directly from a local V4L2 device (e.g., `/dev/video0`) using OpenCV.
@@ -19,25 +19,26 @@ appsrc ! video/x-raw, format=BGR ! queue ! videoconvert ! video/x-raw, format=I4
 
 - **`appsrc`**: The entry point where OpenCV BGR frames are fed into GStreamer.
 - **`video/x-raw, format=BGR`**: Informs GStreamer of the incoming OpenCV format.
-- **`queue`**: Decouples the OpenCV ingestion thread from the GStreamer processing pipeline, preventing blocking.
+- **`queue`**: Decouples the OpenCV thread from the GStreamer processing pipeline, preventing blocking.
 - **`videoconvert ! video/x-raw, format=I420`**: Converts BGR frames to YUV420p, which is required by `x264enc`.
 - **`x264enc`**: The CPU H.264 software encoder.
-  - `tune=zerolatency`: **CRITICAL**. Disables frame reordering (B-frames) and multi-frame lookahead. This drops buffering latency to 0 frames.
-  - `bitrate=2000`: Sets the target bit rate to 2000 kbps (2 Mbps) for 720p 30fps. Low bitrate is essential to avoid packet drops over lossy 2.4GHz WiFi.
-  - `speed-preset=ultrafast`: Uses the fastest and least CPU-intensive encoding settings. This is crucial for CPU encoding on the Orin Nano.
+  - `tune=zerolatency`: Disables frame reordering (B-frames) and multi-frame lookahead. This drops buffering latency to 0 frames.
+  - `bitrate=2000`: Sets the target bit rate to 2000 kbps (2 Mbps) for 720p 30fps. (Helps to avoid packet loss)
+  - `speed-preset=ultrafast`: Uses the fastest and least CPU-intensive encoding settings.
   - `key-int-max=30`: Forces a keyframe (I-frame) at least every 30 frames (1 second). This guarantees that the receiver will recover from network packet drops within 1 second.
   - `threads=4`: Uses 4 CPU cores to speed up encoding.
 - **`rtph264pay`**: Payloads raw H.264 streams into RTP packets.
   - `config-interval=1`: Periodically sends the SPS/PPS parameter headers in-band. This allows the receiver to join the stream or recover from packet loss immediately without waiting.
   - `aggregate-mode=zero-latency`: Bundles SPS/PPS/NAL units into STAP-A packets to minimize packetization overhead and latency.
 - **`udpsink`**: Sends the RTP packet stream over UDP.
-  - `host=192.168.1.10` / `port=5000`: The destination IP address (base station laptop) and port.
-  - `sync=false`: **CRITICAL**. Tells GStreamer to stream frames as soon as they are encoded without waiting for the pipeline clock.
+  - `host=192.168.1.xx` / `port=5000`: The destination IP address (base station laptop) and port.
+  - `sync=false`: Tells GStreamer to stream frames as soon as they are encoded without waiting for the pipeline clock.
   - `async=false`: Disables asynchronous state changes, reducing state transition latency.
   - `buffer-size=2097152`: Configures a 2MB socket send buffer to prevent OS-level UDP packet drops during high-throughput transmission.
 
 ### 2. Receiver Pipeline (Base Station Laptop)
-Run the following GStreamer CLI command on the receiver machine (`192.168.1.10`):
+Run the following GStreamer CLI command on the receiver machine (`192.168.1.xx`) [You can find your IP by running hostname -I]:
+
 
 ```bash
 gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp,media=video,clock-rate=90000,encoding-name=H264,payload=96 ! rtpjitterbuffer latency=0 drop-on-latency=true ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! autovideosink sync=false
@@ -50,14 +51,14 @@ gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp,media=video,clock-rate=90
   - `drop-on-latency=true`: Discards any packet that arrives late relative to the playback timeline.
 - **`rtph264depay ! h264parse`**: Decapsulates and parses the H.264 stream.
 - **`avdec_h264`**: Fast software H.264 decoder (ffmpeg/libav-based).
-- **`autovideosink sync=false`**: Renders the video window. The `sync=false` property is **CRITICAL** to render frames as soon as they are decoded rather than waiting for timestamps.
+- **`autovideosink sync=false`**: Renders the video window. The `sync=false` property renders frames as soon as they are decoded rather than waiting for timestamps.
 
 ---
 
 ## Installation & Setup (Orin Nano)
 
 ### 1. Required GStreamer Plugins
-Install the GStreamer suite on the Jetson Orin Nano to ensure all plugins are available:
+Install the GStreamer suite on the Jetson to ensure all plugins are available:
 
 ```bash
 sudo apt-get update
@@ -108,20 +109,22 @@ Copy the `scripts` directory to your laptop, or run it directly from the reposit
 If you have a local image topic publishing on the Jetson (e.g., `/image_raw`), run:
 
 ```bash
-ros2 run rover_video_streamer video_streamer --source topic --topic /image_raw --host 192.168.1.10 --port 5000
+ros2 run rover_video_streamer video_streamer --source topic --topic /image_raw --host 192.168.1.xx --port 5000
 ```
 
-### Run as a Standalone Script
+### Run as a Standalone Script (What I recommed using so far)
 If you want to capture directly from a V4L2 USB/CSI camera (e.g. `/dev/video0`) without running ROS 2:
 
 ```bash
-ros2 run rover_video_streamer video_streamer --source camera --device 0 --host 192.168.1.10 --port 5000
+ros2 run rover_video_streamer video_streamer --camera-type csi --device 0 --host 192.168.1.xx --port 5000
 ```
 
 *(Alternatively, run the script directly with python3)*:
 ```bash
-python3 src/rover_video_streamer/rover_video_streamer/video_streamer.py --source camera --device 0 --host 192.168.1.10 --port 5000
+python3 src/rover_video_streamer/rover_video_streamer/video_streamer.py --camera-type csi --device 0 --host 192.168.1.xx --port 5000
 ```
+
+Multiple cameras can be streamed at once by changing the device, and port settings (i.e. --device 1 ... --port 5001)
 
 ---
 
@@ -133,11 +136,11 @@ gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp,media=video,clock-rate=90
 ```
 
 ### Lossy Link Enhancements (MJPEG Alternative)
-If the 2.4GHz Ubiquiti bridge experiences severe packet loss, H.264 can sometimes suffer from visual artifacts due to corrupted keyframes. You can try streaming **MJPEG** frames instead, which handles packet loss per frame at the expense of higher bandwidth:
+If severe packet loss is experienced, H.264 can sometimes suffer from visual artifacts due to corrupted keyframes. You can try streaming **MJPEG** frames instead, which handles packet loss per frame at the expense of higher bandwidth:
 
 **Jetson Command:**
 ```bash
-ros2 run rover_video_streamer video_streamer --source camera --device 0 --host 192.168.1.10 --port 5000 --mjpeg
+ros2 run rover_video_streamer video_streamer --camera-type csi --device 0 --host 192.168.1.xx --port 5000 --mjpeg
 ```
 
 **Receiver Command:**
