@@ -5,8 +5,9 @@ import argparse
 import time
 import cv2
 import threading
+import subprocess
 
-# try importing ROS 2 dependencies
+# try importing ros 2 dependencies
 try:
     import rclpy
     from rclpy.node import Node
@@ -21,7 +22,7 @@ except ImportError:
 class VideoStreamer:
     """Manages the GStreamer pipeline and pushes OpenCV frames to it."""
     
-    def __init__(self, host, port, fps, width, height, bitrate, use_mjpeg):
+    def __init__(self, host, port, fps, width, height, bitrate, use_mjpeg, sensor_id=0):
         self.host = host
         self.port = port
         self.fps = fps
@@ -32,32 +33,60 @@ class VideoStreamer:
         self.writer = None
         
         # autofocus state variables
-        self.focus_subdev = self.find_focus_subdev()
+        self.sensor_id = sensor_id
+        # csi port 0 (camera 0) maps to i2c bus 10, csi port 1 (camera 1) maps to i2c bus 9
+        self.i2c_bus = 10 if sensor_id == 0 else 9
+        self.i2c_address = 0x0c
+        
         self.autofocus_in_progress = False
         self.last_frame_sharpness = 0.0
+        self.focus_motor_initialized = False
+        self.has_focus_motor = False
         
         self.init_gst_writer()
 
-    def find_focus_subdev(self):
-        """Scans V4L2 subdevices to find the focus controller (VCM)."""
-        import glob
-        import subprocess
-        for dev in glob.glob("/dev/v4l-subdev*"):
-            try:
-                res = subprocess.run(["v4l2-ctl", "-d", dev, "--list-ctrls"], capture_output=True, text=True)
-                if "focus_absolute" in res.stdout:
-                    return dev
-            except Exception:
-                continue
-        return None
+    def _try_init_bus(self, bus):
+        """Attempts to initialize the VCM focusing chip on a specific I2C bus."""
+        try:
+            # write 0x00 to register 0x02 to initialize the ak7375 vcm chip
+            res = subprocess.run(
+                ["i2cset", "-y", str(bus), f"0x{self.i2c_address:02x}", "0x02", "0x00"], 
+                capture_output=True, check=True
+            )
+            return True
+        except Exception:
+            return False
+
+    def init_focus_motor(self):
+        """Initializes focus VCM on its designated bus with retry delay to allow chip boot-up."""
+        # retry up to 5 times with a 50ms delay between attempts to allow VCM chip to boot after camera power-on
+        for attempt in range(1, 6):
+            if self._try_init_bus(self.i2c_bus):
+                print(f"[Autofocus] Focus VCM initialized successfully on I2C bus {self.i2c_bus} at address 0x{self.i2c_address:02x} (attempt {attempt}).")
+                self.has_focus_motor = True
+                return
+            time.sleep(0.05)
+
+        print(f"[Autofocus] WARNING: Could not communicate with focus VCM on designated I2C bus {self.i2c_bus}.")
+        print("[Autofocus] Direct I2C focus commands will be disabled.")
+        self.has_focus_motor = False
 
     def set_focus(self, value):
-        """Writes the focus target down to the V4L2 subdevice lens motor."""
-        if not self.focus_subdev:
+        """Writes 10-bit focus value (scaled to 12-bit register format) to VCM via direct I2C calls."""
+        if not self.has_focus_motor:
             return
-        import subprocess
         try:
-            subprocess.run(["v4l2-ctl", "-d", self.focus_subdev, "--set-ctrl", f"focus_absolute={int(value)}"], capture_output=True)
+            # map input range (0 to 1000) to vcm 12-bit register range (0 to 4095)
+            val = int(value / 1000.0 * 4095)
+            val = max(0, min(4095, val))
+            val <<= 4  # shift left by 4 bits as expected by ak7375/dw9714 registers
+            
+            high_byte = (val >> 8) & 0xFF
+            low_byte = val & 0xFF
+            
+            # write high byte to register 0x00 and low byte to register 0x01
+            subprocess.run(["i2cset", "-y", str(self.i2c_bus), f"0x{self.i2c_address:02x}", "0x00", f"0x{high_byte:02x}"], check=True, capture_output=True)
+            subprocess.run(["i2cset", "-y", str(self.i2c_bus), f"0x{self.i2c_address:02x}", "0x01", f"0x{low_byte:02x}"], check=True, capture_output=True)
         except Exception as e:
             print(f"[Autofocus] Error setting focus to {value}: {e}")
 
@@ -71,8 +100,8 @@ class VideoStreamer:
 
     def trigger_sweep(self):
         """Launches the autofocus sweep thread if not already running."""
-        if not self.focus_subdev:
-            print("[Autofocus] WARNING: No focus motor subdevice found. Focus sweep aborted.")
+        if not self.has_focus_motor:
+            print("[Autofocus] WARNING: No focus motor detected over I2C. Focus sweep aborted.")
             return False
         if self.autofocus_in_progress:
             print("[Autofocus] Focus sweep already in progress.")
@@ -88,7 +117,7 @@ class VideoStreamer:
         
         focus_min = 100
         focus_max = 900
-        coarse_step = 60
+        coarse_step = 80  # increased step size for faster sweeping
         
         best_focus = focus_min
         max_sharpness = 0.0
@@ -96,8 +125,8 @@ class VideoStreamer:
         # coarse sweep
         for val in range(focus_min, focus_max + 1, coarse_step):
             self.set_focus(val)
-            # sleep slightly longer than frametime to guarantee a fresh frame is processed by opencv
-            time.sleep(0.2)
+            # reduced settle time for faster sweep
+            time.sleep(0.08)
             
             sharpness = self.last_frame_sharpness
             print(f"[Autofocus] Coarse Focus: {val:3d} | Sharpness: {sharpness:.2f}")
@@ -106,13 +135,13 @@ class VideoStreamer:
                 best_focus = val
                 
         # fine sweep around the coarse peak
-        fine_min = max(focus_min, best_focus - 50)
-        fine_max = min(focus_max, best_focus + 50)
-        fine_step = 15
+        fine_min = max(focus_min, best_focus - 60)
+        fine_max = min(focus_max, best_focus + 60)
+        fine_step = 20
         
         for val in range(fine_min, fine_max + 1, fine_step):
             self.set_focus(val)
-            time.sleep(0.18)
+            time.sleep(0.08)
             
             sharpness = self.last_frame_sharpness
             print(f"[Autofocus] Fine Focus: {val:3d} | Sharpness: {sharpness:.2f}")
@@ -126,14 +155,14 @@ class VideoStreamer:
 
     def init_gst_writer(self):
         if self.use_mjpeg:
-            # MJPEG pipeline
+            # mjpeg pipeline
             gst_pipeline = (
                 f"appsrc ! video/x-raw, format=BGR ! queue ! videoconvert ! "
                 f"jpegenc quality=80 ! rtpjpegpay ! "
                 f"udpsink host={self.host} port={self.port} sync=false async=false buffer-size=2097152"
             )
         else:
-            # H.264 software encoding with low latency tuning
+            # h.264 software encoding with low latency tuning
             gst_pipeline = (
                 f"appsrc ! video/x-raw, format=BGR ! queue ! videoconvert ! video/x-raw, format=I420 ! "
                 f"x264enc tune=zerolatency bitrate={self.bitrate} speed-preset=ultrafast key-int-max={int(self.fps)} threads=4 ! "
@@ -159,6 +188,11 @@ class VideoStreamer:
     def send_frame(self, frame):
         if frame is None:
             return
+        
+        # lazy initialization: only initialize the vcm focus motor when the camera is active and powered
+        if not self.focus_motor_initialized:
+            self.init_focus_motor()
+            self.focus_motor_initialized = True
         
         # compute image sharpness in real-time only during active autofocus sweeps
         if self.autofocus_in_progress:
@@ -196,7 +230,7 @@ if ROS2_AVAILABLE:
             )
             self.get_logger().info(f"Subscribed to ROS 2 topic: {args.topic}")
             
-            # register ROS 2 Service to trigger autofocus on the go
+            # register ros 2 service to trigger autofocus while running
             self.srv = self.create_service(
                 Trigger,
                 '~/trigger_autofocus',
@@ -221,7 +255,6 @@ if ROS2_AVAILABLE:
             return response
 
         def image_callback(self, msg):
-            # convert ros image message to cv2 BGR frame
             try:
                 frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
                 self.streamer.send_frame(frame)
@@ -239,13 +272,22 @@ def start_udp_trigger_listener(streamer, port=5005):
     """Listens on a background UDP port for remote focus commands (independent of ROS 2)."""
     import socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        sock.bind(('0.0.0.0', port))
-    except Exception as e:
-        print(f"[Autofocus] WARNING: Could not bind to UDP trigger port {port}: {e}")
-        return
+    
+    # try binding to the requested port, or search for the next available one
+    current_port = port
+    bound = False
+    while not bound:
+        try:
+            sock.bind(('0.0.0.0', current_port))
+            bound = True
+        except Exception:
+            # port in use, try the next one
+            current_port += 1
+            if current_port > port + 100:  # safety ceiling
+                print("[Autofocus] WARNING: Could not find any free UDP trigger ports. Trigger listener aborted.")
+                return
         
-    print(f"[Autofocus] Remote UDP trigger listener active on port {port}.")
+    print(f"[Autofocus] Remote UDP trigger listener active on port {current_port}.")
     
     while True:
         try:
@@ -349,8 +391,8 @@ def main(args=None):
     parser.add_argument('--host', type=str, default='192.168.1.10', help='Base station IP address')
     parser.add_argument('--port', type=int, default=5000, help='UDP port to send stream')
     parser.add_argument('--fps', type=int, default=30, help='Target framerate')
-    parser.add_argument('--width', type=int, default=1280, help='Target frame width')
-    parser.add_argument('--height', type=int, default=720, help='Target frame height')
+    parser.add_argument('--width', type=str, default='1280', help='Target frame width')
+    parser.add_argument('--height', type=str, default='720', help='Target frame height')
     parser.add_argument('--bitrate', type=int, default=2000, help='H.264 bitrate in kbps (x264enc)')
     parser.add_argument('--source', type=str, default='camera', choices=['camera', 'topic'], 
                         help='Input source: "camera" (V4L2) or "topic" (ROS 2 subscriber)')
@@ -366,21 +408,35 @@ def main(args=None):
     # resolve arguments
     parsed_args = parser.parse_args(args=args if args is not None else sys.argv[1:])
 
-    # instantiate the core GStreamer video writer
+    # resolve sensor-id for i2c bus mapping robustly
+    sensor_id = 0
+    if parsed_args.device.isdigit():
+        sensor_id = int(parsed_args.device)
+    elif "video" in parsed_args.device:
+        try:
+            sensor_id = int(''.join(filter(str.isdigit, parsed_args.device)))
+        except ValueError:
+            sensor_id = 0
+
+    # instantiate the core gstreamer video writer
     streamer = VideoStreamer(
         host=parsed_args.host,
         port=parsed_args.port,
         fps=parsed_args.fps,
-        width=parsed_args.width,
-        height=parsed_args.height,
+        width=int(parsed_args.width) if isinstance(parsed_args.width, str) and parsed_args.width.isdigit() else parsed_args.width,
+        height=int(parsed_args.height) if isinstance(parsed_args.height, str) and parsed_args.height.isdigit() else parsed_args.height,
         bitrate=parsed_args.bitrate,
-        use_mjpeg=parsed_args.mjpeg
+        use_mjpeg=parsed_args.mjpeg,
+        sensor_id=sensor_id
     )
 
-    # start the remote focus trigger UDP listener thread (independent of ROS 2)
+    # automatically offset the trigger port based on sensor_id to prevent overlaps
+    trigger_port = parsed_args.trigger_port + sensor_id
+
+    # start the remote focus trigger udp listener thread (independent of ros 2)
     trigger_thread = threading.Thread(
         target=start_udp_trigger_listener,
-        args=(streamer, parsed_args.trigger_port),
+        args=(streamer, trigger_port),
         daemon=True
     )
     trigger_thread.start()
@@ -390,13 +446,13 @@ def main(args=None):
             print("ERROR: ROS 2 imports failed. Cannot run in topic mode. Use --standalone / --source camera.")
             sys.exit(1)
         
-        # initialize ROS 2 and run the subscriber node
+        # initialize ros 2 and run the subscriber node
         rclpy.init()
         node = VideoStreamerROS2Node(parsed_args, streamer)
         try:
             rclpy.spin(node)
         except KeyboardInterrupt:
-            print("\nShutting down ROS 2 node...")
+            print("\nShutting down ros 2 node...")
         finally:
             node.destroy_node()
             rclpy.try_shutdown()
