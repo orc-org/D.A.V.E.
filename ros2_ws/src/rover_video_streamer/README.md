@@ -128,12 +128,37 @@ Multiple cameras can be streamed at once by changing the device, and port settin
 
 ---
 
-## Performance Diagnostic Options
-To view live frame rates and timing statistics on the receiver side, replace `autovideosink` with `fpsdisplaysink`:
+## Autofocus
 
+This package supports remote-triggered autofocus for CSI camera modules (Arducam IMX519). Since the jetson kernel V4L2 focus motor driver is disabled by default, this is achieved by writing directly to the VCM focus motor chip over userspace I2C.
+
+### Port Mapping
+To allow streaming multiple cameras simultaneously, the background UDP trigger listener port is automatically offset by the physical camera index (`sensor_id`):
+- **Camera 0** (`--device 0`) listens on port **`5005`** (maps to I2C bus 10)
+- **Camera 1** (`--device 1`) listens on port **`5006`** (maps to I2C bus 9)
+
+### Trigger Focus Remotely (From Base Station Laptop)
+Use the `trigger_focus.py` script to request an autofocus sweep over the network:
+
+*   **Trigger Camera 0:**
+    ```bash
+    python3 scripts/trigger_focus.py 192.168.1.xx
+    ```
+    *(defaults to port 5005)*
+
+*   **Trigger Camera 1:**
+    ```bash
+    python3 scripts/trigger_focus.py 192.168.1.xx --port 5006
+    ```
+
+### 2. Standalone Local Autofocus (Jetson)
+If you want to run a one-shot autofocus sweep locally on the Jetson without video streaming active, run:
 ```bash
-gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp,media=video,clock-rate=90000,encoding-name=H264,payload=96 ! rtpjitterbuffer latency=0 drop-on-latency=true ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! fpsdisplaysink video-sink="autovideosink sync=false" sync=false
+python3 scripts/autofocus.py --sensor <0 or 1>
 ```
+
+---
+
 
 ### Lossy Link Enhancements (MJPEG Alternative)
 If severe packet loss is experienced, H.264 can sometimes suffer from visual artifacts due to corrupted keyframes. You can try streaming **MJPEG** frames instead, which handles packet loss per frame at the expense of higher bandwidth:
