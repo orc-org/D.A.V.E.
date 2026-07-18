@@ -29,24 +29,26 @@
     padding: 0;
 }
 
-body {
+html, body {
     background-color: var(--bg-primary);
     color: var(--text-main);
     font-family: var(--font-stack);
-    height: 100vh;
-    overflow: hidden;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
     position: relative;
 }
 
-/* Layout container */
+/* layout container */
 .dashboard-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: auto;
+    min-height: 100vh;
     padding: 20px;
     z-index: 10;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* HEADER STYLE */
@@ -138,21 +140,19 @@ body {
     border-color: var(--accent-blue);
 }
 
-/* GRID SETUP */
+/* grid setup */
 .dashboard-grid {
-    display: grid;
-    grid-template-columns: 3fr 2fr;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
     flex-grow: 1;
-    min-height: 0; /* allows flex scrolling child */
 }
 
-/* VIEWPORT CONTAINER */
+/* viewport container */
 .viewport-section {
     display: flex;
     flex-direction: column;
     padding: 20px;
-    min-height: 0;
 }
 
 .panel-header {
@@ -266,30 +266,9 @@ body {
     transform: translateX(-50%);
 }
 
-/* RIGHT COLUMN LAYOUT */
+/* right column layout */
 .controls-column {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-height: 0;
-    overflow-y: auto;
-    padding-right: 8px;
-}
-
-/* Custom Scrollbar for Controls Column */
-.controls-column::-webkit-scrollbar {
-    width: 6px;
-}
-.controls-column::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 3px;
-}
-.controls-column::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-.controls-column::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-blue);
+    display: contents;
 }
 
 /* TELEMETRY VIEW */
