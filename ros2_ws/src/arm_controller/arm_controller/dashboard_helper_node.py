@@ -11,7 +11,7 @@ class DashboardHelperNode(Node):
     def __init__(self):
         super().__init__('dashboard_helper')
         
-        # Define processes: key -> display_name, cmd_args, pgrep_pattern
+        # define processes: key -> display_name, cmd_args, pgrep_pattern
         self.processes = {
             "tf_republisher": {
                 "name": "TF Web Republisher",
@@ -53,6 +53,18 @@ class DashboardHelperNode(Node):
                 "name": "Arm Stepper Driver",
                 "cmd": ["ros2", "run", "arm_controller", "arm_stepper_driver"],
                 "pattern": "arm_stepper_driver",
+                "proc": None
+            },
+            "stream_cam_0": {
+                "name": "Camera 0 Streamer (CSIPort0)",
+                "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "csi", "--device", "0", "--host", "192.168.1.87", "--port", "5000"],
+                "pattern": "video_streamer.py.*--device 0",
+                "proc": None
+            },
+            "stream_cam_1": {
+                "name": "Camera 1 Streamer (CSIPort1)",
+                "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "csi", "--device", "1", "--host", "192.168.1.87", "--port", "5002"],
+                "pattern": "video_streamer.py.*--device 1",
                 "proc": None
             }
         }
