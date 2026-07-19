@@ -502,6 +502,7 @@ NAVnode::NAVnode() : Node("NAVnode") {
     currentVelocity.speed = 0;
     currentVelocity.heading = 0;
 
+<<<<<<< HEAD
     debug = false;
     returnToBase = false;
         
@@ -518,6 +519,14 @@ NAVnode::NAVnode() : Node("NAVnode") {
     for (int i = 0; i < 5; i++) {
         lastFiveWaypoints[i] = currentPosition;
     }
+=======
+        debug = false;
+        returnToBase = false;
+        obstacleCount = 0;
+        obstacleLimit = 10;
+        obstacles = new Obstacle*[obstacleLimit];
+        waypointCount = 0;
+>>>>>>> fa8e302 (commit everything)
         
     northernMapLimit = 100;
     southernMapLimit = 100;
@@ -535,6 +544,7 @@ NAVnode::NAVnode() : Node("NAVnode") {
     GNSS = new SerialPort(SerialPort::stringToCharacterArray(gnss_port.c_str()), gnss_baud);
     GNSS->begin();
 
+<<<<<<< HEAD
     // create topics
     // here, we're using a queue size of 1 because it is more desireable to lose some data
     // than to be using outdated position data
@@ -589,6 +599,34 @@ NAVnode::NAVnode() : Node("NAVnode") {
 
     //main timer will process gnss data once per second
     timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
+=======
+        // create services
+        StopNavigatingServer = this->create_service<navigation_interfaces::srv::VoidService>("StopNavigating", std::bind(&NAVnode::stopNavigating, this, std::placeholders::_1, std::placeholders::_2));
+        SelectRouteServer = this->create_service<navigation_interfaces::srv::SelectRoute>("SelectRoute", std::bind(&NAVnode::selectRoute, this, std::placeholders::_1, std::placeholders::_2));
+        ResetHomeServer = this->create_service<navigation_interfaces::srv::ResetHome>("ResetHome", std::bind(&NAVnode::resetHome, this, std::placeholders::_1, std::placeholders::_2));
+        ClearRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("clearRoute", std::bind(&NAVnode::clearRoute, this, std::placeholders::_1, std::placeholders::_2));
+        
+        ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", std::bind(&NAVnode::toggleDebug, this, std::placeholders::_1, std::placeholders::_2));
+        TogglePreferenceServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreference", std::bind(&NAVnode::togglePreference, this, std::placeholders::_1, std::placeholders::_2));
+        ToggleRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreferenc", std::bind(&NAVnode::togglePreference, this, std::placeholders::_1, std::placeholders::_2));
+        ToggleCircumnavigationStyleServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleCircumnavigationStyle", std::bind(&NAVnode::toggleCircumnavigationStyle, this, std::placeholders::_1, std::placeholders::_2));
+        ToggleDirectionServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDirection", std::bind(&NAVnode::toggleDirection, this, std::placeholders::_1, std::placeholders::_2));
+
+        AddLocalWaypointServer = this->create_service<navigation_interfaces::srv::AddLocalWaypoint>("AddLocalWaypoint", std::bind(&NAVnode::addLocalWaypoint, this, std::placeholders::_1, std::placeholders::_2));
+        AddLocalWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", std::bind(&NAVnode::addLocalWaypointAtIndex, this, std::placeholders::_1, std::placeholders::_2));
+        AddLocalObstacleServer = this->create_service<navigation_interfaces::srv::AddLocalObstacle>("AddLocalObstacle", std::bind(&NAVnode::addLocalObstacle, this, std::placeholders::_1, std::placeholders::_2));
+
+        AddGeodeticWaypointServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypoint>("AddGeodeticWaypoint", std::bind(&NAVnode::addGeodeticWaypoint, this, std::placeholders::_1, std::placeholders::_2));
+        AddGeodeticWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>("AddGeodeticWaypointAtIndex", std::bind(&NAVnode::addGeodeticWaypointAtIndex, this, std::placeholders::_1, std::placeholders::_2));
+        AddGeodeticObstacleServer = this->create_service<navigation_interfaces::srv::AddGeodeticObstacle>("AddGeodeticObstacle", std::bind(&NAVnode::addGeodeticObstacle, this, std::placeholders::_1, std::placeholders::_2));
+
+        AddEarthCentredWaypointServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypoint>("AddEarthCentredWaypoint", std::bind(&NAVnode::addEarthCentredWaypoint, this, std::placeholders::_1, std::placeholders::_2));
+        AddEarthCentredWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", std::bind(&NAVnode::addEarthCentredWaypointAtIndex, this, std::placeholders::_1, std::placeholders::_2));
+        AddEarthCentredObstacleServer = this->create_service<navigation_interfaces::srv::AddEarthCentredObstacle>("AddEarthCentredObstacle", std::bind(&NAVnode::addEarthCentredObstacle, this, std::placeholders::_1, std::placeholders::_2));
+        
+        // main timer will process gnss data once per second
+        timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
+>>>>>>> fa8e302 (commit everything)
 
     }
 
@@ -596,6 +634,7 @@ NAVnode::NAVnode() : Node("NAVnode") {
 void NAVnode::mainTimer(){
     updatePositonData();
 
+<<<<<<< HEAD
     if (debug){
         // debug mode will print the current value for all our variables to the ros terminal thatt the navigation node is active in
         
@@ -604,6 +643,20 @@ void NAVnode::mainTimer(){
         printf("Route to Follow: %s Route to Edit: %s Coordinate Preference: %s Circumnavigation style: %s \n", getRouteToFollowName().c_str(), getRouteToEditName().c_str(), getPreferenceName().c_str(), getCircumnavigationStyleName().c_str());
         printf("Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", waypointCount, obstacleCount, obstacleLimit);
     }
+=======
+        if (debug){
+            // debug mode will print the current value for all our variables to the ros terminal thatt the navigation node is active in
+            RCLCPP_INFO(this->get_logger(), 
+                "Current coordinates: %f N %f W \n\r" 
+                "Current velocity: %f m/s @ %f degrees \n\r" 
+                "Route Selected: %d Coordinate Preference: %d Circumnavigation style: %d \n\r" 
+                "Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", 
+                currentPosition->getLatitude(), currentPosition->getLongitude(),
+                currentVelocity.speed, currentVelocity.heading,
+                static_cast<int>(routeSelected), static_cast<int>(preference), static_cast<int>(circumnavigationStyle),
+                waypointCount, obstacleCount, obstacleLimit);
+        }
+>>>>>>> fa8e302 (commit everything)
 
     if (timeSinceLastVelocityPublishing < 5) {
         lastFiveWaypoints[timeSinceLastVelocityPublishing] = currentPosition;

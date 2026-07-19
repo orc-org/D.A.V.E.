@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 #include "Obstacle.hpp"
+=======
+#ifndef OBSTACLE_CPP
+#define OBSTACLE_CPP
+
+#include "Waypoint.cpp"
+>>>>>>> fa8e302 (commit everything)
 
 int Obstacle::largestObstacle = 5;
 
@@ -55,3 +62,20 @@ bool Obstacle::operator<(const Obstacle& other) const {
     return this->x < other.x;
 }
 
+<<<<<<< HEAD
+=======
+};
+
+// dummy main function for standalone testing
+// int main(int argc, char** argv) {
+//     (void)argc;
+//     (void)argv;
+// 
+//     return 0;
+// }
+
+// define static member variables of obstacle class
+int Obstacle::largestObstacle = 0;
+
+#endif
+>>>>>>> fa8e302 (commit everything)

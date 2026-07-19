@@ -1,3 +1,6 @@
+#ifndef WAYPOINT_CPP
+#define WAYPOINT_CPP
+
 #include <cmath>
 #include "Waypoint.hpp"
 
@@ -94,6 +97,7 @@ void Waypoint::EarthCentred_To_GeodeticApprox() {
         return;
     }
 
+<<<<<<< HEAD
     double lonRad = atan2(ECEF_y, ECEF_x);
     double latRad = atan2(ECEF_z, p * (1.0 - e2));
     double h = 0.0;
@@ -109,3 +113,22 @@ void Waypoint::EarthCentred_To_GeodeticApprox() {
     latitude = latRad;
     longitude = lonRad;
 }
+=======
+// dummy main function for standalone testing
+// int main(int argc, char** argv) {
+//     (void)argc;
+//     (void)argv;
+// 
+//     return 0;
+// }
+
+// define static member variables of waypoint class
+double Waypoint::home_longitude = 0.0;
+double Waypoint::home_latitude = 0.0;
+double Waypoint::home_altitude = 0.0;
+double Waypoint::home_ECEF_x = 0.0;
+double Waypoint::home_ECEF_y = 0.0;
+double Waypoint::home_ECEF_z = 0.0;
+
+#endif
+>>>>>>> fa8e302 (commit everything)

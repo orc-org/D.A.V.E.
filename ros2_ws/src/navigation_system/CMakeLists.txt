@@ -23,6 +23,7 @@ install(
   DESTINATION include
 )
 
+<<<<<<< HEAD
 set(SOURCE_FILES
   src/Waypoint.cpp 
   src/Obstacle.cpp 
@@ -38,10 +39,22 @@ target_include_directories(NAVnode PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/navigation_system>
   $<INSTALL_INTERFACE:include/navigation_system>
 )
+=======
+# compile gpsnode and navnode
+add_executable(GPSnode src/GPSnode.cpp)
+ament_target_dependencies(GPSnode rclcpp navigation_interfaces)
+>>>>>>> fa8e302 (commit everything)
 
+add_executable(NAVnode src/NAVnode.cpp)
+ament_target_dependencies(NAVnode rclcpp navigation_interfaces)
+
+# install targets
 install(TARGETS
+<<<<<<< HEAD
+=======
+  GPSnode
+>>>>>>> fa8e302 (commit everything)
   NAVnode
   DESTINATION lib/${PROJECT_NAME})
-
 
 ament_package()

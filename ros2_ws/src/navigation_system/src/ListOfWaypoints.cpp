@@ -1,4 +1,11 @@
+<<<<<<< HEAD
 // #include "Waypoint.cpp"
+=======
+#ifndef LIST_OF_WAYPOINTS_CPP
+#define LIST_OF_WAYPOINTS_CPP
+
+#include "Waypoint.cpp"
+>>>>>>> fa8e302 (commit everything)
 #include <cstdio>
 #include <iostream>
 
@@ -322,6 +329,22 @@ bool ListOfWaypoints::removeEarthCentredPoint(double x, double y, double z) {
     return false;
 }
 
+<<<<<<< HEAD
 bool ListOfWaypoints::areEqual(Waypoint* point1, Waypoint* point2) {
     return (point1->getX() == point2->getX()) && (point1->getY() == point2->getY());
 }
+=======
+        bool areEqual(Waypoint* point1, Waypoint* point2) {
+            return (point1->getX() == point2->getX()) && (point1->getY() == point2->getY());
+        }
+};
+
+// dummy main function for standalone testing
+// int main(int argc, char** argv) {
+//     (void)argc;
+//     (void)argv;
+// 
+//     return 0;
+// }
+#endif
+>>>>>>> fa8e302 (commit everything)
