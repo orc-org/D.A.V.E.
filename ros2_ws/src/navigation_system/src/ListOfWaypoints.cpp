@@ -1,3 +1,6 @@
+#ifndef LIST_OF_WAYPOINTS_CPP
+#define LIST_OF_WAYPOINTS_CPP
+
 #include "Waypoint.cpp"
 #include <cstdio>
 #include <iostream>
@@ -363,9 +366,11 @@ class ListOfWaypoints{
         }
 };
 
-int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
-
-    return 0;
-}
+// dummy main function for standalone testing
+// int main(int argc, char** argv) {
+//     (void)argc;
+//     (void)argv;
+// 
+//     return 0;
+// }
+#endif

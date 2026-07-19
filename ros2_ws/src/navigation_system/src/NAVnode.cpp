@@ -580,9 +580,9 @@ public:
 
         debug = false;
         returnToBase = false;
-        
         obstacleCount = 0;
         obstacleLimit = 10;
+        obstacles = new Obstacle*[obstacleLimit];
         waypointCount = 0;
         
         northernMapLimit = 100;
@@ -601,28 +601,28 @@ public:
 
 
         // create services
-        StopNavigatingServer = this->create_service<navigation_interfaces::srv::VoidService>("StopNavigating", &stopNavigating);
-        SelectRouteServer = this->create_service<navigation_interfaces::srv::SelectRoute>("SelectRoute", &selectRoute);
-        ResetHomeServer = this->create_service<navigation_interfaces::srv::ResetHome>("ResetHome", &resetHome);
-        ClearRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("clearRoute", &clearRoute);
+        StopNavigatingServer = this->create_service<navigation_interfaces::srv::VoidService>("StopNavigating", std::bind(&NAVnode::stopNavigating, this, std::placeholders::_1, std::placeholders::_2));
+        SelectRouteServer = this->create_service<navigation_interfaces::srv::SelectRoute>("SelectRoute", std::bind(&NAVnode::selectRoute, this, std::placeholders::_1, std::placeholders::_2));
+        ResetHomeServer = this->create_service<navigation_interfaces::srv::ResetHome>("ResetHome", std::bind(&NAVnode::resetHome, this, std::placeholders::_1, std::placeholders::_2));
+        ClearRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("clearRoute", std::bind(&NAVnode::clearRoute, this, std::placeholders::_1, std::placeholders::_2));
         
-        ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
-        TogglePreferenceServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreference", &togglePreference);
-        ToggleRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreferenc", &togglePreference);
-        ToggleCircumnavigationStyleServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleCircumnavigationStyle", &toggleCircumnavigationStyle);
-        ToggleDirectionServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDirection", &toggleDirection);
+        ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", std::bind(&NAVnode::toggleDebug, this, std::placeholders::_1, std::placeholders::_2));
+        TogglePreferenceServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreference", std::bind(&NAVnode::togglePreference, this, std::placeholders::_1, std::placeholders::_2));
+        ToggleRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreferenc", std::bind(&NAVnode::togglePreference, this, std::placeholders::_1, std::placeholders::_2));
+        ToggleCircumnavigationStyleServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleCircumnavigationStyle", std::bind(&NAVnode::toggleCircumnavigationStyle, this, std::placeholders::_1, std::placeholders::_2));
+        ToggleDirectionServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDirection", std::bind(&NAVnode::toggleDirection, this, std::placeholders::_1, std::placeholders::_2));
 
-        AddLocalWaypointServer = this->create_service<navigation_interfaces::srv::AddLocalWaypoint>("AddLocalWaypoint", &addLocalWaypoint);
-        AddLocalWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", &addLocalWaypointAtIndex);
-        AddLocalObstacleServer = this->create_service<navigation_interfaces::srv::AddLocalObstacle>("AddLocalObstacle", &addLocalObstacle);
+        AddLocalWaypointServer = this->create_service<navigation_interfaces::srv::AddLocalWaypoint>("AddLocalWaypoint", std::bind(&NAVnode::addLocalWaypoint, this, std::placeholders::_1, std::placeholders::_2));
+        AddLocalWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", std::bind(&NAVnode::addLocalWaypointAtIndex, this, std::placeholders::_1, std::placeholders::_2));
+        AddLocalObstacleServer = this->create_service<navigation_interfaces::srv::AddLocalObstacle>("AddLocalObstacle", std::bind(&NAVnode::addLocalObstacle, this, std::placeholders::_1, std::placeholders::_2));
 
-        AddGeodeticWaypointServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypoint>("AddGeodeticWaypoint", &addGeodeticWaypoint);
-        AddGeodeticWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>("AddGeodeticWaypointAtIndex", &addGeodeticWaypointAtIndex);
-        AddGeodeticObstacleServer = this->create_service<navigation_interfaces::srv::AddGeodeticObstacle>("AddGeodeticObstacle", &addGeodeticObstacle);
+        AddGeodeticWaypointServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypoint>("AddGeodeticWaypoint", std::bind(&NAVnode::addGeodeticWaypoint, this, std::placeholders::_1, std::placeholders::_2));
+        AddGeodeticWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>("AddGeodeticWaypointAtIndex", std::bind(&NAVnode::addGeodeticWaypointAtIndex, this, std::placeholders::_1, std::placeholders::_2));
+        AddGeodeticObstacleServer = this->create_service<navigation_interfaces::srv::AddGeodeticObstacle>("AddGeodeticObstacle", std::bind(&NAVnode::addGeodeticObstacle, this, std::placeholders::_1, std::placeholders::_2));
 
-        AddEarthCentredWaypointServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypoint>("AddEarthCentredWaypoint", &addEarthCentredWaypoint);
-        AddEarthCentredWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", &addEarthCentredWaypointAtIndex);
-        AddEarthCentredObstacleServer = this->create_service<navigation_interfaces::srv::AddEarthCentredObstacle>("AddEarthCentredObstacle", &addEarthCentredObstacle);
+        AddEarthCentredWaypointServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypoint>("AddEarthCentredWaypoint", std::bind(&NAVnode::addEarthCentredWaypoint, this, std::placeholders::_1, std::placeholders::_2));
+        AddEarthCentredWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", std::bind(&NAVnode::addEarthCentredWaypointAtIndex, this, std::placeholders::_1, std::placeholders::_2));
+        AddEarthCentredObstacleServer = this->create_service<navigation_interfaces::srv::AddEarthCentredObstacle>("AddEarthCentredObstacle", std::bind(&NAVnode::addEarthCentredObstacle, this, std::placeholders::_1, std::placeholders::_2));
         
         // main timer will process gnss data once per second
         timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
@@ -638,14 +638,14 @@ public:
 
         if (debug){
             // debug mode will print the current value for all our variables to the ros terminal thatt the navigation node is active in
-            RCLCPP_INFO(this->getLogger(), 
-                "Current coordinates: %f N %f W \n\r" + 
-                "Current velocity: %f m/s @ %f degrees \n\r" +
-                "Route Selected: %s Coordinate Preference: %s Circumnavigation style: %s \n\r" +
+            RCLCPP_INFO(this->get_logger(), 
+                "Current coordinates: %f N %f W \n\r" 
+                "Current velocity: %f m/s @ %f degrees \n\r" 
+                "Route Selected: %d Coordinate Preference: %d Circumnavigation style: %d \n\r" 
                 "Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", 
-                currentPosition->getLatitude(), currentPosition->getLatitude(),
-                currentVelocity->speed, currentVelocity->direction,
-                routeSelected, preference, circumnavigationStyle,
+                currentPosition->getLatitude(), currentPosition->getLongitude(),
+                currentVelocity.speed, currentVelocity.heading,
+                static_cast<int>(routeSelected), static_cast<int>(preference), static_cast<int>(circumnavigationStyle),
                 waypointCount, obstacleCount, obstacleLimit);
         }
 
