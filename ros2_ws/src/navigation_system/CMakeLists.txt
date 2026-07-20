@@ -9,10 +9,22 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(navigation_interfaces REQUIRED)
+find_package(navigation_system REQUIRED)
 
+set(SOURCE_FILES
+  src/Waypoint.cpp 
+  src/Obstacle.cpp 
+  src/ListOfWaypoints.cpp
+  src/NAVnode.cpp
+)
 
-add_executable(NAVnode src/NAVnode.cpp)
+add_executable(NAVnode ${SOURCE_FILES} )
 ament_target_dependencies(NAVnode rclcpp navigation_interfaces)
+
+target_include_directories(NAVnode PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/navigation_system>
+  $<INSTALL_INTERFACE:include/navigation_system>
+)
 
 install(TARGETS
   NAVnode

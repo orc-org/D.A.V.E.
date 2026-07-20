@@ -1,5 +1,4 @@
-#ifndef N_A_VNODE_HPP
-#define N_A_VNODE_HPP
+#pragma once
 
 // used for functions
 #include <cstdio>
@@ -133,12 +132,13 @@ private:
     // Timers
     rclcpp::TimerBase::SharedPtr timer;
 
-    size_t = count_;
+    //size_t = count_;
 
     ////////////////////////////////////////////
     // End Ros stuff Definition
     ////////////////////////////////////////////
 
+    public:
     /*
         checkWaypointCollisions()
         ---------------------------------
@@ -265,9 +265,15 @@ private:
 
     int getIndexOfObstacle(Obstacle* thing);
 
+    std::string getRouteName();
+
+    std::string getPreferenceName();
+
+    std::string getCircumnavigationStyleName();
+
     // Constructor
-public:
-    NAVnode() : Node("NAVnode");
+
+    NAVnode();
 
     // timers
     void mainTimer();
@@ -293,43 +299,41 @@ public:
     void updateVelocity();
 
     // service callback functions
-    void stopNavigating(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response);
+    void stopNavigating();
 
-    void togglePreference(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response);
+    void togglePreference();
 
-    void toggleRoute(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response);
+    void toggleRoute();
 
-    void toggleDebug(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response);
+    void toggleDebug();
 
-    void toggleDirection(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response);
+    void toggleDirection();
 
-    void toggleCircumnavigationStyle(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response);
+    void toggleCircumnavigationStyle();
 
-    void selectRoute(const std::shared_ptr<navigation_interfaces::srv::SelectRoute::Request> request, std::shared_ptr<navigation_interfaces::srv::SelectRoute::Response> response);
+    void selectRoute(const std::shared_ptr<navigation_interfaces::srv::SelectRoute::Request> request);
     
     void resetHome(const std::shared_ptr<navigation_interfaces::srv::ResetHome::Request> request, std::shared_ptr<navigation_interfaces::srv::ResetHome::Response> response);
 
-    void clearRoute(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response);
+    void clearRoute();
 
-    void addLocalWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Response> response);
+    void addLocalWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Request> request);
 
-    void addLocalWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Response> response);
+    void addLocalWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Request> request);
 
-    void addLocalObstacle(const std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Response> response);
+    void addLocalObstacle(const std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Request> request);
 
-    void addGeodeticWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Response> response);
+    void addGeodeticWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Request> request);
 
-    void addGeodeticWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Response> response);
+    void addGeodeticWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Request> request);
 
-    void addGeodeticObstacle(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Response> response);
+    void addGeodeticObstacle(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Request> request);
 
-    void addEarthCentredWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Response> response);
+    void addEarthCentredWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Request> request);
 
-    void addEarthCentredWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Response> response);
+    void addEarthCentredWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Request> request);
 
-    void addEarthCentredObstacle(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Response> response);
+    void addEarthCentredObstacle(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Request> request);
 
     // action callback functions
 };
-
-#endif

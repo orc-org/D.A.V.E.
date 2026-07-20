@@ -1,5 +1,4 @@
-#ifndef LIST_OF_WAYPOINTS_HPP
-#define LIST_OF_WAYPOINTS_HPP
+#pragma once
 
 #include <cstdio>
 #include <iostream>
@@ -88,5 +87,3 @@ class ListOfWaypoints{
         bool areEqual(Waypoint* point1, Waypoint* point2);
 };
 
-
-#endif

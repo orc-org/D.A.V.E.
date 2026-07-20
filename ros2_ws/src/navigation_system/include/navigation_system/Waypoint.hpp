@@ -1,8 +1,8 @@
-#ifndef WAYPOINT_HPP
-#define WAYPOINT_HPP
+#pragma once
 
 #include <string>
 #include <cmath>
+
 
 
 /*
@@ -25,27 +25,27 @@ protected:
     double ECEF_y;      // Earth Centered Earth Fixed Y coordinate
     double ECEF_z;      // Earth Centered Earth Fixed Z coordinate
 
-    static constexpr double home_x = 0.0;          // local coordinates of the home base
-    static constexpr double home_y = 0.0;          // local coordinates of the home base
+    inline static constexpr double home_x = 0.0;          // local coordinates of the home base
+    inline static constexpr double home_y = 0.0;          // local coordinates of the home base
 
-    static double home_longitude;  // geodetic coordinates of the home base
-    static double home_latitude;   // geodetic coordinates of the home base
-    static double home_altitude;   // geodetic coordinates of the home base
+    inline static double home_longitude;  // geodetic coordinates of the home base
+    inline static double home_latitude;   // geodetic coordinates of the home base
+    inline static double home_altitude;   // geodetic coordinates of the home base
 
-    static double home_ECEF_x;      // Earth Centered Earth Fixed X coordinate of home base
-    static double home_ECEF_y;      // Earth Centered Earth Fixed Y coordinate of home base
-    static double home_ECEF_z;      // Earth Centered Earth Fixed Z coordinate of home base
+    inline static double home_ECEF_x;      // Earth Centered Earth Fixed X coordinate of home base
+    inline static double home_ECEF_y;      // Earth Centered Earth Fixed Y coordinate of home base
+    inline static double home_ECEF_z;      // Earth Centered Earth Fixed Z coordinate of home base
 
-    static bool homeIsSet;          // boolean to stop home position from being accidentally reset
+    inline static bool homeIsSet;          // boolean to stop home position from being accidentally reset
 
 
     // Constants
 
-    static constexpr double a = 6378137.0;               // Semi-major axis (meters)
-    static constexpr double f = 1.0 / 298.257223565;     // Flattening
-    static constexpr double e2 = f * (2.0 - f);          // Eccentricity squared
-    static constexpr double pi = 3.14159265358979323846; // pi
-    static const int password = 741021;                  // Password for resetting home waypoint
+    inline static constexpr double a = 6378137.0;                // Semi-major axis (meters)
+    inline static constexpr double f = 1.0 / 298.257223565;      // Flattening
+    inline static constexpr double e2 = f * (2.0 - f);           // Eccentricity squared
+    inline static constexpr double pi = 3.14159265358979323846;  // pi
+    inline static const int password = 741021;                   // Password for resetting home waypoint
 
     // Constructors
 
@@ -177,5 +177,3 @@ public:
     */
     void EarthCentred_To_GeodeticApprox();
 };
-
-#endif
