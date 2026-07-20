@@ -1,4 +1,5 @@
 #include "NAVnode.hpp"
+#include "Waypoint.hpp"
 
 
 void NAVnode::checkWaypointCollisions(){
@@ -369,6 +370,38 @@ int NAVnode::getIndexOfObstacle(Obstacle* thing){
     return -1;
 }
 
+std::string NAVnode::getRouteName(){
+    string name;
+    switch(routeSelected){
+        case Route1: name = "Route 1"; break;
+        case Route2: name = "Route 2"; break;
+        case Route3: name = "Route 3"; break;
+        case Route4: name = "Route 4"; break;
+        case Route5: name = "Route 5"; break;
+    }
+    return name;
+}
+
+std::string NAVnode::getPreferenceName(){
+    string name;
+    switch(preference){
+        case geodetic: name = "Geodetic"; break;
+        case local: name = "Local"; break;
+        case earthCentered: name = "Earth Centred Earth Fixed"; break;
+    }
+    return name;
+}
+
+std::string NAVnode::getCircumnavigationStyleName(){
+    string name;
+    switch(circumnavigationStyle){
+        case reroute: name = "Reroute"; break;
+        case trackCrawling: name = "Track Crawling"; break;
+        case automatic_Circumnavigation_Off: name = "Automatic Circumnavigation Off"; break;
+    }
+    return name;
+}
+
     // Constructor
 NAVnode::NAVnode() : Node("NAVnode") {
         
@@ -399,31 +432,31 @@ NAVnode::NAVnode() : Node("NAVnode") {
 
 
     // create services
-    StopNavigatingServer = this->create_service<navigation_interfaces::srv::VoidService>("StopNavigating", &stopNavigating);
-    SelectRouteServer = this->create_service<navigation_interfaces::srv::SelectRoute>("SelectRoute", &selectRoute);
-    ResetHomeServer = this->create_service<navigation_interfaces::srv::ResetHome>("ResetHome", &resetHome);
-    ClearRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("clearRoute", &clearRoute);
+    // StopNavigatingServer = this->create_service<navigation_interfaces::srv::VoidService>("StopNavigating", &stopNavigating);
+    // SelectRouteServer = this->create_service<navigation_interfaces::srv::SelectRoute>("SelectRoute", &selectRoute);
+    // ResetHomeServer = this->create_service<navigation_interfaces::srv::ResetHome>("ResetHome", &resetHome);
+    // ClearRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("clearRoute", &clearRoute);
         
-    ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
-    TogglePreferenceServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreference", &togglePreference);
-    ToggleRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreferenc", &togglePreference);
-    ToggleCircumnavigationStyleServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleCircumnavigationStyle", &toggleCircumnavigationStyle);
-    ToggleDirectionServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDirection", &toggleDirection);
+    // ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", &toggleDebug);
+    // TogglePreferenceServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreference", &togglePreference);
+    // ToggleRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreferenc", &togglePreference);
+    // ToggleCircumnavigationStyleServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleCircumnavigationStyle", &toggleCircumnavigationStyle);
+    // ToggleDirectionServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDirection", &toggleDirection);
 
-    AddLocalWaypointServer = this->create_service<navigation_interfaces::srv::AddLocalWaypoint>("AddLocalWaypoint", &addLocalWaypoint);
-    AddLocalWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", &addLocalWaypointAtIndex);
-    AddLocalObstacleServer = this->create_service<navigation_interfaces::srv::AddLocalObstacle>("AddLocalObstacle", &addLocalObstacle);
+    // AddLocalWaypointServer = this->create_service<navigation_interfaces::srv::AddLocalWaypoint>("AddLocalWaypoint", &addLocalWaypoint);
+    // AddLocalWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", &addLocalWaypointAtIndex);
+    // AddLocalObstacleServer = this->create_service<navigation_interfaces::srv::AddLocalObstacle>("AddLocalObstacle", &addLocalObstacle);
 
-    AddGeodeticWaypointServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypoint>("AddGeodeticWaypoint", &addGeodeticWaypoint);
-    AddGeodeticWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>("AddGeodeticWaypointAtIndex", &addGeodeticWaypointAtIndex);
-    AddGeodeticObstacleServer = this->create_service<navigation_interfaces::srv::AddGeodeticObstacle>("AddGeodeticObstacle", &addGeodeticObstacle);
+    // AddGeodeticWaypointServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypoint>("AddGeodeticWaypoint", &addGeodeticWaypoint);
+    // AddGeodeticWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>("AddGeodeticWaypointAtIndex", &addGeodeticWaypointAtIndex);
+    // AddGeodeticObstacleServer = this->create_service<navigation_interfaces::srv::AddGeodeticObstacle>("AddGeodeticObstacle", &addGeodeticObstacle);
 
-    AddEarthCentredWaypointServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypoint>("AddEarthCentredWaypoint", &addEarthCentredWaypoint);
-    AddEarthCentredWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", &addEarthCentredWaypointAtIndex);
-    AddEarthCentredObstacleServer = this->create_service<navigation_interfaces::srv::AddEarthCentredObstacle>("AddEarthCentredObstacle", &addEarthCentredObstacle);
+    // AddEarthCentredWaypointServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypoint>("AddEarthCentredWaypoint", &addEarthCentredWaypoint);
+    // AddEarthCentredWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", &addEarthCentredWaypointAtIndex);
+    // AddEarthCentredObstacleServer = this->create_service<navigation_interfaces::srv::AddEarthCentredObstacle>("AddEarthCentredObstacle", &addEarthCentredObstacle);
         
-    //main timer will process gnss data once per second
-    timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
+    // //main timer will process gnss data once per second
+    // timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
 
     }
 
@@ -434,15 +467,11 @@ void NAVnode::mainTimer(){
 
     if (debug){
         // debug mode will print the current value for all our variables to the ros terminal thatt the navigation node is active in
-        RCLCPP_INFO(this->getLogger(), 
-            "Current coordinates: %f N %f W \n\r" + 
-            "Current velocity: %f m/s @ %f degrees \n\r" +
-            "Route Selected: %s Coordinate Preference: %s Circumnavigation style: %s \n\r" +
-            "Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", 
-            currentPosition->getLatitude(), currentPosition->getLatitude(),
-            currentVelocity->speed, currentVelocity->direction,
-            routeSelected, preference, circumnavigationStyle,
-            waypointCount, obstacleCount, obstacleLimit);
+        
+        printf("Current coordinates: %f N %f W \n", currentPosition->getLatitude(), currentPosition->getLatitude());
+        printf("Current velocity: %f m/s @ %f degrees \n", currentVelocity.speed, currentVelocity.heading);
+        printf("Route Selected: %s Coordinate Preference: %s Circumnavigation style: %s \n", getRouteName().c_str(), getPreferenceName().c_str(), getCircumnavigationStyleName().c_str());
+        printf("Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", waypointCount, obstacleCount, obstacleLimit);
     }
 
     lastFiveWaypoints[timeSinceLastVelocityPublishing] = currentPosition;
@@ -485,164 +514,164 @@ void NAVnode::updateVelocity(){
 }
 
     // service callback functions
-void NAVnode::stopNavigating(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
+// void NAVnode::stopNavigating(){
 
-}
+// }
 
-void NAVnode::togglePreference(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-    switch(preference){
-        case(local): preference = geodetic;          break;
-        case(geodetic): preference = earthCentered;  break;
-        default: preference = local;                 break;
-    }
-}
+// void NAVnode::togglePreference(){
+//     switch(preference){
+//         case(local): preference = geodetic;          break;
+//         case(geodetic): preference = earthCentered;  break;
+//         default: preference = local;                 break;
+//     }
+// }
 
-void NAVnode::toggleRoute(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-    switch(routeSelected){
-        case(Route1): routeSelected = Route2; break;
-        case(Route2): routeSelected = Route3; break;
-        case(Route3): routeSelected = Route4; break;
-        case(Route4): routeSelected = Route5; break;
-        default: routeSelected = Route1;      break;
-    }
-}
+// void NAVnode::toggleRoute(){
+//     switch(routeSelected){
+//         case(Route1): routeSelected = Route2; break;
+//         case(Route2): routeSelected = Route3; break;
+//         case(Route3): routeSelected = Route4; break;
+//         case(Route4): routeSelected = Route5; break;
+//         default: routeSelected = Route1;      break;
+//     }
+// }
 
-void NAVnode::toggleDebug(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-    debug = !debug;
-}
+// void NAVnode::toggleDebug(){
+//     debug = !debug;
+// }
 
-void NAVnode::toggleDirection(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-    returnToBase = !returnToBase;
-}
+// void NAVnode::toggleDirection(){
+//     returnToBase = !returnToBase;
+// }
 
-void NAVnode::toggleCircumnavigationStyle(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-    switch(circumnavigationStyle){
-        case(reroute):       circumnavigationStyle = trackCrawling;                  break;
-        case(trackCrawling): circumnavigationStyle = automatic_Circumnavigation_Off; break;
-        default:             circumnavigationStyle = reroute;                        break;
-    }
-}
+// void NAVnode::toggleCircumnavigationStyle(){
+//     switch(circumnavigationStyle){
+//         case(reroute):       circumnavigationStyle = trackCrawling;                  break;
+//         case(trackCrawling): circumnavigationStyle = automatic_Circumnavigation_Off; break;
+//         default:             circumnavigationStyle = reroute;                        break;
+//     }
+// }
 
-void NAVnode::selectRoute(const std::shared_ptr<navigation_interfaces::srv::SelectRoute::Request> request, std::shared_ptr<navigation_interfaces::srv::SelectRoute::Response> response){
-    switch(request->route){
-        case Route1: routeSelected = Route1; break;
-        case Route2: routeSelected = Route2; break;
-        case Route3: routeSelected = Route3; break;
-        case Route4: routeSelected = Route4; break;
-        case Route5: routeSelected = Route5; break;
-        default: cout << "Error: invalid Route selection" << endl;
-    }
-}
+// void NAVnode::selectRoute(const std::shared_ptr<navigation_interfaces::srv::SelectRoute::Request> request){
+//     switch(request->route){
+//         case Route1: routeSelected = Route1; break;
+//         case Route2: routeSelected = Route2; break;
+//         case Route3: routeSelected = Route3; break;
+//         case Route4: routeSelected = Route4; break;
+//         case Route5: routeSelected = Route5; break;
+//         default: cout << "Error: invalid Route selection" << endl;
+//     }
+// }
 
-void NAVnode::resetHome(const std::shared_ptr<navigation_interfaces::srv::ResetHome::Request> request, std::shared_ptr<navigation_interfaces::srv::ResetHome::Response> response){
-    if (Waypoint::checkPassword(request->password))
-        response->success = true;
-    else 
-        response->success = false;
-}
+// void NAVnode::resetHome(const std::shared_ptr<navigation_interfaces::srv::ResetHome::Request> request, std::shared_ptr<navigation_interfaces::srv::ResetHome::Response> response){
+//     if (Waypoint::checkPassword(request->password))
+//         response->success = true;
+//     else 
+//         response->success = false;
+// }
 
-void NAVnode::clearRoute(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-    routes[routeSelected].clear();
-}
+// void NAVnode::clearRoute(){
+//     routes[routeSelected].clear();
+// }
 
-void NAVnode::addLocalWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Response> response){
-    routes[routeSelected].add(new Waypoint(request->x, request->y));
-}
+// void NAVnode::addLocalWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Request> request){
+//     routes[routeSelected].add(new Waypoint(request->x, request->y));
+// }
 
-void NAVnode::addLocalWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Response> response){
-    routes[routeSelected].add(new Waypoint(request->x, request->y), request->index);
-}
+// void NAVnode::addLocalWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Request> request){
+//     routes[routeSelected].add(new Waypoint(request->x, request->y), request->index);
+// }
 
-void NAVnode::addLocalObstacle(const std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Response> response){
-    // check if the array of obstacles is full
-    if (obstacleCount == obstacleLimit){
-        // increase make a larger array to store obstacles
-        obstacleLimit += 10;
-        Obstacle* biggerArray[obstacleLimit];
+// void NAVnode::addLocalObstacle(const std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Request> request){
+//     // check if the array of obstacles is full
+//     if (obstacleCount == obstacleLimit){
+//         // increase make a larger array to store obstacles
+//         obstacleLimit += 10;
+//         Obstacle* biggerArray[obstacleLimit];
 
-        // copy over existing obstacles (by iterating through existing array)
-        for(int i = 0; i < obstacleLimit - 10; i++){
-            biggerArray[i] = obstacles[i];
-            obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
-        }
+//         // copy over existing obstacles (by iterating through existing array)
+//         for(int i = 0; i < obstacleLimit - 10; i++){
+//             biggerArray[i] = obstacles[i];
+//             obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
+//         }
 
-        // clean up memory and rename our new array (by reusing the old pointer);
-        delete obstacles;
-        obstacles = biggerArray;
-    }
+//         // clean up memory and rename our new array (by reusing the old pointer);
+//         delete obstacles;
+//         obstacles = biggerArray;
+//     }
 
-    // add new obstacle. post incrementing to handle indexing differences
-    if (request->radius <= 0)
-        obstacles[obstacleCount++] = new Obstacle(request->x, request->y); // use default radius if no radius is entered
-    else
-        obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->radius);
-}
+//     // add new obstacle. post incrementing to handle indexing differences
+//     if (request->radius <= 0)
+//         obstacles[obstacleCount++] = new Obstacle(request->x, request->y); // use default radius if no radius is entered
+//     else
+//         obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->radius);
+// }
 
-void NAVnode::addGeodeticWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Response> response){
-    routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true));
-}
+// void NAVnode::addGeodeticWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Request> request){
+//     routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true));
+// }
 
-void NAVnode::addGeodeticWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Response> response){
-    routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true), request->index);
-}
+// void NAVnode::addGeodeticWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Request> request){
+//     routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true), request->index);
+// }
 
-void NAVnode::addGeodeticObstacle(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Response> response){
-    // check if the array of obstacles is full
-    if (obstacleCount == obstacleLimit){
-        // increase make a larger array to store obstacles
-        obstacleLimit += 10;
-        Obstacle* biggerArray[obstacleLimit] = {};
+// void NAVnode::addGeodeticObstacle(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Request> request){
+//     // check if the array of obstacles is full
+//     if (obstacleCount == obstacleLimit){
+//         // increase make a larger array to store obstacles
+//         obstacleLimit += 10;
+//         Obstacle* biggerArray[obstacleLimit] = {};
 
-        // copy over existing obstacles (by iterating through existing array)
-        for(int i = 0; i < obstacleLimit - 10; i++){
-            biggerArray[i] = obstacles[i];
-            obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
-        }
+//         // copy over existing obstacles (by iterating through existing array)
+//         for(int i = 0; i < obstacleLimit - 10; i++){
+//             biggerArray[i] = obstacles[i];
+//             obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
+//         }
 
-        // clean up memory and rename our new array (by reusing the old pointer);
-        delete obstacles;
-        obstacles = biggerArray;
-    }
+//         // clean up memory and rename our new array (by reusing the old pointer);
+//         delete obstacles;
+//         obstacles = biggerArray;
+//     }
 
-    // add new obstacle. post incrementing to handle indexing differences
-    if (request->radius <= 0)
-        obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, true); // use default radius if no radius is entered
-    else
-        obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, request->radius, true);
-}
+//     // add new obstacle. post incrementing to handle indexing differences
+//     if (request->radius <= 0)
+//         obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, true); // use default radius if no radius is entered
+//     else
+//         obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, request->radius, true);
+// }
 
-void NAVnode::addEarthCentredWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Response> response){
-    routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false));
-}
+// void NAVnode::addEarthCentredWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Request> request){
+//     routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false));
+// }
 
-void NAVnode::addEarthCentredWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Response> response){
-    routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false), request->index);
-}
+// void NAVnode::addEarthCentredWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Request> request){
+//     routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false), request->index);
+// }
 
-void NAVnode::addEarthCentredObstacle(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Response> response){
-    // check if the array of obstacles is full
-    if (obstacleCount == obstacleLimit){
-        // increase make a larger array to store obstacles
-        obstacleLimit += 10;
-        Obstacle* biggerArray[obstacleLimit] = {};
+// void NAVnode::addEarthCentredObstacle(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Request> request){
+//     // check if the array of obstacles is full
+//     if (obstacleCount == obstacleLimit){
+//         // increase make a larger array to store obstacles
+//         obstacleLimit += 10;
+//         Obstacle** biggerArray = new Obstacle*[obstacleLimit];
 
-        // copy over existing obstacles (by iterating through existing array)
-        for(int i = 0; i < obstacleLimit - 10; i++){
-            biggerArray[i] = obstacles[i];
-            obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
-        }
+//         // copy over existing obstacles (by iterating through existing array)
+//         for(int i = 0; i < obstacleLimit - 10; i++){
+//             biggerArray[i] = obstacles[i];
+//             obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
+//         }
 
-        // clean up memory and rename our new array (by reusing the old pointer);
-        delete obstacles;
-        obstacles = biggerArray;
-    }
+//         // clean up memory and rename our new array (by reusing the old pointer);
+//         delete obstacles;
+//         obstacles = biggerArray;
+//     }
 
-    // add new obstacle. post incrementing to handle indexing differences
-    if (request->radius <= 0)
-        obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, false); // use default radius if no radius is entered
-    else
-        obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, request->radius, false);
-}
+//     // add new obstacle. post incrementing to handle indexing differences
+//     if (request->radius <= 0)
+//         obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, false); // use default radius if no radius is entered
+//     else
+//         obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, request->radius, false);
+// }
 
 
 

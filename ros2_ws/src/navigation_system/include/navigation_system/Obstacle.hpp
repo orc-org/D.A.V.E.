@@ -1,5 +1,4 @@
-#ifndef OBSTACLE_HPP
-#define OBSTACLE_HPP
+#pragma once
 
 #include "Waypoint.hpp"
     
@@ -23,56 +22,24 @@ private:
     // Getters and Setters
 
 public:
-    void setRadius(int radius){
-        this->radius = radius;
-    }
-    int getRadius(){
-        return radius;
-    }
+    void setRadius(int radius);
+    int getRadius();
    
-    int getLargestObstacle(){
-        return largestObstacle;
-    }
+    int getLargestObstacle();
+
+    double getX();
+    double getY();
 
     // constructors
-    Obstacle() : Waypoint(0.0, 0.0), radius(defaultRadius) {
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
+    Obstacle();
 
-    Obstacle(double newX, double newY, int radius): Waypoint(newX, newY){
-        this->radius = radius;
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
+    Obstacle(double newX, double newY, int radius);
 
-    Obstacle(double coordinateA, double coordinateB, double coordinateC, int radius, bool geodeticCoordinate): Waypoint(coordinateA, coordinateB, coordinateC, geodeticCoordinate){
-        this->radius = radius;
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
+    Obstacle(double coordinateA, double coordinateB, double coordinateC, int radius, bool geodeticCoordinate);
 
-    Obstacle(double newX, double newY): Waypoint(newX, newY){
-        this->radius = defaultRadius;
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
+    Obstacle(double newX, double newY);
 
-    Obstacle(double coordinateA, double coordinateB, double coordinateC, bool geodeticCoordinate): Waypoint(coordinateA, coordinateB, coordinateC, geodeticCoordinate){
-        this->radius = defaultRadius;
-        if(largestObstacle < radius){
-            largestObstacle = radius;
-        }
-    }
+    Obstacle(double coordinateA, double coordinateB, double coordinateC, bool geodeticCoordinate);
 
-    bool operator<(const Obstacle& other) const {
-        return this->x < other.x;
-    }
-
+    bool operator<(const Obstacle& other) const;
 };
-
-#endif
