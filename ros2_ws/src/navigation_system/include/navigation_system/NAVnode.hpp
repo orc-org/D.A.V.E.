@@ -47,7 +47,21 @@
 //interfaces needed to work with ros
 #include "rclcpp/rclcpp.hpp"
 
+using VoidService = navigation_interfaces::srv::VoidService;
+using SelectRoute = navigation_interfaces::srv::SelectRoute;
+using ResetHome = navigation_interfaces::srv::ResetHome;
 
+using AddLocalWaypoint = navigation_interfaces::srv::AddLocalWaypoint;
+using AddLocalWaypointAtIndex = navigation_interfaces::srv::AddLocalWaypointAtIndex;
+using AddLocalObstacle = navigation_interfaces::srv::AddLocalObstacle;
+
+using AddGeodeticWaypoint = navigation_interfaces::srv::AddGeodeticWaypoint;
+using AddGeodeticWaypointAtIndex = navigation_interfaces::srv::AddGeodeticWaypointAtIndex;
+using AddGeodeticObstacle = navigation_interfaces::srv::AddGeodeticObstacle;
+
+using AddEarthCentredWaypoint = navigation_interfaces::srv::AddEarthCentredWaypoint;
+using AddEarthCentredWaypointAtIndex = navigation_interfaces::srv::AddEarthCentredWaypointAtIndex;
+using AddEarthCentredObstacle = navigation_interfaces::srv::AddEarthCentredObstacle;
 
 class NAVnode : public rclcpp::Node{
 
@@ -101,28 +115,28 @@ private:
 
     // Services
 
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr StopNavigatingServer;
-    rclcpp::Service<navigation_interfaces::srv::SelectRoute>::SharedPtr SelectRouteServer;
-    rclcpp::Service<navigation_interfaces::srv::ResetHome>::SharedPtr ResetHomeServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ClearRouteServer;
+    rclcpp::Service<VoidService>::SharedPtr StopNavigatingServer;
+    rclcpp::Service<SelectRoute>::SharedPtr SelectRouteServer;
+    rclcpp::Service<ResetHome>::SharedPtr ResetHomeServer;
+    rclcpp::Service<VoidService>::SharedPtr ClearRouteServer;
         
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleDebugServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr TogglePreferenceServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleRouteServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleCircumnavigationStyleServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleDirectionServer;
+    rclcpp::Service<VoidService>::SharedPtr ToggleDebugServer;
+    rclcpp::Service<VoidService>::SharedPtr TogglePreferenceServer;
+    rclcpp::Service<VoidService>::SharedPtr ToggleRouteServer;
+    rclcpp::Service<VoidService>::SharedPtr ToggleCircumnavigationStyleServer;
+    rclcpp::Service<VoidService>::SharedPtr ToggleDirectionServer;
 
-    rclcpp::Service<navigation_interfaces::srv::AddLocalWaypoint>::SharedPtr AddLocalWaypointServer;
-    rclcpp::Service<navigation_interfaces::srv::AddLocalWaypointAtIndex>::SharedPtr AddLocalWaypointAtIndexServer;
-    rclcpp::Service<navigation_interfaces::srv::AddLocalObstacle>::SharedPtr AddLocalObstacleServer;
+    rclcpp::Service<AddLocalWaypoint>::SharedPtr AddLocalWaypointServer;
+    rclcpp::Service<AddLocalWaypointAtIndex>::SharedPtr AddLocalWaypointAtIndexServer;
+    rclcpp::Service<AddLocalObstacle>::SharedPtr AddLocalObstacleServer;
 
-    rclcpp::Service<navigation_interfaces::srv::AddGeodeticWaypoint>::SharedPtr AddGeodeticWaypointServer;
-    rclcpp::Service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>::SharedPtr AddGeodeticWaypointAtIndexServer;
-    rclcpp::Service<navigation_interfaces::srv::AddGeodeticObstacle>::SharedPtr AddGeodeticObstacleServer;
+    rclcpp::Service<AddGeodeticWaypoint>::SharedPtr AddGeodeticWaypointServer;
+    rclcpp::Service<AddGeodeticWaypointAtIndex>::SharedPtr AddGeodeticWaypointAtIndexServer;
+    rclcpp::Service<AddGeodeticObstacle>::SharedPtr AddGeodeticObstacleServer;
 
-    rclcpp::Service<navigation_interfaces::srv::AddEarthCentredWaypoint>::SharedPtr AddEarthCentredWaypointServer;
-    rclcpp::Service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>::SharedPtr AddEarthCentredWaypointAtIndexServer;
-    rclcpp::Service<navigation_interfaces::srv::AddEarthCentredObstacle>::SharedPtr AddEarthCentredObstacleServer;
+    rclcpp::Service<AddEarthCentredWaypoint>::SharedPtr AddEarthCentredWaypointServer;
+    rclcpp::Service<AddEarthCentredWaypointAtIndex>::SharedPtr AddEarthCentredWaypointAtIndexServer;
+    rclcpp::Service<AddEarthCentredObstacle>::SharedPtr AddEarthCentredObstacleServer;
 
     // Actions (work in progress)
 
@@ -299,41 +313,42 @@ private:
     void updateVelocity();
 
     // service callback functions
-    void stopNavigating();
+    void stopNavigating(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
-    void togglePreference();
+    void togglePreference(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
-    void toggleRoute();
+    void toggleRoute(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
-    void toggleDebug();
+    void toggleDebug(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
-    void toggleDirection();
+    void toggleDirection(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
-    void toggleCircumnavigationStyle();
+    void toggleCircumnavigationStyle(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
-    void selectRoute(const std::shared_ptr<navigation_interfaces::srv::SelectRoute::Request> request);
+    void selectRoute(const std::shared_ptr<SelectRoute::Request> request, std::shared_ptr<SelectRoute::Response> response);
     
-    void resetHome(const std::shared_ptr<navigation_interfaces::srv::ResetHome::Request> request, std::shared_ptr<navigation_interfaces::srv::ResetHome::Response> response);
+    void resetHome(const std::shared_ptr<ResetHome::Request> request, std::shared_ptr<ResetHome::Response> response);
 
-    void clearRoute();
+    void clearRoute(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
-    void addLocalWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Request> request);
+    void addLocalWaypoint(const std::shared_ptr<AddLocalWaypoint::Request> request, std::shared_ptr<AddLocalWaypoint::Response> response);
 
-    void addLocalWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Request> request);
+    void addLocalWaypointAtIndex(const std::shared_ptr<AddLocalWaypointAtIndex::Request> request, std::shared_ptr<AddLocalWaypointAtIndex::Response> response);
 
-    void addLocalObstacle(const std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Request> request);
+    void addLocalObstacle(const std::shared_ptr<AddLocalObstacle::Request> request, std::shared_ptr<AddLocalObstacle::Response> response);
 
-    void addGeodeticWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Request> request);
+    void addGeodeticWaypoint(const std::shared_ptr<AddGeodeticWaypoint::Request> request, std::shared_ptr<AddGeodeticWaypoint::Response> response);
 
-    void addGeodeticWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Request> request);
+    void addGeodeticWaypointAtIndex(const std::shared_ptr<AddGeodeticWaypointAtIndex::Request> request, std::shared_ptr<AddGeodeticWaypointAtIndex::Response> response);
 
-    void addGeodeticObstacle(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Request> request);
+    void addGeodeticObstacle(const std::shared_ptr<AddGeodeticObstacle::Request> request, std::shared_ptr<AddGeodeticObstacle::Response> response);
 
-    void addEarthCentredWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Request> request);
+    void addEarthCentredWaypoint(const std::shared_ptr<AddEarthCentredWaypoint::Request> request, std::shared_ptr<AddEarthCentredWaypoint::Response> response);
 
-    void addEarthCentredWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Request> request);
+    void addEarthCentredWaypointAtIndex(const std::shared_ptr<AddEarthCentredWaypointAtIndex::Request> request, std::shared_ptr<AddEarthCentredWaypointAtIndex::Response> response);
 
-    void addEarthCentredObstacle(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Request> request);
+    void addEarthCentredObstacle(const std::shared_ptr<AddEarthCentredObstacle::Request> request, std::shared_ptr<AddEarthCentredObstacle::Response> response);
 
     // action callback functions
 };
+
