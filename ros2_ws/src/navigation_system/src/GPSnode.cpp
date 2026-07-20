@@ -804,38 +804,38 @@ class GPSnode : public rclcpp::Node {
 // MAIN
 //////////////////////////////////////////////////////////////////////////
 
-int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
+// int main(int argc, char** argv) {
+//     (void)argc;
+//     (void)argv;
 
-    rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<GPSnode>());
-    rclcpp::shutdown();
+//     rclcpp::init(argc, argv);
+//     rclcpp::spin(std::make_shared<GPSnode>());
+//     rclcpp::shutdown();
     
-    /*
+//     /*
     
-    printf("GPS processor node prototype running.\n");
+//     printf("GPS processor node prototype running.\n");
 
-        Example simulation:
-        1. Simulate GNSS first fix
-        2. serialDecode() sets home and current position
-        3. Set target using GPS coordinates
-        4. Print target in current preference format
+//         Example simulation:
+//         1. Simulate GNSS first fix
+//         2. serialDecode() sets home and current position
+//         3. Set target using GPS coordinates
+//         4. Print target in current preference format
     
 
-    g_gnssHasFix = true;
-    g_gnssLatDeg = 49.8880;
-    g_gnssLonDeg = -119.4960;
-    g_gnssAltMeters = 0.0;
+//     g_gnssHasFix = true;
+//     g_gnssLatDeg = 49.8880;
+//     g_gnssLonDeg = -119.4960;
+//     g_gnssAltMeters = 0.0;
 
-    serialDecode();
+//     serialDecode();
 
-    setTarget("49.8885,-119.4955");
+//     setTarget("49.8885,-119.4955");
 
-    cout << "Current position: " << translate(g_currentPosition, true) << endl;
-    cout << "Target: " << getTarget() << endl;
-    */
+//     cout << "Current position: " << translate(g_currentPosition, true) << endl;
+//     cout << "Target: " << getTarget() << endl;
+//     */
 
 
-    return 0;
-}
+//     return 0;
+// }
