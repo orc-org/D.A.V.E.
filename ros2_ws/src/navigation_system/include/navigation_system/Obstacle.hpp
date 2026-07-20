@@ -1,6 +1,8 @@
-#include "Waypoint.cpp"
+#ifndef OBSTACLE_HPP
+#define OBSTACLE_HPP
 
-
+#include "Waypoint.hpp"
+    
 /*
     Obstacle
     ---------
@@ -27,9 +29,7 @@ public:
     int getRadius(){
         return radius;
     }
-    double getX() { return x; }
-    double getY() { return y; }
-
+   
     int getLargestObstacle(){
         return largestObstacle;
     }
@@ -40,7 +40,6 @@ public:
             largestObstacle = radius;
         }
     }
-
 
     Obstacle(double newX, double newY, int radius): Waypoint(newX, newY){
         this->radius = radius;
@@ -76,9 +75,4 @@ public:
 
 };
 
-int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
-
-    return 0;
-}
+#endif
