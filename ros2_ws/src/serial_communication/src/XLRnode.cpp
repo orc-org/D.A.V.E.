@@ -39,8 +39,6 @@ public:
         if (!portIsOpen)
             xlr->begin();
 
-        std::cout << "I'm transmitting it so good" << '\n';
-
         xlr->write(request->outgoing);
     }
 
