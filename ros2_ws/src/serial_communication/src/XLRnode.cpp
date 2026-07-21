@@ -12,6 +12,9 @@
 
 using namespace std::chrono_literals;
 
+using std::placeholders::_1;
+using std::placeholders::_2;
+
 class XLRnode : public rclcpp::Node {
 
     rclcpp::Service<serial_interfaces::srv::Converse>::SharedPtr  converseServer;
@@ -27,19 +30,21 @@ public:
         xlr = new SerialPort(SerialPort::stringToCharacterArray("/dev/ttyUSB0"), 115200);
         portIsOpen = false;
 
-        converseServer = this->create_service<serial_interfaces::srv::Converse>("Converse", &converseWithTerminal);
-        receiveServer = this->create_service<serial_interfaces::srv::Receive>("Receive", &receiveMessage);
-        transmitServer = this->create_service<serial_interfaces::srv::Transmit>("Transmit", &transmitMessage);
+        converseServer = this->create_service<serial_interfaces::srv::Converse>("Converse", std::bind(&XLRnode::converseWithTerminal, this, _1, _2));
+        receiveServer = this->create_service<serial_interfaces::srv::Receive>("Receive", std::bind(&XLRnode::receiveMessage, this, _1, _2));
+        transmitServer = this->create_service<serial_interfaces::srv::Transmit>("Transmit", std::bind(&XLRnode::transmitMessage, this, _1, _2));
     }
 
-    void transmitMessage(const std::shared_ptr<serial_interfaces::srv::Transmit::Request> request){
+    void transmitMessage(const std::shared_ptr<serial_interfaces::srv::Transmit::Request> request, std::shared_ptr<serial_interfaces::srv::Transmit::Response> response){
         if (!portIsOpen)
             xlr->begin();
+
+        std::cout << "I'm transmitting it so good" << '\n';
 
         xlr->write(request->outgoing);
     }
 
-    void receiveMessage(const std::shared_ptr<serial_interfaces::srv::Receive::Response> response){
+    void receiveMessage(const std::shared_ptr<serial_interfaces::srv::Receive::Request> request, std::shared_ptr<serial_interfaces::srv::Receive::Response> response){
         if(!portIsOpen)
             xlr->begin();
         

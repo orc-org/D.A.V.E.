@@ -179,7 +179,7 @@ std::string SerialPort::read(){
     return message;
 }
 
-static char* SerialPort::stringToCharacterArray(std::string message){
+char* SerialPort::stringToCharacterArray(std::string message){
     char* newMessage = new char[message.length()];
 
     // add each letter of the string to the character array
