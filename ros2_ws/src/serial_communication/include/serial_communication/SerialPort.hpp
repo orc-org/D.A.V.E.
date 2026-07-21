@@ -1,5 +1,4 @@
-#ifndef SERIAL_PORT_HPP
-#define SERIAL_PORT_HPP
+#pragma once
 
 #include <cstdio>
 #include <cstring>
@@ -63,21 +62,15 @@ public:
 
     ~SerialPort();
 
-    void setPortID(char* portID){
-        this->portID = portID;
-    }
+    void setPortID(char* portID);
 
-    void setPortID(std::string portID){
-        this->portID = stringToCharacterArray(portID);
-    }
+    void setPortID(std::string portID);
 
     void configure();
 
     void begin();
 
-    void write(std::string message){
-        write(stringToCharacterArray(message));
-    }
+    void write(std::string message);
 
     void write(char* message);
 
@@ -87,5 +80,3 @@ public:
 
     void printConfig();
 };
-
-#endif
