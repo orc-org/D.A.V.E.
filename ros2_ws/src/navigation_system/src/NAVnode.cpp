@@ -1,11 +1,11 @@
 #include "NAVnode.hpp"
-#include "Waypoint.hpp"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
+
 void NAVnode::checkWaypointCollisions(){
     std::sort(obstacles, obstacles + obstacleCount); 
-    ListNode* current = routes[routeSelected].getHead();
+    ListNode* current = routes[routeToEdit].getHead();
     while (current != nullptr) {
         for (int i = 0; i < obstacleCount; i++) {
             double dx = current->point->getX() - obstacles[i]->getX();
@@ -46,7 +46,11 @@ bool NAVnode::isWaypointColliding(Waypoint* point){
 }
 
 void NAVnode::checkTrackCollisions(){
-    ListNode* current = routes[routeSelected].getHead();
+    ListNode* current = routes[routeToEdit].getHead();
+
+    if(current == nullptr)
+        return;
+
     current = current->next;
     while (current != nullptr) {
         for (int i = 0; i < obstacleCount; i++) {
@@ -115,7 +119,7 @@ void NAVnode::checkTrackCollisions(ListNode* start, ListNode* end, Obstacle* obs
 
 void NAVnode::waypointCollisionDetected(ListNode* node, Obstacle* obstacle){
     switch (circumnavigationStyle){
-        case(reroute): routes[routeSelected].remove(node); break;
+        case(reroute): routes[routeToEdit].remove(node); break;
         case(trackCrawling): {
             auto pointOfInterest = calculatePointOfInterest(node->previous, node, obstacle);
                 
@@ -127,9 +131,28 @@ void NAVnode::waypointCollisionDetected(ListNode* node, Obstacle* obstacle){
                so we'll still be following the original route reasonably closely
             */ 
             ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
-                new Waypoint(pointOfInterest[0] - (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] - (obstacle->getRadius() + 1) * pointOfInterest[3]));
+                new Waypoint(node->point->getX() - (obstacle->getRadius() + 1) * pointOfInterest[2], node->point->getY() - (obstacle->getRadius() + 1) * pointOfInterest[3]));
             
-            routes[routeSelected].addBefore(newWaypoint, node);
+            //check if our new waypoint is colliding with an obstacle
+            if (isWaypointColliding(newWaypoint)){
+                // we'll try the same thing again, taking care not to go past the previous waypoint
+
+                // check if the previous waypoint is within 1 radii of the waypoint we just made
+                double dx = node->previous->point->getX() - newWaypoint->point->getX();
+                double dy = node->previous->point->getY() - newWaypoint->point->getY();
+                delete newWaypoint;
+                
+                if (!(sqrt(dx * dx + dy * dy) < obstacle->getRadius())){
+                    // if moving back one more radii will NOT make a new waypoint behind the first one, then we add a new waypoint 1 radii back from the last one, else we simply omit it
+                    newWaypoint = new ListNode(nullptr, nullptr, 
+                        new Waypoint(node->point->getX() - (obstacle->getRadius() * 2 + 1) * pointOfInterest[2], node->point->getY() - (obstacle->getRadius() * 2+ 1) * pointOfInterest[3]));
+                    
+                    routes[routeToEdit].addBefore(newWaypoint, node);
+                }
+            }
+            else{
+                routes[routeToEdit].addBefore(newWaypoint, node);
+            }
 
             /*  for the next waypoint, we will need to calculate the unit vector to the next waypoint as there's a good change the the path turns to some degree at the waypoint
                 therefore, the direction described by the unit vector calculated with the POI will be incorrect
@@ -141,12 +164,31 @@ void NAVnode::waypointCollisionDetected(ListNode* node, Obstacle* obstacle){
             double* unitVectorToNextWaypoint = new double[2]{dx / sqrt(dx * dx + dy* dy), dy / sqrt(dx * dx + dy * dy)};
                 
             newWaypoint = new ListNode(nullptr, nullptr, 
-                new Waypoint(pointOfInterest[0] + (obstacle->getRadius() + 1) * unitVectorToNextWaypoint[0], pointOfInterest[1] + (obstacle->getRadius() + 1) * unitVectorToNextWaypoint[1]));
+                new Waypoint(node->point->getX() + (obstacle->getRadius() + 1) * unitVectorToNextWaypoint[0], node->point->getY() + (obstacle->getRadius() + 1) * unitVectorToNextWaypoint[1]));
+            
+            // check if our new waypoint is colliding with an obstacle
+            if (isWaypointColliding(newWaypoint)){
+                // we'll try the same thing again, taking care not to go past the next waypoint
 
-            routes[routeSelected].addBefore(newWaypoint, node);
+                // check if the next waypoint is within 1 radii of the waypoint we just made
+                double dx = node->next->point->getX() - newWaypoint->point->getX();
+                double dy = node->next->point->getY() - newWaypoint->point->getY();
+                delete newWaypoint;
+                
+                if (!(sqrt(dx * dx + dy * dy) < obstacle->getRadius())){
+                    // if moving back one more radii will NOT make a new waypoint behind the first one, then we add a new waypoint 1 radii back from the last one, else we simply omit it
+                    newWaypoint = new ListNode(nullptr, nullptr, 
+                        new Waypoint(node->point->getX() + (obstacle->getRadius() * 2 + 1) * pointOfInterest[2], node->point->getY() + (obstacle->getRadius() * 2+ 1) * pointOfInterest[3]));
+                    
+                    routes[routeToEdit].addBefore(newWaypoint, node);
+                }
+            }
+            else{
+                routes[routeToEdit].addBefore(newWaypoint, node);
+            }
 
+            routes[routeToEdit].remove(node);
             delete unitVectorToNextWaypoint;
-            newWaypoint = nullptr;
         }; break;
         case(automatic_Circumnavigation_Off): cout << "collision Detected at waypoint (" << node->point->getX() << ", " << node->point->getY() << ")" << endl; break;
     };
@@ -168,13 +210,51 @@ void NAVnode::trackCollisionDetected(ListNode* nextNode, Obstacle* obstacle){
             */ 
             ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
                 new Waypoint(pointOfInterest[0] - (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] - (obstacle->getRadius() + 1) * pointOfInterest[3]));
+            
+            //check if our new waypoint is colliding with an obstacle
+            if (isWaypointColliding(newWaypoint)){
+                // we'll try the same thing again, taking care not to go past the previous waypoint
+
+                // check if the previous waypoint is within 1 radii of the waypoint we just made
+                double dx = nextNode->previous->point->getX() - newWaypoint->point->getX();
+                double dy = nextNode->previous->point->getY() - newWaypoint->point->getY();
+                delete newWaypoint;
                 
-            routes[routeSelected].addBefore(newWaypoint, nextNode);
+                if (!(sqrt(dx * dx + dy * dy) < obstacle->getRadius())){
+                    // if moving back one more radii will NOT make a new waypoint behind the first one, then we add a new waypoint 1 radii back from the last one, else we simply omit it
+                    newWaypoint = new ListNode(nullptr, nullptr, 
+                        new Waypoint(pointOfInterest[0] - (obstacle->getRadius() * 2 + 1) * pointOfInterest[2], pointOfInterest[1] - (obstacle->getRadius() * 2 + 1) * pointOfInterest[3]));
+                    
+                    routes[routeToEdit].addBefore(newWaypoint, nextNode);
+                }
+            }
+            else{
+                routes[routeToEdit].addBefore(newWaypoint, nextNode);
+            }
 
             newWaypoint = new ListNode(nullptr, nullptr, 
                 new Waypoint(pointOfInterest[0] + (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] + (obstacle->getRadius() + 1) * pointOfInterest[3]));
                 
-            routes[routeSelected].addBefore(newWaypoint, nextNode);
+            //check if our new waypoint is colliding with an obstacle
+            if (isWaypointColliding(newWaypoint)){
+                // we'll try the same thing again, taking care not to go past the previous waypoint
+
+                // check if the previous waypoint is within 1 radii of the waypoint we just made
+                double dx = nextNode->previous->point->getX() - newWaypoint->point->getX();
+                double dy = nextNode->previous->point->getY() - newWaypoint->point->getY();
+                delete newWaypoint;
+                
+                if (!(sqrt(dx * dx + dy * dy) < obstacle->getRadius())){
+                    // if moving back one more radii will NOT make a new waypoint behind the first one, then we add a new waypoint 1 radii back from the last one, else we simply omit it
+                    newWaypoint = new ListNode(nullptr, nullptr, 
+                        new Waypoint(pointOfInterest[0] + (obstacle->getRadius() * 2 + 1) * pointOfInterest[2], pointOfInterest[1] + (obstacle->getRadius() * 2 + 1) * pointOfInterest[3]));
+                    
+                    routes[routeToEdit].addBefore(newWaypoint, nextNode);
+                }
+            }
+            else{
+                routes[routeToEdit].addBefore(newWaypoint, nextNode);
+            }
 
             newWaypoint = nullptr;
         }; break;
@@ -200,7 +280,7 @@ void NAVnode::generateDetour(double pointOfInterest_X, double pointOfInterest_Y,
         
     if (!isWaypointColliding(newWaypoint)){
         // putting it 1m past the nearest apex works fine
-        routes[routeSelected].addBefore(newWaypoint, nextNode);
+        routes[routeToEdit].addBefore(newWaypoint, nextNode);
         // check if the new waypoint created other track collisions. 
         // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
         checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
@@ -215,7 +295,7 @@ void NAVnode::generateDetour(double pointOfInterest_X, double pointOfInterest_Y,
         
         if (!isWaypointColliding(newWaypoint)){
             // putting it at the nearest apex works fine
-            routes[routeSelected].addBefore(newWaypoint, nextNode);
+            routes[routeToEdit].addBefore(newWaypoint, nextNode);
                 
             // check if the new waypoint created other track collisions. 
             // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
@@ -230,7 +310,7 @@ void NAVnode::generateDetour(double pointOfInterest_X, double pointOfInterest_Y,
                 
             if (!isWaypointColliding(newWaypoint)){
                 // putting it 1m past the far apex works fine
-                routes[routeSelected].addBefore(newWaypoint, nextNode);
+                routes[routeToEdit].addBefore(newWaypoint, nextNode);
                     
                 // check if the new waypoint created other track collisions. 
                 // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
@@ -246,7 +326,7 @@ void NAVnode::generateDetour(double pointOfInterest_X, double pointOfInterest_Y,
             
                 if (!isWaypointColliding(newWaypoint)){
                     // putting it at the far apex works fine
-                    routes[routeSelected].addBefore(newWaypoint, nextNode);
+                    routes[routeToEdit].addBefore(newWaypoint, nextNode);
                     
                     // check if the new waypoint created other track collisions. 
                     // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
@@ -285,7 +365,7 @@ void NAVnode::generateDetour(double pointOfInterest_X, double pointOfInterest_Y,
                         newWaypoint = new ListNode(nullptr, nullptr, alternative2);
                         delete alternative1;
                     }
-                    routes[routeSelected].addBefore(newWaypoint, nextNode);
+                    routes[routeToEdit].addBefore(newWaypoint, nextNode);
                         
                     // check if the new waypoint created other track collisions. 
                     // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
@@ -371,9 +451,21 @@ int NAVnode::getIndexOfObstacle(Obstacle* thing){
     return -1;
 }
 
-std::string NAVnode::getRouteName(){
+std::string NAVnode::getRouteToFollowName(){
     string name;
-    switch(routeSelected){
+    switch(routeToFollow){
+        case Route1: name = "Route 1"; break;
+        case Route2: name = "Route 2"; break;
+        case Route3: name = "Route 3"; break;
+        case Route4: name = "Route 4"; break;
+        case Route5: name = "Route 5"; break;
+    }
+    return name;
+}
+
+std::string NAVnode::getRouteToEditName(){
+    string name;
+    switch(routeToEdit){
         case Route1: name = "Route 1"; break;
         case Route2: name = "Route 2"; break;
         case Route3: name = "Route 3"; break;
@@ -424,7 +516,10 @@ NAVnode::NAVnode() : Node("NAVnode") {
         
     preference = local;
     circumnavigationStyle = reroute;
-    routeSelected = Route1;
+    routeToFollow = Route1;
+
+    GNSS = new SerialPort(SerialPort::stringToCharacterArray("/dev/ttyACM0"), 38400);
+    GNSS->begin();
 
     // create topics
     // here, we're using a queue size of 1 because it is more desireable to lose some data
@@ -432,14 +527,16 @@ NAVnode::NAVnode() : Node("NAVnode") {
     VelocityPublisher = this->create_publisher<navigation_interfaces::msg::Velocity>("Velocity", 1);
 
     // create services
-    StopNavigatingServer = this->create_service<VoidService>("StopNavigating", std::bind(&NAVnode::stopNavigating, this, _1, _2));
-    SelectRouteServer    = this->create_service<SelectRoute>("SelectRoute",    std::bind(&NAVnode::selectRoute, this, _1, _2));
-    ResetHomeServer      = this->create_service<ResetHome>  ("ResetHome",      std::bind(&NAVnode::resetHome, this, _1, _2));
-    ClearRouteServer     = this->create_service<VoidService>("clearRoute",     std::bind(&NAVnode::clearRoute, this, _1, _2));
+    StopNavigatingServer      = this->create_service<VoidService>("StopNavigating", std::bind(&NAVnode::stopNavigating, this, _1, _2));
+    SelectRouteToFollowServer = this->create_service<SelectRoute>("SelectRoute",    std::bind(&NAVnode::selectRoute, this, _1, _2));
+    SelectRouteToEditServer   = this->create_service<SelectRoute>("SelectRoute",    std::bind(&NAVnode::selectRouteToEdit, this, _1, _2));
+    ResetHomeServer           = this->create_service<ResetHome>  ("ResetHome",      std::bind(&NAVnode::resetHome, this, _1, _2));
+    ClearRouteServer          = this->create_service<VoidService>("clearRoute",     std::bind(&NAVnode::clearRoute, this, _1, _2));
         
     ToggleDebugServer                 = this->create_service<VoidService>("ToggleDebug",                 std::bind(&NAVnode::toggleDebug, this, _1, _2));
     TogglePreferenceServer            = this->create_service<VoidService>("TogglePreference",            std::bind(&NAVnode::togglePreference, this, _1, _2));
-    ToggleRouteServer                 = this->create_service<VoidService>("TogglePreferenc",             std::bind(&NAVnode::togglePreference, this, _1, _2));
+    ToggleRouteToFollowServer         = this->create_service<VoidService>("ToggleRouteToFollow",         std::bind(&NAVnode::toggleRoute, this, _1, _2));
+    ToggleRouteToEditServer           = this->create_service<VoidService>("ToggleRouteToEdit",           std::bind(&NAVnode::toggleRouteToEdit, this, _1, _2));
     ToggleCircumnavigationStyleServer = this->create_service<VoidService>("ToggleCircumnavigationStyle", std::bind(&NAVnode::toggleCircumnavigationStyle, this, _1, _2));
     ToggleDirectionServer             = this->create_service<VoidService>("ToggleDirection",             std::bind(&NAVnode::toggleDirection, this, _1, _2));
 
@@ -454,7 +551,19 @@ NAVnode::NAVnode() : Node("NAVnode") {
     AddEarthCentredWaypointServer        = this->create_service<AddEarthCentredWaypoint>       ("AddEarthCentredWaypoint",        std::bind(&NAVnode::addEarthCentredWaypoint, this, _1, _2));
     AddEarthCentredWaypointAtIndexServer = this->create_service<AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", std::bind(&NAVnode::addEarthCentredWaypointAtIndex, this, _1, _2));
     AddEarthCentredObstacleServer        = this->create_service<AddEarthCentredObstacle>       ("AddEarthCentredObstacle",        std::bind(&NAVnode::addEarthCentredObstacle, this, _1, _2));
-        
+
+    RemoveLocalObstacleServer        = this->create_service<RemoveLocal>        ("RemoveLocalObstacle",        std::bind(&NAVnode::removeLocalObstacle, this, _1, _2));
+    RemoveGeodeticObstacleServer     = this->create_service<RemoveGeodetic>     ("RemoveGeodeticObstacle",     std::bind(&NAVnode::removeGeodeticObstacle, this, _1, _2));
+    RemoveEarthCentredObstacleServer = this->create_service<RemoveEarthCentred> ("RemoveEarthCentredObstacle", std::bind(&NAVnode::removeEarthCentredObstacle, this, _1, _2));
+
+    RemoveLocalWaypointServer        = this->create_service<RemoveLocal>        ("RemoveLocalWaypoint",        std::bind(&NAVnode::removeLocalWaypoint, this, _1, _2));
+    RemoveGeodeticWaypointServer     = this->create_service<RemoveGeodetic>     ("RemoveGeodeticWaypoint",     std::bind(&NAVnode::removeGeodeticWaypoint, this, _1, _2));
+    RemoveEarthCentredWaypointServer = this->create_service<RemoveEarthCentred> ("RemoveEarthCentredWaypoint", std::bind(&NAVnode::removeEarthCentredWaypoint, this, _1, _2));
+    RemoveLastWaypointServer         = this->create_service<RemoveLastWaypoint> ("RemoveLastWaypoint",         std::bind(&NAVnode::removeLastWaypoint, this, _1, _2));
+
+    SendToGNSSServer   = this->create_service<SendToGNSS>   ("SendToGNSS",   std::bind(&NAVnode::sendToGNSS, this, _1, _2));
+    ReadFromGNSSServer = this->create_service<ReadFromGNSS> ("ReadFromGNSS", std::bind(&NAVnode::readFromGNSS, this, _1, _2));
+
     //main timer will process gnss data once per second
     timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
 
@@ -463,27 +572,29 @@ NAVnode::NAVnode() : Node("NAVnode") {
     // timers
 void NAVnode::mainTimer(){
     updatePositonData();
-    pointsVisited.add(currentPosition);
 
     if (debug){
         // debug mode will print the current value for all our variables to the ros terminal thatt the navigation node is active in
         
         printf("Current coordinates: %f N %f W \n", currentPosition->getLatitude(), currentPosition->getLatitude());
         printf("Current velocity: %f m/s @ %f degrees \n", currentVelocity.speed, currentVelocity.heading);
-        printf("Route Selected: %s Coordinate Preference: %s Circumnavigation style: %s \n", getRouteName().c_str(), getPreferenceName().c_str(), getCircumnavigationStyleName().c_str());
+        printf("Route to Follow: %s Route to Edit: %s Coordinate Preference: %s Circumnavigation style: %s \n", getRouteToFollowName().c_str(), getRouteToEditName().c_str(), getPreferenceName().c_str(), getCircumnavigationStyleName().c_str());
         printf("Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", waypointCount, obstacleCount, obstacleLimit);
     }
 
     lastFiveWaypoints[timeSinceLastVelocityPublishing] = currentPosition;
 
     if (timeSinceLastVelocityPublishing >= 5){
+        pointsVisited.add(currentPosition);
         updateVelocity();
         VelocityPublisher->publish(currentVelocity);
     }
 }
 
 void NAVnode::updatePositonData(){
-        
+        cout << GNSS->read() << '\n';
+
+        currentPosition = new Waypoint(0,0); // change these coordinatesonce we learn how to parse the message from the GNSS
     }
 
 void NAVnode::updateVelocity(){
@@ -530,12 +641,23 @@ void NAVnode::togglePreference(const std::shared_ptr<VoidService::Request> reque
 
 void NAVnode::toggleRoute(const std::shared_ptr<VoidService::Request> request, 
                             std::shared_ptr<VoidService::Response> response){
-    switch(routeSelected){
-        case(Route1): routeSelected = Route2; break;
-        case(Route2): routeSelected = Route3; break;
-        case(Route3): routeSelected = Route4; break;
-        case(Route4): routeSelected = Route5; break;
-        default: routeSelected = Route1;      break;
+    switch(routeToFollow){
+        case(Route1): routeToFollow = Route2; break;
+        case(Route2): routeToFollow = Route3; break;
+        case(Route3): routeToFollow = Route4; break;
+        case(Route4): routeToFollow = Route5; break;
+        default: routeToFollow = Route1;      break;
+    }
+}
+
+void NAVnode::toggleRouteToEdit(const std::shared_ptr<VoidService::Request> request, 
+                            std::shared_ptr<VoidService::Response> response){
+    switch(routeToEdit){
+        case(Route1): routeToEdit = Route2; break;
+        case(Route2): routeToEdit = Route3; break;
+        case(Route3): routeToEdit = Route4; break;
+        case(Route4): routeToEdit = Route5; break;
+        default: routeToEdit = Route1;      break;
     }
 }
 
@@ -561,11 +683,23 @@ void NAVnode::toggleCircumnavigationStyle(const std::shared_ptr<VoidService::Req
 void NAVnode::selectRoute(const std::shared_ptr<SelectRoute::Request> request, 
                             std::shared_ptr<SelectRoute::Response> response){
     switch(request->route){
-        case Route1: routeSelected = Route1; break;
-        case Route2: routeSelected = Route2; break;
-        case Route3: routeSelected = Route3; break;
-        case Route4: routeSelected = Route4; break;
-        case Route5: routeSelected = Route5; break;
+        case Route1: routeToFollow = Route1; break;
+        case Route2: routeToFollow = Route2; break;
+        case Route3: routeToFollow = Route3; break;
+        case Route4: routeToFollow = Route4; break;
+        case Route5: routeToFollow = Route5; break;
+        default: cout << "Error: invalid Route selection" << endl;
+    }
+}
+
+void NAVnode::selectRouteToEdit(const std::shared_ptr<SelectRoute::Request> request, 
+                            std::shared_ptr<SelectRoute::Response> response){
+    switch(request->route){
+        case Route1: routeToEdit = Route1; break;
+        case Route2: routeToEdit = Route2; break;
+        case Route3: routeToEdit = Route3; break;
+        case Route4: routeToEdit = Route4; break;
+        case Route5: routeToEdit = Route5; break;
         default: cout << "Error: invalid Route selection" << endl;
     }
 }
@@ -580,17 +714,17 @@ void NAVnode::resetHome(const std::shared_ptr<ResetHome::Request> request,
 
 void NAVnode::clearRoute(const std::shared_ptr<VoidService::Request> request, 
                             std::shared_ptr<VoidService::Response> response){
-    routes[routeSelected].clear();
+    routes[routeToEdit].clear();
 }
 
 void NAVnode::addLocalWaypoint(const std::shared_ptr<AddLocalWaypoint::Request> request, 
                                 std::shared_ptr<AddLocalWaypoint::Response> response){
-    routes[routeSelected].add(new Waypoint(request->x, request->y));
+    routes[routeToEdit].add(new Waypoint(request->x, request->y));
 }
 
 void NAVnode::addLocalWaypointAtIndex(const std::shared_ptr<AddLocalWaypointAtIndex::Request> request, 
                                         std::shared_ptr<AddLocalWaypointAtIndex::Response> response){
-    routes[routeSelected].add(new Waypoint(request->x, request->y), request->index);
+    routes[routeToEdit].add(new Waypoint(request->x, request->y), request->index);
 }
 
 void NAVnode::addLocalObstacle(const std::shared_ptr<AddLocalObstacle::Request> request, 
@@ -621,12 +755,12 @@ void NAVnode::addLocalObstacle(const std::shared_ptr<AddLocalObstacle::Request> 
 
 void NAVnode::addGeodeticWaypoint(const std::shared_ptr<AddGeodeticWaypoint::Request> request, 
                                     std::shared_ptr<AddGeodeticWaypoint::Response> response){
-    routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true));
+    routes[routeToEdit].add(new Waypoint(request->longitude, request->latitude, request->altitude, true));
 }
 
 void NAVnode::addGeodeticWaypointAtIndex(const std::shared_ptr<AddGeodeticWaypointAtIndex::Request> request, 
                                             std::shared_ptr<AddGeodeticWaypointAtIndex::Response> response){
-    routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true), request->index);
+    routes[routeToEdit].add(new Waypoint(request->longitude, request->latitude, request->altitude, true), request->index);
 }
 
 void NAVnode::addGeodeticObstacle(const std::shared_ptr<AddGeodeticObstacle::Request> 
@@ -657,12 +791,12 @@ void NAVnode::addGeodeticObstacle(const std::shared_ptr<AddGeodeticObstacle::Req
 
 void NAVnode::addEarthCentredWaypoint(const std::shared_ptr<AddEarthCentredWaypoint::Request> request, 
                                         std::shared_ptr<AddEarthCentredWaypoint::Response> response){
-    routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false));
+    routes[routeToEdit].add(new Waypoint(request->x, request->y, request->z, false));
 }
 
 void NAVnode::addEarthCentredWaypointAtIndex(const std::shared_ptr<AddEarthCentredWaypointAtIndex::Request> request, 
                                                 std::shared_ptr<AddEarthCentredWaypointAtIndex::Response> response){
-    routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false), request->index);
+    routes[routeToEdit].add(new Waypoint(request->x, request->y, request->z, false), request->index);
 }
 
 void NAVnode::addEarthCentredObstacle(const std::shared_ptr<AddEarthCentredObstacle::Request> request, 
@@ -692,12 +826,103 @@ void NAVnode::addEarthCentredObstacle(const std::shared_ptr<AddEarthCentredObsta
 }
 
 
+void NAVnode::removeLocalWaypoint(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response){
+    if(routes[routeToFollow].removePoint(request->x, request-> y))
+        response->output = "Waypoint removed successfully";
+    else
+        response->output = "Waypoint not in Route";
+}
 
+void NAVnode::removeLocalObstacle(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response){
+    
+}
 
+void NAVnode::removeGeodeticWaypoint(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response){
+    if(routes[routeToFollow].removeGeodeticPoint(request->latitude, request-> longitude))
+        response->output = "Waypoint removed successfully";
+    else
+        response->output = "Waypoint not in Route";
+}
+
+void NAVnode::removeGeodeticObstacle(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response){
+
+}
+
+void NAVnode::removeEarthCentredWaypoint(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response){
+    if(routes[routeToFollow].removeEarthCentredPoint(request->x, request->y, request->z))
+        response->output = "Waypoint removed successfully";
+    else
+        response->output = "Waypoint not in Route";
+}
+
+void NAVnode::removeEarthCentredObstacle(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response){
+
+}
+
+void NAVnode::removeLastWaypoint(const std::shared_ptr<RemoveLastWaypoint::Request> request, std::shared_ptr<RemoveLastWaypoint::Response> response){
+    ListNode* temp = routes[routeToFollow].getHead();
+
+    if(temp == nullptr)
+        response->output = "List is already empty";
+    else {
+        routes[routeToFollow].removeLast();
+        response->output = "Last Waypoint Successfull Removed";
+    }
+}
+
+void NAVnode::sendToGNSS(const std::shared_ptr<SendToGNSS::Request> request, std::shared_ptr<SendToGNSS::Response> response){
+    GNSS->write(request->outgoing);
+}
+
+void NAVnode::readFromGNSS(const std::shared_ptr<ReadFromGNSS::Request> request, std::shared_ptr<ReadFromGNSS::Response> response){
+    response->incoming = GNSS->read();
+    cout << response->incoming << '\n';
+}
 
 
     // action callback functions
+rclcpp_action::GoalResponse NAVnode::followRoute_Goal(const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const NAVaction::Goal> goal){
+    cout << "Received goal6 request" << '\n';
+    (void)uuid;
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE; // accept all new goals without question
+}
 
+rclcpp_action::CancelResponse NAVnode::followRoute_Cancel(const std::shared_ptr<NAVGoalHandle> goal_handle){
+    cout<< "Received cancel request" << '\n';
+    (void)goal_handle;
+    return rclcpp_action::CancelResponse::ACCEPT; // blindly accepts all cancel requests
+}
+
+void NAVnode::followRoute_Accepted(const std::shared_ptr<NAVGoalHandle> goal_handle){
+    // this needs to return quickly, lest we block the executor, so we spin up a new thread
+    std::thread{std::bind(&NAVnode::followRoute_Execute, this, _1), goal_handle}.detach();
+}
+
+void NAVnode::followRoute_Execute(const std::shared_ptr<NAVGoalHandle> goal_handle){
+    // actual method that excecutes the action
+    rclcpp::Rate loop_rate(1);
+    const auto goal = goal_handle->get_goal();
+    auto feedback = std::make_shared<NAVaction::Feedback>();
+    auto result = std::make_shared<NAVaction::Result>();
+
+    while(true){
+        if (goal_handle->is_canceling()){
+            result->success = "Navigation Prematurely Terminated";
+            goal_handle->canceled(result);
+            return;
+        }
+        // do stuff
+
+
+
+        loop_rate.sleep();
+    }
+
+    if(rclcpp::ok()){
+        result->success = "great success";
+            goal_handle->succeed(result);
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////
 // TODO

@@ -52,7 +52,7 @@ class ListOfWaypoints{
 
         ListNode* getPoint(double x, double y);
 
-        ListNode* getGeodeticPoint(double longitude, double latitude);
+        ListNode* getGeodeticPoint(double latitude, double longitude);
 
         ListNode* getEarthCentredPoint(double x, double y, double z);
 
@@ -78,11 +78,11 @@ class ListOfWaypoints{
 
         void remove(ListNode* node);
 
-        void removePoint(double x, double y);
+        bool removePoint(double x, double y);
 
-        void removeGeodeticPoint(double longitude, double latitude);
+        bool removeGeodeticPoint(double latitude, double longitude);
 
-        void removeEarthCentredPoint(double x, double y, double z);  
+        bool removeEarthCentredPoint(double x, double y, double z);  
 
         bool areEqual(Waypoint* point1, Waypoint* point2);
 };
