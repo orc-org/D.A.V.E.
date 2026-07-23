@@ -43,7 +43,7 @@ ListNode* ListOfWaypoints::getPoint(double x, double y){
     return nullptr;
 }
 
-ListNode* ListOfWaypoints::getGeodeticPoint(double longitude, double latitude){
+ListNode* ListOfWaypoints::getGeodeticPoint(double latitude, double longitude){
     ListNode* current = head;
 
     while (current != nullptr) {
@@ -247,7 +247,7 @@ void ListOfWaypoints::remove(ListNode* node) {
     delete node;
 }
 
-void ListOfWaypoints::removePoint(double x, double y) {
+bool ListOfWaypoints::removePoint(double x, double y) {
     ListNode* current = head;
 
     while (current != nullptr) {
@@ -265,13 +265,14 @@ void ListOfWaypoints::removePoint(double x, double y) {
             }
 
             delete current;
-            return;
+            return true;
         }
         current = current->next;
+        return false;
     }
 }
 
-void ListOfWaypoints::removeGeodeticPoint(double longitude, double latitude) {
+bool ListOfWaypoints::removeGeodeticPoint(double latitude, double longitude) {
     ListNode* current = head;
 
     while (current != nullptr) {
@@ -289,13 +290,14 @@ void ListOfWaypoints::removeGeodeticPoint(double longitude, double latitude) {
             }
 
             delete current;
-            return;
+            return true;
         }
         current = current->next;
     }
+    return false;
 }
 
-void ListOfWaypoints::removeEarthCentredPoint(double x, double y, double z) {
+bool ListOfWaypoints::removeEarthCentredPoint(double x, double y, double z) {
     ListNode* current = head;
 
     while (current != nullptr) {
@@ -313,10 +315,11 @@ void ListOfWaypoints::removeEarthCentredPoint(double x, double y, double z) {
             }
 
             delete current;
-            return;
+            return true;
         }
         current = current->next;
     }
+    return false;
 }
 
 bool ListOfWaypoints::areEqual(Waypoint* point1, Waypoint* point2) {

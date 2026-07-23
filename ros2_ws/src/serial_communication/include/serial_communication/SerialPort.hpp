@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <iostream>
 
 // linux specific headers
 #include <fcntl.h>   // contains file controls
@@ -33,6 +34,7 @@ public:
     bool enableControlLines;         // used to set CLOCAL which disables
     bool canonicalMode;              // used to enable cannonical mode (where data is only processed when a newline character is received)
     bool enableEcho;                 // used to select if we want sent bits to be echoed back at us
+    bool portIsOpen;                 // used to confirm if the serial port is open
 
     int minimumData;                 // used to set VMIN, this will change the behaviour of read()
     int timeout;                     // used to set VTIME, this will change the behaviour of read()
@@ -56,9 +58,25 @@ public:
 
     SerialPort(char* portID, int baud);
 
+    SerialPort(char* portID, int minimumData, int timeout, int baud);
+
     SerialPort(char* portID, bool parityBit, bool extraStopBit, int baud);
 
-    SerialPort(char* portID, bool parityBit, bool extraStopBit, bool hardwareControl, bool controlLines, bool canonical, bool echo, int baud);
+    SerialPort(char* portID, bool parityBit, bool extraStopBit, int minimumData, int timeout, int baud);
+
+    SerialPort(char* portID, bool parityBit, bool extraStopBit, bool hardwareControl, bool controlLines, bool canonical, bool echo, int mimimunData, int timeout, int baud);
+
+    SerialPort(std::string portID);
+
+    SerialPort(std::string portID, int baud);
+
+    SerialPort(std::string portID, int minimumData, int timeout, int baud);
+
+    SerialPort(std::string portID, bool parityBit, bool extraStopBit, int baud);
+
+    SerialPort(std::string portID, bool parityBit, bool extraStopBit, int minimumData, int timeout, int baud);
+
+    SerialPort(std::string portID, bool parityBit, bool extraStopBit, bool hardwareControl, bool controlLines, bool canonical, bool echo, int mimimunData, int timeout, int baud);
 
     ~SerialPort();
 
@@ -66,8 +84,28 @@ public:
 
     void setPortID(std::string portID);
 
-    void configure();
+    void toggleParityBit();
 
+    void toggleExtraStopBit();
+
+    void toggleHardwareControl();
+
+    void toggleControlLines();
+
+    void toggleCannonicalMode();
+
+    void toggleEcho();
+
+    void toggleReading();
+
+    void setMinimumData(int number);
+
+    void setTimeout(int number);
+
+    void setBaudRate(int number);
+private:
+    void configure();
+public:
     void begin();
 
     void write(std::string message);

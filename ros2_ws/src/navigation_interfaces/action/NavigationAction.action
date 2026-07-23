@@ -1,4 +1,7 @@
+#goal
 ---
-string progress
----
+#result
 string success
+---
+#feedback
+string progress

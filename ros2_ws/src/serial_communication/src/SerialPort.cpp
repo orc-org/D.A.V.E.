@@ -1,24 +1,62 @@
 #include "SerialPort.hpp"
 
 SerialPort::SerialPort(){
-    SerialPort(stringToCharacterArray("/dev/ttyACM0"), false, false, false, false, false, false, 9600);
+    SerialPort(stringToCharacterArray("/dev/ttyACM0"), false, false, false, false, false, false, 0, 0, 9600);
 }
 
 SerialPort::SerialPort(char* portID){
-    SerialPort(portID, false, false, false, false, false, false, 9600);
+    SerialPort(portID, false, false, false, false, false, false, 0, 0, 9600);
 }
 
 SerialPort::SerialPort(char* portID, int baud){
-    SerialPort(portID, false, false, false, false, false, false, baud);
+    SerialPort(portID, false, false, false, false, false, false, 0, 0, baud);
+}
+
+SerialPort::SerialPort(char* portID, int minimumData, int timeout, int baud){
+    SerialPort(portID, false, false, false, false, false, false, minimumData, timeout, baud);
 }
 
 SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, int baud){
-    SerialPort(portID, parityBit, extraStopBit, false, false, false, false, baud);
+    SerialPort(portID, parityBit, extraStopBit, false, false, false, false, 0, 0, baud);
 }
 
-SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, bool hardwareControl, bool controlLines, bool canonical, bool echo, int baud)
+SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, int minimumData, int timeout, int baud){
+    SerialPort(portID, parityBit, extraStopBit, false, false, false, false, minimumData, timeout, baud);
+}
+
+SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, bool hardwareControl, bool controlLines, bool canonical, bool echo, int minimumData, int timeout, int baud)
     : portID(portID), parityBit(parityBit), twoStopBits(extraStopBit), hardwareFlowControlEnabled(hardwareControl),
-    enableControlLines(controlLines), canonicalMode(canonical), enableEcho(echo), baudRate(baud){}
+    enableControlLines(controlLines), canonicalMode(canonical), enableEcho(echo), minimumData(minimumData), timeout(timeout), baudRate(baud){ 
+
+        portIsOpen = false;
+    }
+
+SerialPort::SerialPort(std::string portID){
+    SerialPort(portID, false, false, false, false, false, false, 0, 0, 9600);
+}
+
+SerialPort::SerialPort(std::string portID, int baud){
+    SerialPort(portID, false, false, false, false, false, false, 0, 0, baud);
+}
+
+SerialPort::SerialPort(std::string portID, int minimumData, int timeout, int baud){
+    SerialPort(portID, false, false, false, false, false, false, minimumData, timeout, baud);
+}
+
+SerialPort::SerialPort(std::string portID, bool parityBit, bool extraStopBit, int baud){
+    SerialPort(portID, parityBit, extraStopBit, false, false, false, false, 0, 0, baud);
+}
+
+SerialPort::SerialPort(std::string portID, bool parityBit, bool extraStopBit, int minimumData, int timeout, int baud){
+    SerialPort(portID, parityBit, extraStopBit, false, false, false, false, minimumData, timeout, baud);
+}
+
+SerialPort::SerialPort(std::string portID, bool parityBit, bool extraStopBit, bool hardwareControl, bool controlLines, bool canonical, bool echo, int minimumData, int timeout, int baud)
+    : portID(stringToCharacterArray(portID)), parityBit(parityBit), twoStopBits(extraStopBit), hardwareFlowControlEnabled(hardwareControl),
+    enableControlLines(controlLines), canonicalMode(canonical), enableEcho(echo), minimumData(minimumData), timeout(timeout), baudRate(baud){ 
+
+        portIsOpen = false;
+    }
 
 SerialPort::~SerialPort(){
     delete portID;
@@ -31,6 +69,51 @@ void SerialPort::setPortID(char* portID){
 
 void SerialPort::setPortID(std::string portID){
     this->portID = stringToCharacterArray(portID);
+}
+
+void SerialPort::toggleParityBit(){
+    parityBit = !parityBit;
+}
+
+void SerialPort::toggleExtraStopBit(){
+    twoStopBits = !twoStopBits;
+}
+
+void SerialPort::toggleHardwareControl(){
+    hardwareFlowControlEnabled = !hardwareFlowControlEnabled;
+}
+
+void SerialPort::toggleControlLines(){
+    enableControlLines = !enableControlLines;
+}
+
+void SerialPort::toggleCannonicalMode(){
+    canonicalMode = !canonicalMode;
+}
+
+void SerialPort::toggleEcho(){
+    enableEcho = !enableEcho;
+}
+
+void SerialPort::toggleReading(){
+    enableReading = !enableReading;
+    
+    if(!enableReading)
+        std::cout << '\n' << "CAUTION:" << '\n\n' << "YOU HAVE DISABLED READING FROM THE SERIAL PORT" << '\n\n' << "IF THIS WAS UNINTENTIONAL UNDO THIS" << '\n';
+    else
+        std::cout << '\n' << "Crisis Averted" << '\n\n' << "Ability to Read Restored :)" << '\n';
+}
+
+void SerialPort::setMinimumData(int number){
+    minimumData = number;
+}
+
+void SerialPort::setTimeout(int number){
+    timeout = number;
+}
+
+void SerialPort::setBaudRate(int number){
+    baudRate = number;
 }
 
 void SerialPort::configure(){
@@ -111,6 +194,22 @@ void SerialPort::configure(){
     // tty.c_oflag &= ~OXTABS; // Prevent conversion of tabs to spaces (NOT PRESENT IN LINUX)
     // tty.c_oflag &= ~ONOEOT; // Prevent removal of C-d chars (0x004) in output (NOT PRESENT IN LINUX)
 
+    //VMIN and VTIME
+    if (minimumData < 0 || minimumData > 255){
+        tty.c_cc[VMIN] = 0; // VMIN is represented by one byte, so it is a number between 0 and 255, we will default to 0 if an invalid number is received
+    }
+    else{
+        tty.c_cc[VMIN] = minimumData;
+    }
+
+    //NOTE: VTIME is in deciseconds (so a value of 255 for VTIME means that Read() will be blocked for 25.5 seconds)
+    if (timeout < 0 || timeout > 255){
+        tty.c_cc[VTIME] = 0; // VTIME is represented by one byte, so it is a number between 0 and 255, we will default to 0 if an invalid number is received
+    }
+    else{
+        tty.c_cc[VTIME] = timeout;
+    }
+
     // Baud Rate
     switch(baudRate){
         case 0:      cfsetspeed(&tty, B0);      break;
@@ -145,6 +244,7 @@ void SerialPort::configure(){
 void SerialPort::begin(){
     // start serial communication
     serial_port = open(portID, O_RDWR);
+    portIsOpen = true;
 
     // check for errors in creating the serial connectiom
     if(serial_port < 0){

@@ -22,13 +22,11 @@ class XLRnode : public rclcpp::Node {
     rclcpp::Service<serial_interfaces::srv::Transmit>::SharedPtr  transmitServer;
 
     SerialPort* xlr;
-    bool portIsOpen;
 
 public:
 
     XLRnode() : Node("XLRnode") {
         xlr = new SerialPort(SerialPort::stringToCharacterArray("/dev/ttyUSB0"), 115200);
-        portIsOpen = false;
 
         converseServer = this->create_service<serial_interfaces::srv::Converse>("Converse", std::bind(&XLRnode::converseWithTerminal, this, _1, _2));
         receiveServer = this->create_service<serial_interfaces::srv::Receive>("Receive", std::bind(&XLRnode::receiveMessage, this, _1, _2));
@@ -36,14 +34,14 @@ public:
     }
 
     void transmitMessage(const std::shared_ptr<serial_interfaces::srv::Transmit::Request> request, std::shared_ptr<serial_interfaces::srv::Transmit::Response> response){
-        if (!portIsOpen)
+        if (!xlr->portIsOpen)
             xlr->begin();
 
         xlr->write(request->outgoing);
     }
 
     void receiveMessage(const std::shared_ptr<serial_interfaces::srv::Receive::Request> request, std::shared_ptr<serial_interfaces::srv::Receive::Response> response){
-        if(!portIsOpen)
+        if(!xlr->portIsOpen)
             xlr->begin();
         
         response->incoming = xlr->read();
@@ -51,7 +49,7 @@ public:
     }
 
     void converseWithTerminal(const std::shared_ptr<serial_interfaces::srv::Converse::Request> request, std::shared_ptr<serial_interfaces::srv::Converse::Response> response){
-        if(!portIsOpen)
+        if(!xlr->portIsOpen)
             xlr->begin();                      // ensure port is open
         xlr->write(request->outgoing);         // send message
         std::this_thread::sleep_for(1500ms);   // wait 1.5s to allow the terminal to think it over
