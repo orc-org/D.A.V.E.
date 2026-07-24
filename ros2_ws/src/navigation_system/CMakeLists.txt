@@ -12,6 +12,8 @@ list(APPEND CMAKE_PREFIX_PATH "${ROS2_WS}/install")
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action)
+find_package(rclcpp_components)
 find_package(navigation_interfaces REQUIRED)
 find_package(serial_interfaces REQUIRED)
 find_package(serial_communication REQUIRED)
@@ -30,7 +32,7 @@ set(SOURCE_FILES
 )
 
 add_executable(NAVnode ${SOURCE_FILES} )
-ament_target_dependencies(NAVnode rclcpp navigation_interfaces serial_interfaces serial_communication)
+ament_target_dependencies(NAVnode rclcpp rclcpp_action rclcpp_components navigation_interfaces serial_interfaces serial_communication)
 
 target_include_directories(NAVnode PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/navigation_system>

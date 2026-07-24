@@ -99,9 +99,9 @@ void SerialPort::toggleReading(){
     enableReading = !enableReading;
     
     if(!enableReading)
-        std::cout << '\n' << "CAUTION:" << '\n\n' << "YOU HAVE DISABLED READING FROM THE SERIAL PORT" << '\n\n' << "IF THIS WAS UNINTENTIONAL UNDO THIS" << '\n';
+        std::cout << '\n' << "CAUTION:" << '\n' << '\n' << "YOU HAVE DISABLED READING FROM THE SERIAL PORT" << '\n' << '\n' << "IF THIS WAS UNINTENTIONAL UNDO THIS" << '\n';
     else
-        std::cout << '\n' << "Crisis Averted" << '\n\n' << "Ability to Read Restored :)" << '\n';
+        std::cout << '\n' << "Crisis Averted" << '\n' << '\n' << "Ability to Read Restored :)" << '\n';
 }
 
 void SerialPort::setMinimumData(int number){
