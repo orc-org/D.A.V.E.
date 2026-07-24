@@ -32,7 +32,7 @@
             const originalError = console.error;
             
             function appendToDiag(type, args) {
-                const consoleDiv = document.getElementById('diagnostic-console');
+                const consoleDiv = document.getElementById('diag-logs');
                 if (!consoleDiv) return;
 
                 const msg = Array.from(args).map(x => {
@@ -138,32 +138,34 @@
         <!-- MAIN GRID -->
         <main class="dashboard-grid">
             
-            <!-- LEFT COLUMN: Live Feed Viewport -->
-            <section class="viewport-section glass-panel">
+            <!-- 3D ROBOT VIEW SECTION -->
+            <section class="viewport-section glass-panel" id="urdf-viewer-section" style="margin-bottom: 20px;">
                 <div class="panel-header">
-                    <h2>CAMERA VIEWPORT</h2>
+                    <h2>3D ROBOT VIEW</h2>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <button id="btn-toggle-view" class="neon-btn-blue" style="padding: 4px 8px; font-size: 0.75rem;">SHOW 3D VIEW</button>
-                        <select id="camera-view-mode" class="neon-select hidden" style="padding: 4px 8px; font-size: 0.75rem; background: var(--bg-secondary); color: var(--accent-blue); border: 1px solid var(--border-color); border-radius: 4px; font-family: monospace; cursor: pointer; outline: none;">
+                        <select id="camera-view-mode" class="neon-select" style="padding: 4px 8px; font-size: 0.75rem; background: var(--bg-secondary); color: var(--accent-blue); border: 1px solid var(--border-color); border-radius: 4px; font-family: monospace; cursor: pointer; outline: none;">
                             <option value="free">FREECAM</option>
                             <option value="orbit">ORBIT LOCK</option>
                             <option value="chase">CHASE CAM</option>
                         </select>
-                        <span class="system-tag">CAM_FEED_01</span>
+                        <span class="system-tag">3D_MODEL</span>
                     </div>
                 </div>
                 
-                <!-- Simple Viewport container -->
-                <div class="camera-viewport" id="viewport-container" style="display: flex; align-items: center; justify-content: center; background: #000; color: #8fa0ba; font-family: monospace; font-size: 1rem; letter-spacing: 1.5px;">
-                    NO CAMERA FEED
-                </div>
-
                 <!-- 3D URDF Viewer container -->
-                <div class="camera-viewport hidden" id="urdf-viewer-container" style="background: #000; position: relative; min-height: 350px; flex-grow: 1; display: flex; flex-direction: column;">
-                    <div id="urdf-viewer" style="width: 100%; height: 100%; flex-grow: 1;"></div>
+                <div class="camera-viewport" id="urdf-viewer-container" style="background: #000; position: relative; min-height: 450px; flex-grow: 1; display: flex; flex-direction: column;">
+                    <div id="urdf-viewer" style="width: 100%; height: 100%; flex-grow: 1; min-height: 400px;"></div>
                     <!-- Diagnostic Console Overlay -->
-                    <div id="diagnostic-console" style="position: absolute; bottom: 10px; right: 10px; width: calc(100% - 20px); max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.85); border: 1px solid #ffcc00; font-family: monospace; font-size: 0.65rem; color: #ffcc00; padding: 5px; z-index: 1000; pointer-events: auto; text-align: left; box-sizing: border-box;">
-                        [Diagnostics console active]
+                    <div id="diagnostic-console" style="position: absolute; bottom: 10px; right: 10px; width: calc(100% - 20px); height: 120px; max-height: 120px; overflow: hidden; background: rgba(0,0,0,0.85); border: 1px solid #ffcc00; font-family: monospace; font-size: 0.65rem; color: #ffcc00; z-index: 1000; display: flex; flex-direction: column; box-sizing: border-box; transition: height 0.2s; text-align: left;">
+                        <!-- Console Header -->
+                        <div id="diag-header" style="background: rgba(255, 204, 0, 0.15); padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; border-bottom: 1px solid #ffcc00; flex-shrink: 0;">
+                            <span>DIAGNOSTICS LOGS</span>
+                            <span id="diag-collapse-btn" style="font-weight: bold;">[ HIDE ]</span>
+                        </div>
+                        <!-- Console Logs -->
+                        <div id="diag-logs" style="flex-grow: 1; overflow-y: auto; padding: 5px;">
+                            [Diagnostics console active]
+                        </div>
                     </div>
                 </div>
 
@@ -175,8 +177,71 @@
                     <span id="hud-target-coords"></span>
                     <span id="hud-pitch"></span>
                     <span id="hud-roll"></span>
+                    <button id="btn-toggle-view"></button> <!-- keep button for back compatibility -->
                 </div>
             </section>
+
+            <!-- CAMERA STARTUPS SECTION -->
+            <section class="viewport-section glass-panel" id="camera-startups-section" style="margin-bottom: 20px;">
+                <div class="panel-header">
+                    <h2>CAMERA STARTUPS</h2>
+                    <span class="system-tag">CAMERAS</span>
+                </div>
+                
+                <!-- Camera Cards container -->
+                <div class="camera-viewport" id="viewport-container" style="display: flex; flex-direction: column; background: #000; color: #8fa0ba; font-family: monospace; font-size: 0.9rem; padding: 15px; box-sizing: border-box; gap: 15px; justify-content: center; height: auto; min-height: min-content; overflow: visible; flex-grow: 0;">
+                    <div class="camera-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; height: auto;">
+                        
+                        <!-- Camera 0 Slot -->
+                        <div class="camera-card" id="card-cam-0" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: bold; color: var(--text-main);">CAMERA 0 (CSI PORT 0)</span>
+                                    <span class="status-indicator disconnected" id="status-cam-0-dot" style="margin-left: auto; margin-right: 5px;"></span>
+                                    <span id="status-cam-0-text" style="font-size: 0.75rem; color: var(--text-muted);">OFFLINE</span>
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 15px;">
+                                    <div><strong>Bus:</strong> I2C Bus 10 (VCM Focus)</div>
+                                    <div><strong>Resolution:</strong> 1280x720 @ 30 FPS</div>
+                                    <div><strong>IP/Port:</strong> 192.168.1.87:5000</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="font-size: 0.65rem; color: var(--accent-amber); background: rgba(255,170,0,0.05); padding: 5px; border-radius: 4px; border: 1px dashed rgba(255,170,0,0.2); word-break: break-all;">
+                                    Run on laptop:<br>
+                                    <code>./scripts/receive_stream.sh -p 5000</code>
+                                </div>
+                                <button id="btn-toggle-cam-0" class="neon-btn-blue" style="width: 100%; font-size: 0.75rem; padding: 6px 0;">START STREAM</button>
+                            </div>
+                        </div>
+
+                        <!-- Camera 1 Slot -->
+                        <div class="camera-card" id="card-cam-1" style="border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; justify-content: space-between; position: relative;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: bold; color: var(--text-main);">CAMERA 1 (CSI PORT 1)</span>
+                                    <span class="status-indicator disconnected" id="status-cam-1-dot" style="margin-left: auto; margin-right: 5px;"></span>
+                                    <span id="status-cam-1-text" style="font-size: 0.75rem; color: var(--text-muted);">OFFLINE</span>
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 15px;">
+                                    <div><strong>Bus:</strong> I2C Bus 9 (VCM Focus)</div>
+                                    <div><strong>Resolution:</strong> 1280x720 @ 30 FPS</div>
+                                    <div><strong>IP/Port:</strong> 192.168.1.87:5002</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="font-size: 0.65rem; color: var(--accent-amber); background: rgba(255,170,0,0.05); padding: 5px; border-radius: 4px; border: 1px dashed rgba(255,170,0,0.2); word-break: break-all;">
+                                    Run on laptop:<br>
+                                    <code>./scripts/receive_stream.sh -p 5002</code>
+                                </div>
+                                <button id="btn-toggle-cam-1" class="neon-btn-blue" style="width: 100%; font-size: 0.75rem; padding: 6px 0;">START STREAM</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
 
             <!-- RIGHT COLUMN: Telemetry & Controls -->
             <div class="controls-column">

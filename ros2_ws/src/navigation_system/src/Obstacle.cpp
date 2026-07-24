@@ -1,3 +1,6 @@
+#ifndef OBSTACLE_CPP
+#define OBSTACLE_CPP
+
 #include "Waypoint.cpp"
 
 
@@ -76,9 +79,15 @@ public:
 
 };
 
-int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
+// dummy main function for standalone testing
+// int main(int argc, char** argv) {
+//     (void)argc;
+//     (void)argv;
+// 
+//     return 0;
+// }
 
-    return 0;
-}
+// define static member variables of obstacle class
+int Obstacle::largestObstacle = 0;
+
+#endif

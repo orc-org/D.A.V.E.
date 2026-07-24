@@ -1,3 +1,6 @@
+#ifndef WAYPOINT_CPP
+#define WAYPOINT_CPP
+
 #include <cmath>
 
 
@@ -241,9 +244,20 @@ public:
     }
 };
 
-int main(int argc, char** argv) {
-    (void)argc;
-    (void)argv;
+// dummy main function for standalone testing
+// int main(int argc, char** argv) {
+//     (void)argc;
+//     (void)argv;
+// 
+//     return 0;
+// }
 
-    return 0;
-}
+// define static member variables of waypoint class
+double Waypoint::home_longitude = 0.0;
+double Waypoint::home_latitude = 0.0;
+double Waypoint::home_altitude = 0.0;
+double Waypoint::home_ECEF_x = 0.0;
+double Waypoint::home_ECEF_y = 0.0;
+double Waypoint::home_ECEF_z = 0.0;
+
+#endif

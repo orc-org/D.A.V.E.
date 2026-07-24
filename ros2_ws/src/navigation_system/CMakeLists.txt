@@ -11,12 +11,17 @@ find_package(rclcpp REQUIRED)
 find_package(navigation_interfaces REQUIRED)
 
 
+# compile gpsnode and navnode
 add_executable(GPSnode src/GPSnode.cpp)
 ament_target_dependencies(GPSnode rclcpp navigation_interfaces)
 
+add_executable(NAVnode src/NAVnode.cpp)
+ament_target_dependencies(NAVnode rclcpp navigation_interfaces)
+
+# install targets
 install(TARGETS
   GPSnode
+  NAVnode
   DESTINATION lib/${PROJECT_NAME})
-
 
 ament_package()
