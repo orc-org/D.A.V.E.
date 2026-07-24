@@ -20,6 +20,8 @@
 
 
   <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>rclcpp_components</depend>
   <depend>navigation_interfaces</depend>
   <depend>serial_interfaces</depend>
   <depend>serial_communication</depend>
