@@ -22,8 +22,8 @@ let rlMotorSub = null;
 let rrMotorSub = null;
 let cmdVelSub = null;
 
-// 3D Viewer State
-let showing3D = false;
+// 3d viewer state
+let showing3D = true;
 let viewer3D = null;
 let tfClient = null;
 let urdfClient = null;
@@ -1671,7 +1671,7 @@ function updateModuleStatusUI(status) {
         modulesInitialized = true;
     }
 
-    // Update statuses and buttons
+    // update statuses and buttons
     for (const key in status) {
         const info = status[key];
         const isRunning = info.running;
@@ -1693,6 +1693,30 @@ function updateModuleStatusUI(status) {
                 btn.className = "module-toggle-btn neon-btn-blue";
             }
         }
+
+        // update corresponding camera card UI widgets if these are the stream modules
+        if (key === 'stream_cam_0') {
+            const cam0Dot = document.getElementById('status-cam-0-dot');
+            const cam0Text = document.getElementById('status-cam-0-text');
+            const cam0Btn = document.getElementById('btn-toggle-cam-0');
+            if (cam0Dot) cam0Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam0Text) cam0Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam0Btn) {
+                cam0Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam0Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
+            }
+        }
+        if (key === 'stream_cam_1') {
+            const cam1Dot = document.getElementById('status-cam-1-dot');
+            const cam1Text = document.getElementById('status-cam-1-text');
+            const cam1Btn = document.getElementById('btn-toggle-cam-1');
+            if (cam1Dot) cam1Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam1Text) cam1Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam1Btn) {
+                cam1Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam1Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
+            }
+        }
     }
 }
 
@@ -1709,6 +1733,27 @@ function resetModuleStatusUI() {
             btn.disabled = false;
         });
     }
+    // reset camera card indicators too
+    const cam0Dot = document.getElementById('status-cam-0-dot');
+    const cam0Text = document.getElementById('status-cam-0-text');
+    const cam0Btn = document.getElementById('btn-toggle-cam-0');
+    if (cam0Dot) cam0Dot.className = "status-indicator disconnected";
+    if (cam0Text) cam0Text.innerText = "OFFLINE";
+    if (cam0Btn) {
+        cam0Btn.innerText = "START STREAM";
+        cam0Btn.className = "neon-btn-blue";
+        cam0Btn.disabled = false;
+    }
+    const cam1Dot = document.getElementById('status-cam-1-dot');
+    const cam1Text = document.getElementById('status-cam-1-text');
+    const cam1Btn = document.getElementById('btn-toggle-cam-1');
+    if (cam1Dot) cam1Dot.className = "status-indicator disconnected";
+    if (cam1Text) cam1Text.innerText = "OFFLINE";
+    if (cam1Btn) {
+        cam1Btn.innerText = "START STREAM";
+        cam1Btn.className = "neon-btn-blue";
+        cam1Btn.disabled = false;
+    }
 }
 
 function toggleModule(key) {
@@ -1716,14 +1761,23 @@ function toggleModule(key) {
         console.warn("Cannot toggle module: Not connected to ROS.");
         return;
     }
+    
+    // support toggling both process manager list buttons and specific viewport buttons
     const btn = document.getElementById(`btn-toggle-${key}`);
-    if (!btn) return;
-    
-    const shouldStart = btn.innerText === "START";
-    
-    // Set button to busy/loading state
-    btn.innerText = shouldStart ? "STARTING..." : "STOPPING...";
-    btn.disabled = true;
+    const camBtn = (key === 'stream_cam_0') ? document.getElementById('btn-toggle-cam-0') : 
+                   (key === 'stream_cam_1') ? document.getElementById('btn-toggle-cam-1') : null;
+
+    const currentText = btn ? btn.innerText : (camBtn ? camBtn.innerText : "");
+    const shouldStart = currentText.includes("START");
+
+    if (btn) {
+        btn.innerText = shouldStart ? "STARTING..." : "STOPPING...";
+        btn.disabled = true;
+    }
+    if (camBtn) {
+        camBtn.innerText = shouldStart ? "STARTING..." : "STOPPING...";
+        camBtn.disabled = true;
+    }
     
     const service = new ROSLIB.Service({
         ros: ros,
@@ -1736,27 +1790,31 @@ function toggleModule(key) {
     });
     
     service.callService(request, (result) => {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
+        if (camBtn) camBtn.disabled = false;
         if (result && result.success) {
             console.log(`Successfully toggled ${key}: ${result.message}`);
         } else {
             console.error(`Failed to toggle ${key}: ${result ? result.message : 'Unknown error'}`);
-            btn.innerText = shouldStart ? "START" : "STOP";
+            if (btn) btn.innerText = shouldStart ? "START" : "STOP";
+            if (camBtn) camBtn.innerText = shouldStart ? "START STREAM" : "STOP STREAM";
         }
     }, (error) => {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
+        if (camBtn) camBtn.disabled = false;
         console.error(`Service call error for ${key}:`, error);
-        btn.innerText = shouldStart ? "START" : "STOP";
+        if (btn) btn.innerText = shouldStart ? "START" : "STOP";
+        if (camBtn) camBtn.innerText = shouldStart ? "START STREAM" : "STOP STREAM";
     });
 }
 
-// Collapsible Panel Event Listener
+// collapsible panel event listener
 btnToggleModules.addEventListener('click', () => {
     modulesDrawer.classList.toggle('collapsed');
     modulesCollapseIcon.classList.toggle('collapsed');
 });
 
-// Click delegation for toggle buttons
+// click delegation for toggle buttons
 modulesDrawer.addEventListener('click', (e) => {
     const btn = e.target.closest('.module-toggle-btn');
     if (btn) {
@@ -1766,4 +1824,37 @@ modulesDrawer.addEventListener('click', (e) => {
         }
     }
 });
+
+// click listeners for main panel camera toggle buttons
+const cam0Toggle = document.getElementById('btn-toggle-cam-0');
+if (cam0Toggle) {
+    cam0Toggle.addEventListener('click', () => {
+        toggleModule('stream_cam_0');
+    });
+}
+const cam1Toggle = document.getElementById('btn-toggle-cam-1');
+if (cam1Toggle) {
+    cam1Toggle.addEventListener('click', () => {
+        toggleModule('stream_cam_1');
+    });
+}
+
+// click listener to collapse/expand diagnostics log panel
+const diagConsole = document.getElementById('diagnostic-console');
+const diagHeader = document.getElementById('diag-header');
+const diagCollapseBtn = document.getElementById('diag-collapse-btn');
+
+if (diagHeader && diagConsole && diagCollapseBtn) {
+    diagHeader.addEventListener('click', () => {
+        const isCollapsed = diagConsole.style.height === '24px';
+        if (isCollapsed) {
+            diagConsole.style.height = '120px';
+            diagCollapseBtn.innerText = '[ HIDE ]';
+        } else {
+            diagConsole.style.height = '24px';
+            diagCollapseBtn.innerText = '[ SHOW ]';
+        }
+    });
+}
+
 

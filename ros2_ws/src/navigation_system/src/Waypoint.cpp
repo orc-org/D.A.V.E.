@@ -1,3 +1,6 @@
+#ifndef WAYPOINT_CPP
+#define WAYPOINT_CPP
+
 #include <cmath>
 #include "Waypoint.hpp"
 

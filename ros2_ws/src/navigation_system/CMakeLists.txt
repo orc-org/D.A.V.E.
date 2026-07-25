@@ -39,9 +39,12 @@ target_include_directories(NAVnode PUBLIC
   $<INSTALL_INTERFACE:include/navigation_system>
 )
 
+add_executable(NAVnode src/NAVnode.cpp)
+ament_target_dependencies(NAVnode rclcpp navigation_interfaces)
+
+# install targets
 install(TARGETS
   NAVnode
   DESTINATION lib/${PROJECT_NAME})
-
 
 ament_package()
