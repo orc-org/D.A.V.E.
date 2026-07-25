@@ -24,4 +24,9 @@ install(TARGETS
   NAVnode
   DESTINATION lib/${PROJECT_NAME})
 
+install(PROGRAMS
+  src/gps_bridge_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_package()
