@@ -87,16 +87,23 @@ void Waypoint::local_To_EarthCentred() {
 }
 
 void Waypoint::EarthCentred_To_GeodeticApprox() {
-    double lonRad = atan2(ECEF_y, ECEF_x);
-
     double p = sqrt(ECEF_x * ECEF_x + ECEF_y * ECEF_y);
+    if (p < 1e-9 && std::abs(ECEF_z) < 1e-9) {
+        latitude = 0.0;
+        longitude = 0.0;
+        return;
+    }
+
+    double lonRad = atan2(ECEF_y, ECEF_x);
     double latRad = atan2(ECEF_z, p * (1.0 - e2));
-    double h;
+    double h = 0.0;
 
     for (int i = 0; i < 5; i++) {
         double N = calcPrimeVerticalRadius(latRad);
-        h = p / cos(latRad) - N;
-        latRad = atan2(ECEF_z, p * (1.0 - e2 * N / (N + h)));
+        double denom = N + h;
+        if (std::abs(denom) < 1e-9) break;
+        h = p / std::cos(latRad) - N;
+        latRad = atan2(ECEF_z, p * (1.0 - e2 * N / denom));
     }
 
     latitude = latRad;
