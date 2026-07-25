@@ -97,6 +97,9 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/ros3d@0.17.0/build/ros3d.min.js"></script>
+    <!-- Leaflet CSS & JS for Interactive Location Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -178,6 +181,105 @@
                     <span id="hud-pitch"></span>
                     <span id="hud-roll"></span>
                     <button id="btn-toggle-view"></button> <!-- keep button for back compatibility -->
+                </div>
+            </section>
+
+            <!-- LOCATION & GPS NAVIGATION SECTION -->
+            <section class="viewport-section glass-panel" id="gps-navigation-section" style="margin-bottom: 20px;">
+                <div class="panel-header">
+                    <h2>LOCATION & GPS NAVIGATION</h2>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color);">
+                            <span class="status-indicator disconnected" id="gps-fix-status-dot"></span>
+                            <span id="gps-fix-status-text" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: bold;">NO FIX</span>
+                        </div>
+                        <select id="gps-map-mode" class="neon-select" style="padding: 4px 8px; font-size: 0.75rem; background: var(--bg-secondary); color: var(--accent-blue); border: 1px solid var(--border-color); border-radius: 4px; font-family: monospace; cursor: pointer; outline: none;">
+                            <option value="radar">TACTICAL RADAR</option>
+                            <option value="map">SATELLITE / MAP</option>
+                        </select>
+                        <span class="system-tag">GNSS_NAV</span>
+                    </div>
+                </div>
+                
+                <!-- Main Layout Grid for Location Section -->
+                <div class="gps-layout-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; width: 100%;">
+                    
+                    <!-- Left: Interactive Map / Radar Visualizer -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div id="gps-map-viewport" style="background: #050811; border-radius: 8px; border: 1px solid var(--border-color); position: relative; height: 380px; width: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                            <!-- HTML5 Canvas for Tactical Radar View -->
+                            <canvas id="gps-radar-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+                            <!-- Leaflet Map Container -->
+                            <div id="leaflet-map" style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: none; z-index: 10;"></div>
+                            
+                            <!-- Map Overlay Controls & Target HUD -->
+                            <div style="position: absolute; top: 12px; left: 12px; background: rgba(5,8,17,0.85); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; font-family: monospace; font-size: 0.75rem; z-index: 20; backdrop-filter: blur(4px); pointer-events: none;">
+                                <div style="color: var(--accent-blue); font-weight: bold; margin-bottom: 4px;">TARGET WAYPOINT</div>
+                                <div id="map-target-coords" style="color: var(--text-main);">Lat: -- | Lon: --</div>
+                                <div id="map-target-dist-bearing" style="color: var(--text-muted); font-size: 0.7rem; margin-top: 2px;">Dist: -- m | Bear: --°</div>
+                            </div>
+
+                            <!-- Map Origin / Coordinates Quick Tag -->
+                            <div style="position: absolute; bottom: 12px; right: 12px; background: rgba(5,8,17,0.85); border: 1px solid var(--border-color); border-radius: 6px; padding: 6px 10px; font-family: monospace; font-size: 0.7rem; z-index: 20; color: var(--accent-green);">
+                                ROVER: <span id="map-rover-coords-short">37.774929, -122.419416</span>
+                            </div>
+                        </div>
+
+                        <!-- Map Interactive Control Bar -->
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="btn-set-home-origin" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 120px;">SET HOME ORIGIN</button>
+                            <button id="btn-set-target-waypoint" class="neon-btn-amber" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 130px;">CLICK MAP TO TARGET</button>
+                            <button id="btn-center-rover" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 110px;">CENTER ROVER</button>
+                            <button id="btn-clear-waypoint" class="neon-btn-red" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 110px;">CLEAR WAYPOINT</button>
+                        </div>
+                    </div>
+
+                    <!-- Right: Detailed Location Telemetry & NMEA Inspector -->
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        
+                        <!-- Location Telemetry Cards -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">LATITUDE</span>
+                                <span class="card-value" id="val-gps-lat-det" style="font-size: 0.85rem; color: var(--accent-blue); word-break: break-all;">--</span>
+                            </div>
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">LONGITUDE</span>
+                                <span class="card-value" id="val-gps-lon-det" style="font-size: 0.85rem; color: var(--accent-blue); word-break: break-all;">--</span>
+                            </div>
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">ALTITUDE</span>
+                                <span class="card-value" id="val-gps-alt-det" style="font-size: 0.85rem;">-- m</span>
+                            </div>
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">FIX QUALITY</span>
+                                <span class="card-value" id="val-gps-quality" style="font-size: 0.85rem; color: var(--accent-amber);">SEARCHING</span>
+                            </div>
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">DIST TO TARGET</span>
+                                <span class="card-value" id="val-gps-dist" style="font-size: 0.85rem;">-- m</span>
+                            </div>
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">BEARING TO TARGET</span>
+                                <span class="card-value" id="val-gps-bearing" style="font-size: 0.85rem;">--°</span>
+                            </div>
+                        </div>
+
+                        <!-- Raw NMEA 0183 Live Inspector Drawer -->
+                        <div class="glass-panel" style="padding: 10px; flex-grow: 1; display: flex; flex-direction: column; min-height: 180px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); letter-spacing: 1px;">RAW NMEA STREAM</span>
+                                <div style="display: flex; gap: 6px;">
+                                    <button id="btn-toggle-nmea-autoscroll" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; cursor: pointer;">AUTOSCROLL ON</button>
+                                    <button id="btn-clear-nmea" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; cursor: pointer;">CLEAR</button>
+                                </div>
+                            </div>
+                            <div id="nmea-stream-log" style="flex-grow: 1; background: #000; border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; padding: 8px; font-family: monospace; font-size: 0.65rem; color: var(--accent-green); overflow-y: auto; max-height: 140px; line-height: 1.4; word-break: break-all;">
+                                [NMEA 0183 Stream Waiting for Serial Input or Simulator...]
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </section>
 
@@ -392,6 +494,14 @@
                             <span class="card-label">WHEEL SPEED RATIO</span>
                             <span class="card-value" id="val-wheel-speed">FL: 0%, FR: 0%</span>
                         </div>
+                        <div class="telemetry-card">
+                            <span class="card-label">GPS COORDINATES</span>
+                            <span class="card-value" id="val-gps-telemetry-coords">Lat: --, Lon: --</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="card-label">GPS FIX / ALTITUDE</span>
+                            <span class="card-value" id="val-gps-telemetry-fix">NO FIX (-- m)</span>
+                        </div>
                     </div>
                 </section>
 
@@ -500,8 +610,20 @@
                         </div>
                         <div class="module-row">
                             <div class="module-info">
+<<<<<<< HEAD
                                 <span class="module-status-dot stopped" id="status-dot-arm_stepper_driver"></span>
                                 <span class="module-name">Arm & Gripper Steppers (DM556Y)</span>
+=======
+                                <span class="module-status-dot stopped" id="status-dot-stepper_driver"></span>
+                                <span class="module-name">Stepper Wheel Driver</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-stepper_driver" data-module="stepper_driver">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-arm_stepper_driver"></span>
+                                <span class="module-name">Arm Stepper Driver</span>
+>>>>>>> 9bfcf53 (gps slop)
                             </div>
                             <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-arm_stepper_driver" data-module="arm_stepper_driver">START</button>
                         </div>
@@ -533,6 +655,7 @@
                             </div>
                             <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-nav_node" data-module="nav_node">START</button>
                         </div>
+<<<<<<< HEAD
                         <div class="module-row">
                             <div class="module-info">
                                 <span class="module-status-dot stopped" id="status-dot-imu_telemetry"></span>
@@ -575,6 +698,8 @@
                             </div>
                             <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-enigma_node" data-module="enigma_node">START</button>
                         </div>
+=======
+>>>>>>> 9bfcf53 (gps slop)
                     </div>
                 </section>
 

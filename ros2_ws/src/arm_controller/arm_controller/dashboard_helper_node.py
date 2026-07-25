@@ -78,6 +78,7 @@ class DashboardHelperNode(Node):
                 "cmd": ["ros2", "run", "navigation_system", "NAVnode"],
                 "pattern": "NAVnode",
                 "proc": None
+<<<<<<< HEAD
             },
             "imu_telemetry": {
                 "name": "IMU Telemetry Node",
@@ -114,6 +115,8 @@ class DashboardHelperNode(Node):
                 "cmd": ["ros2", "run", "enigma_machine", "enigma_node"],
                 "pattern": "enigma_node",
                 "proc": None
+=======
+>>>>>>> 9bfcf53 (gps slop)
             }
         }
 
@@ -227,16 +230,22 @@ class DashboardHelperNode(Node):
         return response
 
     def publish_status(self):
-        status_dict = {}
-        for key, info in self.processes.items():
-            status_dict[key] = {
-                "name": info["name"],
-                "running": self.is_running(info["pattern"])
-            }
-        
-        msg = String()
-        msg.data = json.dumps(status_dict)
-        self.status_pub.publish(msg)
+        if not rclpy.ok():
+            return
+        try:
+            status_dict = {}
+            for key, info in self.processes.items():
+                status_dict[key] = {
+                    "name": info["name"],
+                    "running": self.is_running(info["pattern"])
+                }
+            
+            msg = String()
+            msg.data = json.dumps(status_dict)
+            if rclpy.ok():
+                self.status_pub.publish(msg)
+        except Exception as e:
+            pass
 
     def destroy_node(self):
         # Clean up any child processes on exit
@@ -253,11 +262,15 @@ def main(args=None):
     node = DashboardHelperNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, BaseException):
         pass
     finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        try:
+            node.destroy_node()
+        except Exception:
+            pass
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

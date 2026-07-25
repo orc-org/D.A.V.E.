@@ -21,6 +21,9 @@ let frMotorSub = null;
 let rlMotorSub = null;
 let rrMotorSub = null;
 let cmdVelSub = null;
+let gpsFixSub = null;
+let gpsNmeaSub = null;
+let gpsTargetPub = null;
 
 // 3d viewer state
 let showing3D = true;
@@ -388,8 +391,11 @@ function setupROSInterfaces() {
     publishMode();
 
     setupGPSROSInterfaces();
+<<<<<<< HEAD
     setupIMUROSInterfaces();
     setupMorseSubscribers();
+=======
+>>>>>>> 9bfcf53 (gps slop)
 
     if (showing3D && !viewer3D) {
         init3DViewer();
@@ -440,8 +446,11 @@ function cleanupROSInterfaces() {
     if (cmdVelSub) { cmdVelSub.unsubscribe(); cmdVelSub = null; }
 
     cleanupGPSROSInterfaces();
+<<<<<<< HEAD
     cleanupIMUROSInterfaces();
     cleanupMorseSubscribers();
+=======
+>>>>>>> 9bfcf53 (gps slop)
 
     resetModuleStatusUI();
     robotStatePublisherRunning = false;
@@ -1660,8 +1669,8 @@ function updateModuleStatusUI(status) {
     const drawer = document.getElementById('modules-drawer');
     if (!drawer) return;
 
-    // Build module list dynamically from received status if not initialized
-    if (!modulesInitialized) {
+    const currentKeys = Object.keys(status).join(',');
+    if (!modulesInitialized || drawer.getAttribute('data-keys') !== currentKeys) {
         drawer.innerHTML = '';
         for (const key in status) {
             const info = status[key];
@@ -1676,6 +1685,7 @@ function updateModuleStatusUI(status) {
             `;
             drawer.appendChild(row);
         }
+        drawer.setAttribute('data-keys', currentKeys);
         modulesInitialized = true;
     }
 
@@ -1965,10 +1975,13 @@ function setupGPSROSInterfaces() {
                 gpsHomeOrigin.isSet = true;
             }
 
+<<<<<<< HEAD
             if (gpsCurrentFix.status >= 0) {
                 recordRoverPathPoint(msg.latitude, msg.longitude, null, null);
             }
 
+=======
+>>>>>>> 9bfcf53 (gps slop)
             updateGPSUI();
         }
     });
@@ -2107,6 +2120,7 @@ function appendNmeaLog(line) {
     }
 }
 
+<<<<<<< HEAD
 function recordRoverPathPoint(lat, lon, x, y) {
     if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) return;
     const now = Date.now();
@@ -2122,6 +2136,9 @@ function recordRoverPathPoint(lat, lon, x, y) {
 }
 
 // 4. Tactical Radar Canvas Renderer (Clean static grid with trajectory path line)
+=======
+// 4. Tactical Radar Canvas Renderer (Clean static grid without sweep animation)
+>>>>>>> 9bfcf53 (gps slop)
 function drawTacticalRadar() {
     const canvas = document.getElementById('gps-radar-canvas');
     if (!canvas) return;
@@ -2175,6 +2192,7 @@ function drawTacticalRadar() {
     ctx.fillText('E', cx + maxRadius + 12, cy);
     ctx.fillText('W', cx - maxRadius - 12, cy);
 
+<<<<<<< HEAD
     // Draw Rover Trajectory Path Line (if history exists)
     if (roverPathHistory.length > 1 && gpsCurrentFix.latitude !== null && gpsCurrentFix.longitude !== null) {
         ctx.save();
@@ -2223,6 +2241,8 @@ function drawTacticalRadar() {
         ctx.restore();
     }
 
+=======
+>>>>>>> 9bfcf53 (gps slop)
     // Draw Home Origin (if set and fix available)
     if (gpsCurrentFix.latitude !== null && gpsHomeOrigin.isSet && gpsHomeOrigin.latitude !== null) {
         const homeDist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsHomeOrigin.latitude, gpsHomeOrigin.longitude);
@@ -2273,6 +2293,7 @@ function drawTacticalRadar() {
         ctx.fillText(`TARGET (${dist.toFixed(1)}m)`, tx, ty - 12);
     }
 
+<<<<<<< HEAD
     // Rover Icon (Center of Radar) with Heading Pointer (Priority: Raw /imu/euler -> Filtered /imu/filtered_euler -> TF Base Yaw)
     let headingRad = 0;
     const isImuRaw = imuEulerData.lastUpdate !== null && (Date.now() - imuEulerData.lastUpdate < 5000);
@@ -2287,12 +2308,26 @@ function drawTacticalRadar() {
         const match = yawText.match(/(-?\d+\.?\d*)\s*rad/);
         if (match) {
             headingRad = -parseFloat(match[1]);
+=======
+    // Rover Icon (Center of Radar) with Heading Pointer
+    let headingRad = -Math.PI / 2;
+    if (typeof valBaseYaw !== 'undefined' && valBaseYaw) {
+        const yawText = valBaseYaw.innerText || '0';
+        const match = yawText.match(/(-?\d+\.?\d*)\s*rad/);
+        if (match) {
+            const yaw = parseFloat(match[1]);
+            headingRad = (yaw - Math.PI / 2);
+>>>>>>> 9bfcf53 (gps slop)
         }
     }
 
     ctx.save();
     ctx.translate(cx, cy);
+<<<<<<< HEAD
     ctx.rotate(headingRad);
+=======
+    ctx.rotate(headingRad + Math.PI / 2);
+>>>>>>> 9bfcf53 (gps slop)
     ctx.fillStyle = '#39ff14';
     ctx.beginPath();
     ctx.moveTo(0, -12);
@@ -2504,6 +2539,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+<<<<<<< HEAD
     const btnClearPath = document.getElementById('btn-clear-path');
     if (btnClearPath) {
         btnClearPath.addEventListener('click', () => {
@@ -2516,6 +2552,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+=======
+>>>>>>> 9bfcf53 (gps slop)
     if (btnAutoscroll) {
         btnAutoscroll.addEventListener('click', () => {
             nmeaAutoScroll = !nmeaAutoScroll;
@@ -2552,6 +2590,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+<<<<<<< HEAD
     // IMU Command & Service Button Event Listeners
     const btnImuCalibrate = document.getElementById('btn-imu-calibrate');
     const btnImuTogglePub = document.getElementById('btn-imu-toggle-pub');
@@ -3256,6 +3295,10 @@ document.addEventListener('DOMContentLoaded', () => {
             setMorseRecorderParam('pixel_count_threshold', e.target.value);
         });
     }
+=======
+    drawTacticalRadar();
+    updateGPSUI();
+>>>>>>> 9bfcf53 (gps slop)
 });
 
 
