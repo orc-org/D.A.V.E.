@@ -1,28 +1,22 @@
 #include "SerialPort.hpp"
 
-SerialPort::SerialPort(){
-    SerialPort(stringToCharacterArray("/dev/ttyACM0"), false, false, false, false, false, false, 0, 0, 9600);
-}
+SerialPort::SerialPort()
+    : SerialPort(stringToCharacterArray("/dev/ttyACM0"), false, false, false, false, false, false, 0, 0, 9600) {}
 
-SerialPort::SerialPort(char* portID){
-    SerialPort(portID, false, false, false, false, false, false, 0, 0, 9600);
-}
+SerialPort::SerialPort(char* portID)
+    : SerialPort(portID, false, false, false, false, false, false, 0, 0, 9600) {}
 
-SerialPort::SerialPort(char* portID, int baud){
-    SerialPort(portID, false, false, false, false, false, false, 0, 0, baud);
-}
+SerialPort::SerialPort(char* portID, int baud)
+    : SerialPort(portID, false, false, false, false, false, false, 0, 0, baud) {}
 
-SerialPort::SerialPort(char* portID, int minimumData, int timeout, int baud){
-    SerialPort(portID, false, false, false, false, false, false, minimumData, timeout, baud);
-}
+SerialPort::SerialPort(char* portID, int minimumData, int timeout, int baud)
+    : SerialPort(portID, false, false, false, false, false, false, minimumData, timeout, baud) {}
 
-SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, int baud){
-    SerialPort(portID, parityBit, extraStopBit, false, false, false, false, 0, 0, baud);
-}
+SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, int baud)
+    : SerialPort(portID, parityBit, extraStopBit, false, false, false, false, 0, 0, baud) {}
 
-SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, int minimumData, int timeout, int baud){
-    SerialPort(portID, parityBit, extraStopBit, false, false, false, false, minimumData, timeout, baud);
-}
+SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, int minimumData, int timeout, int baud)
+    : SerialPort(portID, parityBit, extraStopBit, false, false, false, false, minimumData, timeout, baud) {}
 
 SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, bool hardwareControl, bool controlLines, bool canonical, bool echo, int minimumData, int timeout, int baud)
     : portID(portID), parityBit(parityBit), twoStopBits(extraStopBit), hardwareFlowControlEnabled(hardwareControl),
@@ -31,25 +25,20 @@ SerialPort::SerialPort(char* portID, bool parityBit, bool extraStopBit, bool har
         portIsOpen = false;
     }
 
-SerialPort::SerialPort(std::string portID){
-    SerialPort(portID, false, false, false, false, false, false, 0, 0, 9600);
-}
+SerialPort::SerialPort(std::string portID)
+    : SerialPort(portID, false, false, false, false, false, false, 0, 0, 9600) {}
 
-SerialPort::SerialPort(std::string portID, int baud){
-    SerialPort(portID, false, false, false, false, false, false, 0, 0, baud);
-}
+SerialPort::SerialPort(std::string portID, int baud)
+    : SerialPort(portID, false, false, false, false, false, false, 0, 0, baud) {}
 
-SerialPort::SerialPort(std::string portID, int minimumData, int timeout, int baud){
-    SerialPort(portID, false, false, false, false, false, false, minimumData, timeout, baud);
-}
+SerialPort::SerialPort(std::string portID, int minimumData, int timeout, int baud)
+    : SerialPort(portID, false, false, false, false, false, false, minimumData, timeout, baud) {}
 
-SerialPort::SerialPort(std::string portID, bool parityBit, bool extraStopBit, int baud){
-    SerialPort(portID, parityBit, extraStopBit, false, false, false, false, 0, 0, baud);
-}
+SerialPort::SerialPort(std::string portID, bool parityBit, bool extraStopBit, int baud)
+    : SerialPort(portID, parityBit, extraStopBit, false, false, false, false, 0, 0, baud) {}
 
-SerialPort::SerialPort(std::string portID, bool parityBit, bool extraStopBit, int minimumData, int timeout, int baud){
-    SerialPort(portID, parityBit, extraStopBit, false, false, false, false, minimumData, timeout, baud);
-}
+SerialPort::SerialPort(std::string portID, bool parityBit, bool extraStopBit, int minimumData, int timeout, int baud)
+    : SerialPort(portID, parityBit, extraStopBit, false, false, false, false, minimumData, timeout, baud) {}
 
 SerialPort::SerialPort(std::string portID, bool parityBit, bool extraStopBit, bool hardwareControl, bool controlLines, bool canonical, bool echo, int minimumData, int timeout, int baud)
     : portID(stringToCharacterArray(portID)), parityBit(parityBit), twoStopBits(extraStopBit), hardwareFlowControlEnabled(hardwareControl),
@@ -280,12 +269,13 @@ std::string SerialPort::read(){
 }
 
 char* SerialPort::stringToCharacterArray(std::string message){
-    char* newMessage = new char[message.length()];
+    char* newMessage = new char[message.length() + 1];
 
     // add each letter of the string to the character array
     for(unsigned int i = 0; i < message.length(); i++){
         newMessage[i] = message[i];
     }
+    newMessage[message.length()] = '\0';
 
     return newMessage;
 }
