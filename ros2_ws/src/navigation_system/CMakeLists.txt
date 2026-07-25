@@ -45,7 +45,11 @@ add_executable(GPSnode src/GPSnode.cpp)
 ament_target_dependencies(GPSnode rclcpp navigation_interfaces)
 >>>>>>> fa8e302 (commit everything)
 
+<<<<<<< HEAD
 
+=======
+ 
+>>>>>>> 4907726 (bugs from somewhere?)
 # install targets
 install(TARGETS
 <<<<<<< HEAD

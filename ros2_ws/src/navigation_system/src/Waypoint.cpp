@@ -114,6 +114,7 @@ void Waypoint::EarthCentred_To_GeodeticApprox() {
     longitude = lonRad;
 }
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 // dummy main function for standalone testing
 // int main(int argc, char** argv) {
@@ -137,3 +138,7 @@ double Waypoint::home_ECEF_z = 0.0;
 
 #endif // WAYPOINT_CPP
 >>>>>>> 4a54d9a (oops)
+=======
+
+#endif // WAYPOINT_CPP
+>>>>>>> 4907726 (bugs from somewhere?)
