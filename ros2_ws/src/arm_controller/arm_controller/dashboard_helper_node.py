@@ -66,6 +66,18 @@ class DashboardHelperNode(Node):
                 "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "csi", "--device", "1", "--host", "192.168.1.87", "--port", "5002"],
                 "pattern": "video_streamer.py.*--device 1",
                 "proc": None
+            },
+            "gps_bridge": {
+                "name": "GPS Serial Bridge",
+                "cmd": ["ros2", "run", "navigation_system", "gps_bridge_node.py"],
+                "pattern": "gps_bridge_node",
+                "proc": None
+            },
+            "nav_node": {
+                "name": "Navigation Controller (NAVnode)",
+                "cmd": ["ros2", "run", "navigation_system", "NAVnode"],
+                "pattern": "NAVnode",
+                "proc": None
             }
         }
 
@@ -179,16 +191,22 @@ class DashboardHelperNode(Node):
         return response
 
     def publish_status(self):
-        status_dict = {}
-        for key, info in self.processes.items():
-            status_dict[key] = {
-                "name": info["name"],
-                "running": self.is_running(info["pattern"])
-            }
-        
-        msg = String()
-        msg.data = json.dumps(status_dict)
-        self.status_pub.publish(msg)
+        if not rclpy.ok():
+            return
+        try:
+            status_dict = {}
+            for key, info in self.processes.items():
+                status_dict[key] = {
+                    "name": info["name"],
+                    "running": self.is_running(info["pattern"])
+                }
+            
+            msg = String()
+            msg.data = json.dumps(status_dict)
+            if rclpy.ok():
+                self.status_pub.publish(msg)
+        except Exception as e:
+            pass
 
     def destroy_node(self):
         # Clean up any child processes on exit
@@ -205,11 +223,15 @@ def main(args=None):
     node = DashboardHelperNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, BaseException):
         pass
     finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        try:
+            node.destroy_node()
+        except Exception:
+            pass
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

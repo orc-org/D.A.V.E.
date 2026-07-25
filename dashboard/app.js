@@ -21,6 +21,9 @@ let frMotorSub = null;
 let rlMotorSub = null;
 let rrMotorSub = null;
 let cmdVelSub = null;
+let gpsFixSub = null;
+let gpsNmeaSub = null;
+let gpsTargetPub = null;
 
 // 3d viewer state
 let showing3D = true;
@@ -387,6 +390,8 @@ function setupROSInterfaces() {
     // Send initial auto mode status
     publishMode();
 
+    setupGPSROSInterfaces();
+
     if (showing3D && !viewer3D) {
         init3DViewer();
     }
@@ -434,6 +439,8 @@ function cleanupROSInterfaces() {
     if (rlMotorSub) { rlMotorSub.unsubscribe(); rlMotorSub = null; }
     if (rrMotorSub) { rrMotorSub.unsubscribe(); rrMotorSub = null; }
     if (cmdVelSub) { cmdVelSub.unsubscribe(); cmdVelSub = null; }
+
+    cleanupGPSROSInterfaces();
 
     resetModuleStatusUI();
     robotStatePublisherRunning = false;
@@ -1652,8 +1659,8 @@ function updateModuleStatusUI(status) {
     const drawer = document.getElementById('modules-drawer');
     if (!drawer) return;
 
-    // Build module list dynamically from received status if not initialized
-    if (!modulesInitialized) {
+    const currentKeys = Object.keys(status).join(',');
+    if (!modulesInitialized || drawer.getAttribute('data-keys') !== currentKeys) {
         drawer.innerHTML = '';
         for (const key in status) {
             const info = status[key];
@@ -1668,6 +1675,7 @@ function updateModuleStatusUI(status) {
             `;
             drawer.appendChild(row);
         }
+        drawer.setAttribute('data-keys', currentKeys);
         modulesInitialized = true;
     }
 
@@ -1856,5 +1864,614 @@ if (diagHeader && diagConsole && diagCollapseBtn) {
         }
     });
 }
+
+// ====================================================
+// 9. GPS & LOCATION NAVIGATION SYSTEM
+// ====================================================
+
+let gpsCurrentFix = {
+    latitude: null,
+    longitude: null,
+    altitude: null,
+    status: -1, // STATUS_NO_FIX
+    satellites: 0,
+    hdop: 0,
+    lastUpdate: null
+};
+
+let gpsHomeOrigin = {
+    latitude: null,
+    longitude: null,
+    altitude: null,
+    isSet: false
+};
+
+let gpsTargetWaypoint = {
+    latitude: null,
+    longitude: null,
+    x: null,
+    y: null,
+    isSet: false
+};
+
+let gpsMapMode = 'radar';
+let leafletMap = null;
+let leafletRoverMarker = null;
+let leafletTargetMarker = null;
+let leafletPolyline = null;
+
+let nmeaAutoScroll = true;
+
+// Math utility helpers for GPS calculation
+function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+    if (lat1 === null || lon1 === null || lat2 === null || lon2 === null) return 0.0;
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+function calculateBearingDegrees(lat1, lon1, lat2, lon2) {
+    if (lat1 === null || lon1 === null || lat2 === null || lon2 === null) return 0.0;
+    const phi1 = lat1 * Math.PI / 180;
+    const phi2 = lat2 * Math.PI / 180;
+    const lam1 = lon1 * Math.PI / 180;
+    const lam2 = lon2 * Math.PI / 180;
+    const y = Math.sin(lam2 - lam1) * Math.cos(phi2);
+    const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(lam2 - lam1);
+    let bearing = Math.atan2(y, x) * 180 / Math.PI;
+    return (bearing + 360) % 360;
+}
+
+function getCompassDirection(bearingDeg) {
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const idx = Math.round(bearingDeg / 45) % 8;
+    return dirs[idx];
+}
+
+function offsetLatLonByMeters(lat, lon, dxMeters, dyMeters) {
+    if (lat === null || lon === null) return { latitude: 0.0, longitude: 0.0 };
+    const R = 6371000;
+    const newLat = lat + (dyMeters / R) * (180 / Math.PI);
+    const newLon = lon + (dxMeters / (R * Math.cos(lat * Math.PI / 180))) * (180 / Math.PI);
+    return { latitude: newLat, longitude: newLon };
+}
+
+// 1. Setup GPS ROS Topics
+function setupGPSROSInterfaces() {
+    if (!ros) return;
+
+    gpsFixSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/gps/fix',
+        messageType: 'sensor_msgs/msg/NavSatFix'
+    });
+    gpsFixSub.subscribe((msg) => {
+        if (msg && msg.latitude !== undefined && msg.longitude !== undefined) {
+            gpsCurrentFix.latitude = msg.latitude;
+            gpsCurrentFix.longitude = msg.longitude;
+            gpsCurrentFix.altitude = msg.altitude || 0.0;
+            gpsCurrentFix.status = (msg.status && msg.status.status !== undefined) ? msg.status.status : 0;
+            gpsCurrentFix.lastUpdate = Date.now();
+
+            if (!gpsHomeOrigin.isSet && gpsCurrentFix.status >= 0) {
+                gpsHomeOrigin.latitude = msg.latitude;
+                gpsHomeOrigin.longitude = msg.longitude;
+                gpsHomeOrigin.altitude = msg.altitude || 0.0;
+                gpsHomeOrigin.isSet = true;
+            }
+
+            updateGPSUI();
+        }
+    });
+
+    gpsNmeaSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/gps/nmea_raw',
+        messageType: 'std_msgs/msg/String'
+    });
+    gpsNmeaSub.subscribe((msg) => {
+        if (msg && msg.data) {
+            appendNmeaLog(msg.data);
+        }
+    });
+
+    gpsTargetPub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/gps/set_target',
+        messageType: 'geometry_msgs/msg/Point'
+    });
+}
+
+function cleanupGPSROSInterfaces() {
+    if (gpsFixSub) { gpsFixSub.unsubscribe(); gpsFixSub = null; }
+    if (gpsNmeaSub) { gpsNmeaSub.unsubscribe(); gpsNmeaSub = null; }
+    gpsTargetPub = null;
+}
+
+// 2. UI Update Function
+function updateGPSUI() {
+    const fixDot = document.getElementById('gps-fix-status-dot');
+    const fixText = document.getElementById('gps-fix-status-text');
+    const isFixed = gpsCurrentFix.status >= 0 && gpsCurrentFix.latitude !== null;
+
+    if (fixDot) {
+        fixDot.className = isFixed ? "status-indicator connected" : "status-indicator disconnected";
+    }
+    if (fixText) {
+        fixText.innerText = isFixed ? "3D FIX (GNSS)" : "NO FIX";
+        fixText.style.color = isFixed ? "var(--accent-green)" : "var(--accent-red)";
+    }
+
+    // Telemetry Cards (in SYSTEM TELEMETRY)
+    const teleCoords = document.getElementById('val-gps-telemetry-coords');
+    const teleFix = document.getElementById('val-gps-telemetry-fix');
+    if (teleCoords) {
+        teleCoords.innerText = isFixed ? `${gpsCurrentFix.latitude.toFixed(6)}°, ${gpsCurrentFix.longitude.toFixed(6)}°` : "Lat: --, Lon: --";
+    }
+    if (teleFix) {
+        teleFix.innerText = isFixed ? `FIX 3D (${gpsCurrentFix.altitude.toFixed(1)} m)` : "NO FIX (-- m)";
+    }
+
+    // Detailed Location Cards
+    const latDet = document.getElementById('val-gps-lat-det');
+    const lonDet = document.getElementById('val-gps-lon-det');
+    const altDet = document.getElementById('val-gps-alt-det');
+    const qualityDet = document.getElementById('val-gps-quality');
+    const distDet = document.getElementById('val-gps-dist');
+    const bearingDet = document.getElementById('val-gps-bearing');
+    const roverCoordsShort = document.getElementById('map-rover-coords-short');
+
+    if (latDet) latDet.innerText = isFixed ? `${gpsCurrentFix.latitude.toFixed(6)}°` : "--";
+    if (lonDet) lonDet.innerText = isFixed ? `${gpsCurrentFix.longitude.toFixed(6)}°` : "--";
+    if (altDet) altDet.innerText = isFixed ? `${gpsCurrentFix.altitude.toFixed(1)} m` : "-- m";
+    if (roverCoordsShort) roverCoordsShort.innerText = isFixed ? `${gpsCurrentFix.latitude.toFixed(5)}, ${gpsCurrentFix.longitude.toFixed(5)}` : "NO FIX";
+
+    if (qualityDet) {
+        if (isFixed) {
+            qualityDet.innerText = "3D FIX (GOOD)";
+            qualityDet.style.color = "var(--accent-green)";
+        } else {
+            qualityDet.innerText = "SEARCHING...";
+            qualityDet.style.color = "var(--accent-amber)";
+        }
+    }
+
+    // Distance and bearing calculations if target set
+    const mapTargetCoords = document.getElementById('map-target-coords');
+    const mapTargetDistBearing = document.getElementById('map-target-dist-bearing');
+
+    if (isFixed && gpsTargetWaypoint.isSet && gpsTargetWaypoint.latitude !== null && gpsTargetWaypoint.longitude !== null) {
+        const dist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsTargetWaypoint.latitude, gpsTargetWaypoint.longitude);
+        const bearing = calculateBearingDegrees(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsTargetWaypoint.latitude, gpsTargetWaypoint.longitude);
+        const cardDir = getCompassDirection(bearing);
+
+        if (distDet) distDet.innerText = `${dist.toFixed(1)} m`;
+        if (bearingDet) bearingDet.innerText = `${bearing.toFixed(1)}° (${cardDir})`;
+        if (mapTargetCoords) mapTargetCoords.innerText = `Lat: ${gpsTargetWaypoint.latitude.toFixed(6)} | Lon: ${gpsTargetWaypoint.longitude.toFixed(6)}`;
+        if (mapTargetDistBearing) mapTargetDistBearing.innerText = `Dist: ${dist.toFixed(1)} m | Bear: ${bearing.toFixed(1)}° (${cardDir})`;
+    } else {
+        if (distDet) distDet.innerText = "-- m";
+        if (bearingDet) bearingDet.innerText = "--°";
+        if (mapTargetCoords) mapTargetCoords.innerText = "Lat: -- | Lon: --";
+        if (mapTargetDistBearing) mapTargetDistBearing.innerText = "Dist: -- m | Bear: --°";
+    }
+
+    // Render maps
+    if (gpsMapMode === 'radar') {
+        drawTacticalRadar();
+    } else if (gpsMapMode === 'map' && leafletMap) {
+        updateLeafletMap();
+    }
+}
+
+// 3. Raw NMEA Inspector logger
+function appendNmeaLog(line) {
+    const logBox = document.getElementById('nmea-stream-log');
+    if (!logBox) return;
+
+    if (logBox.children.length === 1 && logBox.children[0].innerText.includes('Waiting for Serial Input')) {
+        logBox.innerHTML = '';
+    }
+
+    const timeStr = new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+    entry.style.padding = '2px 0';
+
+    if (line.includes('GGA')) {
+        entry.style.color = 'var(--accent-blue)';
+    } else if (line.includes('RMC')) {
+        entry.style.color = 'var(--accent-green)';
+    } else {
+        entry.style.color = 'var(--text-muted)';
+    }
+
+    entry.innerText = `[${timeStr}] ${line}`;
+    logBox.appendChild(entry);
+
+    while (logBox.children.length > 50) {
+        logBox.removeChild(logBox.firstChild);
+    }
+
+    if (nmeaAutoScroll) {
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+}
+
+// 4. Tactical Radar Canvas Renderer (Clean static grid without sweep animation)
+function drawTacticalRadar() {
+    const canvas = document.getElementById('gps-radar-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    if (canvas.width !== rect.width || canvas.height !== rect.height) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+    }
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const maxRadius = Math.min(w, h) / 2 - 25;
+
+    ctx.fillStyle = '#050811';
+    ctx.fillRect(0, 0, w, h);
+
+    const rings = [0.25, 0.5, 0.75, 1.0];
+    const ringDistances = [5, 10, 20, 50];
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.15)';
+    ctx.lineWidth = 1;
+
+    rings.forEach((rRatio, idx) => {
+        const r = maxRadius * rRatio;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(0, 229, 255, 0.4)';
+        ctx.font = '10px monospace';
+        ctx.fillText(`${ringDistances[idx]}m`, cx + r + 4, cy - 4);
+    });
+
+    ctx.beginPath();
+    ctx.moveTo(cx - maxRadius, cy);
+    ctx.lineTo(cx + maxRadius, cy);
+    ctx.moveTo(cx, cy - maxRadius);
+    ctx.lineTo(cx, cy + maxRadius);
+    ctx.stroke();
+
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', cx, cy - maxRadius - 12);
+    ctx.fillText('S', cx, cy + maxRadius + 12);
+    ctx.fillText('E', cx + maxRadius + 12, cy);
+    ctx.fillText('W', cx - maxRadius - 12, cy);
+
+    // Draw Home Origin (if set and fix available)
+    if (gpsCurrentFix.latitude !== null && gpsHomeOrigin.isSet && gpsHomeOrigin.latitude !== null) {
+        const homeDist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsHomeOrigin.latitude, gpsHomeOrigin.longitude);
+        if (homeDist < 100) {
+            const homeBearing = calculateBearingDegrees(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsHomeOrigin.latitude, gpsHomeOrigin.longitude);
+            const homeRad = (homeBearing - 90) * Math.PI / 180;
+            const px = cx + (homeDist / 50) * maxRadius * Math.cos(homeRad);
+            const py = cy + (homeDist / 50) * maxRadius * Math.sin(homeRad);
+
+            ctx.fillStyle = '#ffaa00';
+            ctx.beginPath();
+            ctx.arc(px, py, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.font = '10px monospace';
+            ctx.fillText('HOME', px, py - 8);
+        }
+    }
+
+    // Draw Target Waypoint (if set)
+    if (gpsCurrentFix.latitude !== null && gpsTargetWaypoint.isSet && gpsTargetWaypoint.latitude !== null && gpsTargetWaypoint.longitude !== null) {
+        const dist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsTargetWaypoint.latitude, gpsTargetWaypoint.longitude);
+        const bearing = calculateBearingDegrees(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsTargetWaypoint.latitude, gpsTargetWaypoint.longitude);
+        const rad = (bearing - 90) * Math.PI / 180;
+
+        const clampedDist = Math.min(dist, 50);
+        const tx = cx + (clampedDist / 50) * maxRadius * Math.cos(rad);
+        const ty = cy + (clampedDist / 50) * maxRadius * Math.sin(rad);
+
+        ctx.strokeStyle = '#ffaa00';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath();
+        ctx.arc(tx, ty, 7, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText(`TARGET (${dist.toFixed(1)}m)`, tx, ty - 12);
+    }
+
+    // Rover Icon (Center of Radar) with Heading Pointer
+    let headingRad = -Math.PI / 2;
+    if (typeof valBaseYaw !== 'undefined' && valBaseYaw) {
+        const yawText = valBaseYaw.innerText || '0';
+        const match = yawText.match(/(-?\d+\.?\d*)\s*rad/);
+        if (match) {
+            const yaw = parseFloat(match[1]);
+            headingRad = (yaw - Math.PI / 2);
+        }
+    }
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(headingRad + Math.PI / 2);
+    ctx.fillStyle = '#39ff14';
+    ctx.beginPath();
+    ctx.moveTo(0, -12);
+    ctx.lineTo(8, 10);
+    ctx.lineTo(0, 6);
+    ctx.lineTo(-8, 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+}
+
+// 5. Leaflet Map
+function initLeafletMap() {
+    const mapDiv = document.getElementById('leaflet-map');
+    if (!mapDiv || typeof L === 'undefined') return;
+
+    if (leafletMap) {
+        leafletMap.invalidateSize();
+        return;
+    }
+
+    const initLat = gpsCurrentFix.latitude || 37.774929;
+    const initLon = gpsCurrentFix.longitude || -122.419416;
+
+    try {
+        leafletMap = L.map('leaflet-map', {
+            zoomControl: true,
+            attributionControl: false
+        }).setView([initLat, initLon], 18);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(leafletMap);
+
+        const roverIcon = L.divIcon({
+            className: 'custom-rover-marker',
+            html: '<div class="radar-pulse-dot"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        leafletRoverMarker = L.marker([initLat, initLon], { icon: roverIcon })
+            .addTo(leafletMap)
+            .bindPopup('<b>D.A.V.E. Rover</b><br>GNSS Location');
+
+        leafletMap.on('click', (e) => {
+            if (gpsCurrentFix.latitude !== null) {
+                setTargetWaypoint(e.latlng.lat, e.latlng.lng);
+            }
+        });
+
+    } catch (err) {
+        console.error("Failed to initialize Leaflet Map:", err);
+    }
+}
+
+function updateLeafletMap() {
+    if (!leafletMap || typeof L === 'undefined') return;
+
+    const lat = gpsCurrentFix.latitude;
+    const lon = gpsCurrentFix.longitude;
+
+    if (lat !== null && lon !== null && leafletRoverMarker) {
+        leafletRoverMarker.setLatLng([lat, lon]);
+    }
+
+    if (gpsTargetWaypoint.isSet && gpsTargetWaypoint.latitude !== null && gpsTargetWaypoint.longitude !== null) {
+        const targetLat = gpsTargetWaypoint.latitude;
+        const targetLon = gpsTargetWaypoint.longitude;
+
+        if (!leafletTargetMarker) {
+            leafletTargetMarker = L.marker([targetLat, targetLon]).addTo(leafletMap)
+                .bindPopup('<b>Target Waypoint</b>');
+        } else {
+            leafletTargetMarker.setLatLng([targetLat, targetLon]);
+        }
+
+        if (lat !== null && lon !== null) {
+            if (!leafletPolyline) {
+                leafletPolyline = L.polyline([[lat, lon], [targetLat, targetLon]], { color: '#ffaa00', weight: 3, dashArray: '6, 6' }).addTo(leafletMap);
+            } else {
+                leafletPolyline.setLatLngs([[lat, lon], [targetLat, targetLon]]);
+            }
+        }
+    } else {
+        if (leafletTargetMarker) {
+            leafletMap.removeLayer(leafletTargetMarker);
+            leafletTargetMarker = null;
+        }
+        if (leafletPolyline) {
+            leafletMap.removeLayer(leafletPolyline);
+            leafletPolyline = null;
+        }
+    }
+}
+
+// 6. Waypoint & Origin Actions
+function setTargetWaypoint(lat, lon) {
+    gpsTargetWaypoint.latitude = lat;
+    gpsTargetWaypoint.longitude = lon;
+    gpsTargetWaypoint.isSet = true;
+
+    if (gpsHomeOrigin.isSet && gpsHomeOrigin.latitude !== null) {
+        const dx = calculateDistanceMeters(gpsHomeOrigin.latitude, gpsHomeOrigin.longitude, gpsHomeOrigin.latitude, lon);
+        const dy = calculateDistanceMeters(gpsHomeOrigin.latitude, gpsHomeOrigin.longitude, lat, gpsHomeOrigin.longitude);
+        const signX = lon >= gpsHomeOrigin.longitude ? 1 : -1;
+        const signY = lat >= gpsHomeOrigin.latitude ? 1 : -1;
+        gpsTargetWaypoint.x = dx * signX;
+        gpsTargetWaypoint.y = dy * signY;
+    }
+
+    if (connected && gpsTargetPub) {
+        const msg = new ROSLIB.Message({
+            x: gpsTargetWaypoint.x || 0.0,
+            y: gpsTargetWaypoint.y || 0.0,
+            z: 0.0
+        });
+        gpsTargetPub.publish(msg);
+    }
+
+    updateGPSUI();
+}
+
+function clearTargetWaypoint() {
+    gpsTargetWaypoint.latitude = null;
+    gpsTargetWaypoint.longitude = null;
+    gpsTargetWaypoint.isSet = false;
+    updateGPSUI();
+}
+
+function setHomeOrigin() {
+    if (gpsCurrentFix.latitude !== null) {
+        gpsHomeOrigin.latitude = gpsCurrentFix.latitude;
+        gpsHomeOrigin.longitude = gpsCurrentFix.longitude;
+        gpsHomeOrigin.altitude = gpsCurrentFix.altitude;
+        gpsHomeOrigin.isSet = true;
+        console.log(`GPS Home Origin set to ${gpsHomeOrigin.latitude}, ${gpsHomeOrigin.longitude}`);
+        updateGPSUI();
+    }
+}
+
+// 7. Event Listeners for Location Navigation Section
+document.addEventListener('DOMContentLoaded', () => {
+    const selectMapMode = document.getElementById('gps-map-mode');
+    const btnSetHome = document.getElementById('btn-set-home-origin');
+    const btnSetTarget = document.getElementById('btn-set-target-waypoint');
+    const btnCenter = document.getElementById('btn-center-rover');
+    const btnClearTarget = document.getElementById('btn-clear-waypoint');
+    const btnAutoscroll = document.getElementById('btn-toggle-nmea-autoscroll');
+    const btnClearNmea = document.getElementById('btn-clear-nmea');
+    const radarCanvas = document.getElementById('gps-radar-canvas');
+
+    if (selectMapMode) {
+        selectMapMode.addEventListener('change', (e) => {
+            gpsMapMode = e.target.value;
+            const radarCanvas = document.getElementById('gps-radar-canvas');
+            const leafletDiv = document.getElementById('leaflet-map');
+
+            if (gpsMapMode === 'radar') {
+                if (radarCanvas) radarCanvas.style.display = 'block';
+                if (leafletDiv) leafletDiv.style.display = 'none';
+                drawTacticalRadar();
+            } else {
+                if (radarCanvas) radarCanvas.style.display = 'none';
+                if (leafletDiv) leafletDiv.style.display = 'block';
+                initLeafletMap();
+                updateLeafletMap();
+            }
+        });
+    }
+
+    if (btnSetHome) {
+        btnSetHome.addEventListener('click', () => {
+            setHomeOrigin();
+        });
+    }
+
+    if (btnSetTarget) {
+        btnSetTarget.addEventListener('click', () => {
+            const defaultLat = gpsCurrentFix.latitude ? gpsCurrentFix.latitude.toFixed(6) : "37.774929";
+            const defaultLon = gpsCurrentFix.longitude ? gpsCurrentFix.longitude.toFixed(6) : "-122.419416";
+            const targetLatStr = prompt("Enter Target Latitude (Decimal Degrees):", defaultLat);
+            const targetLonStr = prompt("Enter Target Longitude (Decimal Degrees):", defaultLon);
+            if (targetLatStr && targetLonStr) {
+                const lat = parseFloat(targetLatStr);
+                const lon = parseFloat(targetLonStr);
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    setTargetWaypoint(lat, lon);
+                }
+            }
+        });
+    }
+
+    if (btnCenter) {
+        btnCenter.addEventListener('click', () => {
+            if (gpsMapMode === 'map' && leafletMap && gpsCurrentFix.latitude !== null) {
+                leafletMap.setView([gpsCurrentFix.latitude, gpsCurrentFix.longitude], 18);
+            } else {
+                drawTacticalRadar();
+            }
+        });
+    }
+
+    if (btnClearTarget) {
+        btnClearTarget.addEventListener('click', () => {
+            clearTargetWaypoint();
+        });
+    }
+
+    if (btnAutoscroll) {
+        btnAutoscroll.addEventListener('click', () => {
+            nmeaAutoScroll = !nmeaAutoScroll;
+            btnAutoscroll.innerText = nmeaAutoScroll ? "AUTOSCROLL ON" : "AUTOSCROLL OFF";
+            btnAutoscroll.style.color = nmeaAutoScroll ? "var(--accent-blue)" : "var(--text-muted)";
+        });
+    }
+
+    if (btnClearNmea) {
+        btnClearNmea.addEventListener('click', () => {
+            const logBox = document.getElementById('nmea-stream-log');
+            if (logBox) logBox.innerHTML = '';
+        });
+    }
+
+    if (radarCanvas) {
+        radarCanvas.addEventListener('click', (e) => {
+            if (gpsCurrentFix.latitude === null) return;
+            const rect = radarCanvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            const cx = radarCanvas.width / 2;
+            const cy = radarCanvas.height / 2;
+            const maxRadius = Math.min(radarCanvas.width, radarCanvas.height) / 2 - 25;
+
+            const dxPx = clickX - cx;
+            const dyPx = clickY - cy;
+
+            const dxMeters = (dxPx / maxRadius) * 50;
+            const dyMeters = (-dyPx / maxRadius) * 50;
+
+            const targetCoords = offsetLatLonByMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, dxMeters, dyMeters);
+            setTargetWaypoint(targetCoords.latitude, targetCoords.longitude);
+        });
+    }
+
+    drawTacticalRadar();
+    updateGPSUI();
+});
+
+
 
 
