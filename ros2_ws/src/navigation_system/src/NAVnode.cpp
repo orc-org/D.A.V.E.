@@ -508,6 +508,16 @@ NAVnode::NAVnode() : Node("NAVnode") {
     obstacleCount = 0;
     obstacleLimit = 10;
     waypointCount = 0;
+    timeSinceLastVelocityPublishing = 0;
+
+    obstacles = new Obstacle*[obstacleLimit];
+    for (int i = 0; i < obstacleLimit; i++) {
+        obstacles[i] = nullptr;
+    }
+
+    for (int i = 0; i < 5; i++) {
+        lastFiveWaypoints[i] = currentPosition;
+    }
         
     northernMapLimit = 100;
     southernMapLimit = 100;
@@ -518,7 +528,11 @@ NAVnode::NAVnode() : Node("NAVnode") {
     circumnavigationStyle = reroute;
     routeToFollow = Route1;
 
-    GNSS = new SerialPort(SerialPort::stringToCharacterArray("/dev/ttyACM0"), 38400);
+    std::string gnss_port = this->declare_parameter<std::string>("gnss_port", "/dev/ttyUSB0");
+    int gnss_baud = this->declare_parameter<int>("gnss_baudrate", 38400);
+
+    // initialize serial port using the parameter
+    GNSS = new SerialPort(SerialPort::stringToCharacterArray(gnss_port.c_str()), gnss_baud);
     GNSS->begin();
 
     // create topics
@@ -564,6 +578,15 @@ NAVnode::NAVnode() : Node("NAVnode") {
     SendToGNSSServer   = this->create_service<SendToGNSS>   ("SendToGNSS",   std::bind(&NAVnode::sendToGNSS, this, _1, _2));
     ReadFromGNSSServer = this->create_service<ReadFromGNSS> ("ReadFromGNSS", std::bind(&NAVnode::readFromGNSS, this, _1, _2));
 
+    // create action server
+    FollowRouteServer = rclcpp_action::create_server<NAVaction>(
+        this,
+        "FollowRoute",
+        std::bind(&NAVnode::followRoute_Goal, this, _1, _2),
+        std::bind(&NAVnode::followRoute_Cancel, this, _1),
+        std::bind(&NAVnode::followRoute_Accepted, this, _1)
+    );
+
     //main timer will process gnss data once per second
     timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
 
@@ -582,12 +605,16 @@ void NAVnode::mainTimer(){
         printf("Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", waypointCount, obstacleCount, obstacleLimit);
     }
 
-    lastFiveWaypoints[timeSinceLastVelocityPublishing] = currentPosition;
+    if (timeSinceLastVelocityPublishing < 5) {
+        lastFiveWaypoints[timeSinceLastVelocityPublishing] = currentPosition;
+        timeSinceLastVelocityPublishing++;
+    }
 
     if (timeSinceLastVelocityPublishing >= 5){
         pointsVisited.add(currentPosition);
         updateVelocity();
         VelocityPublisher->publish(currentVelocity);
+        timeSinceLastVelocityPublishing = 0;
     }
 }
 
@@ -598,30 +625,35 @@ void NAVnode::updatePositonData(){
     }
 
 void NAVnode::updateVelocity(){
-    double x,y,dX,dY;
+    double x = 0.0, y = 0.0, dX = 0.0, dY = 0.0;
+
+    if (!lastFiveWaypoints[0]) return;
 
     for(int i = 1; i < 5; i++){
+        if (!lastFiveWaypoints[i]) continue;
         dX += lastFiveWaypoints[i]->getX() - lastFiveWaypoints[0]->getX();
         dY += lastFiveWaypoints[i]->getY() - lastFiveWaypoints[0]->getY();
     }
 
-    x = abs(dX/4); 
-    y = abs(dY/4);
+    x = std::abs(dX / 4.0); 
+    y = std::abs(dY / 4.0);
 
     // calculate speed
-    currentVelocity.speed = sqrt(x*x + y*y)/4;
+    currentVelocity.speed = std::sqrt(x * x + y * y) / 4.0;
 
-    //calculate heading
-    if (dX == 0 && dY == 0);
-    else if (dX > 0 && dY > 0) // 1st quadrant
-        currentVelocity.heading = 90  - currentPosition->radToDeg(std::asin(y/x));
-    else if (dX < 0 && dY > 0) // 2nd quadrant
-        currentVelocity.heading = 270 + currentPosition->radToDeg(std::asin(y/x));
-    else if (dX < 0 && dY < 0) // 3rd quadrant
-        currentVelocity.heading = 270 - currentPosition->radToDeg(std::asin(y/x));
-    else if (dX > 0 && dY < 0) // 4th quadrant
-        currentVelocity.heading = 90  + currentPosition->radToDeg(std::asin(y/x));
-    
+    // calculate heading
+    if (dX == 0.0 && dY == 0.0) {
+        // stationary
+    } else if (x > 0.0) {
+        double ratio = y / x;
+        if (ratio > 1.0) ratio = 1.0;
+        double angleDeg = currentPosition->radToDeg(std::asin(ratio));
+
+        if (dX > 0 && dY >= 0) currentVelocity.heading = 90.0 - angleDeg;
+        else if (dX < 0 && dY >= 0) currentVelocity.heading = 270.0 + angleDeg;
+        else if (dX < 0 && dY < 0) currentVelocity.heading = 270.0 - angleDeg;
+        else if (dX > 0 && dY < 0) currentVelocity.heading = 90.0 + angleDeg;
+    }
 }
 
     // service callback functions
@@ -729,28 +761,33 @@ void NAVnode::addLocalWaypointAtIndex(const std::shared_ptr<AddLocalWaypointAtIn
 
 void NAVnode::addLocalObstacle(const std::shared_ptr<AddLocalObstacle::Request> request, 
                                 std::shared_ptr<AddLocalObstacle::Response> response){
+    (void)response;
     // check if the array of obstacles is full
     if (obstacleCount == obstacleLimit){
-        // increase make a larger array to store obstacles
-        obstacleLimit += 10;
-        Obstacle* biggerArray[obstacleLimit];
+        int newLimit = obstacleLimit + 10;
+        Obstacle** biggerArray = new Obstacle*[newLimit];
 
-        // copy over existing obstacles (by iterating through existing array)
-        for(int i = 0; i < obstacleLimit - 10; i++){
+        for(int i = 0; i < obstacleCount; i++){
             biggerArray[i] = obstacles[i];
-            obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
+        }
+        for(int i = obstacleCount; i < newLimit; i++){
+            biggerArray[i] = nullptr; // this is so our newly expanded slots don't contain garbage pointers
         }
 
         // clean up memory and rename our new array (by reusing the old pointer);
-        delete obstacles;
+        delete[] obstacles;
         obstacles = biggerArray;
+        obstacleLimit = newLimit;
     }
 
     // add new obstacle. post incrementing to handle indexing differences
     if (request->radius <= 0)
-        obstacles[obstacleCount++] = new Obstacle(request->x, request->y); // use default radius if no radius is entered
+        obstacles[obstacleCount++] = new Obstacle(request->x, request->y);
     else
         obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->radius);
+
+    checkWaypointCollisions();
+    checkTrackCollisions();
 }
 
 void NAVnode::addGeodeticWaypoint(const std::shared_ptr<AddGeodeticWaypoint::Request> request, 
@@ -765,28 +802,35 @@ void NAVnode::addGeodeticWaypointAtIndex(const std::shared_ptr<AddGeodeticWaypoi
 
 void NAVnode::addGeodeticObstacle(const std::shared_ptr<AddGeodeticObstacle::Request> 
                                     request, std::shared_ptr<AddGeodeticObstacle::Response> response){
+    (void)response;
     // check if the array of obstacles is full
     if (obstacleCount == obstacleLimit){
         // increase make a larger array to store obstacles
-        obstacleLimit += 10;
-        Obstacle* biggerArray[obstacleLimit] = {};
+        int newLimit = obstacleLimit + 10;
+        Obstacle** biggerArray = new Obstacle*[newLimit];
 
         // copy over existing obstacles (by iterating through existing array)
-        for(int i = 0; i < obstacleLimit - 10; i++){
+        for(int i = 0; i < obstacleCount; i++){
             biggerArray[i] = obstacles[i];
-            obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
+        }
+        for(int i = obstacleCount; i < newLimit; i++){
+            biggerArray[i] = nullptr;
         }
 
         // clean up memory and rename our new array (by reusing the old pointer);
-        delete obstacles;
+        delete[] obstacles;
         obstacles = biggerArray;
+        obstacleLimit = newLimit;
     }
 
     // add new obstacle. post incrementing to handle indexing differences
     if (request->radius <= 0)
-        obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, true); // use default radius if no radius is entered
+        obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, true);
     else
         obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, request->radius, true);
+
+    checkWaypointCollisions();
+    checkTrackCollisions();
 }
 
 void NAVnode::addEarthCentredWaypoint(const std::shared_ptr<AddEarthCentredWaypoint::Request> request, 
@@ -801,28 +845,35 @@ void NAVnode::addEarthCentredWaypointAtIndex(const std::shared_ptr<AddEarthCentr
 
 void NAVnode::addEarthCentredObstacle(const std::shared_ptr<AddEarthCentredObstacle::Request> request, 
                                         std::shared_ptr<AddEarthCentredObstacle::Response> response){
+    (void)response;
     // check if the array of obstacles is full
     if (obstacleCount == obstacleLimit){
         // increase make a larger array to store obstacles
-        obstacleLimit += 10;
-        Obstacle** biggerArray = new Obstacle*[obstacleLimit];
+        int newLimit = obstacleLimit + 10;
+        Obstacle** biggerArray = new Obstacle*[newLimit];
 
         // copy over existing obstacles (by iterating through existing array)
-        for(int i = 0; i < obstacleLimit - 10; i++){
+        for(int i = 0; i < obstacleCount; i++){
             biggerArray[i] = obstacles[i];
-            obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
+        }
+        for(int i = obstacleCount; i < newLimit; i++){
+            biggerArray[i] = nullptr;
         }
 
         // clean up memory and rename our new array (by reusing the old pointer);
-        delete obstacles;
+        delete[] obstacles;
         obstacles = biggerArray;
+        obstacleLimit = newLimit;
     }
 
     // add new obstacle. post incrementing to handle indexing differences
     if (request->radius <= 0)
-        obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, false); // use default radius if no radius is entered
+        obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, false);
     else
         obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, request->radius, false);
+
+    checkWaypointCollisions();
+    checkTrackCollisions();
 }
 
 
@@ -899,28 +950,57 @@ void NAVnode::followRoute_Accepted(const std::shared_ptr<NAVGoalHandle> goal_han
 }
 
 void NAVnode::followRoute_Execute(const std::shared_ptr<NAVGoalHandle> goal_handle){
-    // actual method that excecutes the action
+    // actual method that executes the action
     rclcpp::Rate loop_rate(1);
-    const auto goal = goal_handle->get_goal();
     auto feedback = std::make_shared<NAVaction::Feedback>();
     auto result = std::make_shared<NAVaction::Result>();
 
-    while(true){
+    ListNode* current = routes[routeToFollow].getHead();
+    int count = 0;
+    const double arrivalThreshold = 1.0; // arrival tolerance in meters
+
+    if (current == nullptr) {
+        feedback->progress = "Route is empty. Standing by at current position.";
+        goal_handle->publish_feedback(feedback);
+        loop_rate.sleep();
+        result->success = "Route is empty. No waypoints to follow.";
+        goal_handle->succeed(result);
+        return;
+    }
+
+    while(current != nullptr && rclcpp::ok()){
         if (goal_handle->is_canceling()){
             result->success = "Navigation Prematurely Terminated";
             goal_handle->canceled(result);
             return;
         }
-        // do stuff
 
+        // calculate the distance from rover's currentPosition to current target waypoint
+        double dx = currentPosition->getX() - current->point->getX();
+        double dy = currentPosition->getY() - current->point->getY();
+        double distance = std::sqrt(dx * dx + dy * dy);
 
+        std::stringstream ss;
+        ss << "Navigating to Waypoint " << (count + 1)
+           << " [Target: (" << current->point->getX() << ", " << current->point->getY() 
+           << ") | Current: (" << currentPosition->getX() << ", " << currentPosition->getY()
+           << ") | Dist: " << std::fixed << std::setprecision(2) << distance << "m]";
+        
+        feedback->progress = ss.str();
+        goal_handle->publish_feedback(feedback);
+
+        // advance to next waypoint once within arrival threshold distance
+        if (distance <= arrivalThreshold) {
+            count++;
+            current = current->next;
+        }
 
         loop_rate.sleep();
     }
 
     if(rclcpp::ok()){
         result->success = "great success";
-            goal_handle->succeed(result);
+        goal_handle->succeed(result);
     }
 }
 
