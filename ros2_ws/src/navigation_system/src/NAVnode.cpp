@@ -1,236 +1,81 @@
-// used for functions
-#include <cstdio>
-#include <string>
-#include <array>
-//#include <list>
-#include <vector>
-#include <cmath>
-#include <sstream>
-#include <iostream>
-#include <algorithm>
+#include "NAVnode.hpp"
 
-// used for ros publishers and servers
-#include <chrono>
-#include <functional>
-#include <memory>
-#include <iomanip>
+using std::placeholders::_1;
+using std::placeholders::_2;
 
-//custom defined interface for use with topics and services (defined in GPS node implementation)
-#include "navigation_interfaces/msg/bearing_string.hpp"
-#include "navigation_interfaces/msg/position_string.hpp"
-#include "navigation_interfaces/srv/get_nav.hpp"
-#include "navigation_interfaces/srv/set_nav.hpp"
-
-//All Data Structures and objects we've defined
-#include "ListOfWaypoints.cpp"
-#include "Waypoint.cpp"
-#include "Obstacle.cpp"
-
-
-//custom defined interfaces for use with topics, services and actions
-#include "navigation_interfaces/msg/velocity.hpp"
-
-#include "navigation_interfaces/srv/void_service.hpp"
-#include "navigation_interfaces/srv/reset_home.hpp"
-#include "navigation_interfaces/srv/select_route.hpp"
-
-#include "navigation_interfaces/srv/add_local_waypoint.hpp"
-#include "navigation_interfaces/srv/add_local_waypoint_at_index.hpp"
-#include "navigation_interfaces/srv/add_local_obstacle.hpp"
-
-#include "navigation_interfaces/srv/add_geodetic_waypoint.hpp"
-#include "navigation_interfaces/srv/add_geodetic_waypoint_at_index.hpp"
-#include "navigation_interfaces/srv/add_geodetic_obstacle.hpp"
-
-#include "navigation_interfaces/srv/add_earth_centred_waypoint.hpp"
-#include "navigation_interfaces/srv/add_earth_centred_waypoint_at_index.hpp"
-#include "navigation_interfaces/srv/add_earth_centred_obstacle.hpp"
-
-#include "navigation_interfaces/action/navigation_action.hpp"
-
-//interfaces needed to work with ros
-#include "rclcpp/rclcpp.hpp"
-
-
-
-class NAVnode : public rclcpp::Node{
-
-    // Attributes
-private:
-    bool debug;                 // displays added information to the terminal for debugging purposes (false by default)
-    bool returnToBase;          // boolean to select the direction of travel along selected route 
-
-    int obstacleCount;          // keeps track of how many obstacles are currently stored in the system 
-    int obstacleLimit;          // maximum number of obstacles that can be stored in the system
-    int waypointCount;          // keeps track of the number of waypoints stored in the system accross all routes 
-
-    int timeSinceLastVelocityPublishing; // used in the numerical method for calculating the velocity of the rover
-
-
-    /*
-        Map Limits are used to define the available area that this node may reroute within. 
-        without this, we could get the situation where the computer decides to reroute through Edmonton to avoid obstacles
-        while this would work to avoid the obstacle, it's hardly practical/legal in the eyes of CIRC
-    */
-    double northernMapLimit; // distance Vertically from home base to the upper edge of the testing area
-    double southernMapLimit; // distance Vertically from home base to the lower edge of the testing area
-    double westernMapLimit;  // distance Horizontally from home base to the Left-most edge of the testing area
-    double easternMapLimit;  // distance Horizontally from home base to the Right-most edge of the testing area
-    
-    enum coordinates {local, geodetic, earthCentered};  // defines the three coordinate systems available to the pilot 
-    enum coordinates preference; // used to select which form of the coordinates gets displayed to the pilot
-
-    enum avoidanceStrategy {reroute, trackCrawling, automatic_Circumnavigation_Off}; // defines the methods of circumnavigating obstacles
-    enum avoidanceStrategy circumnavigationStyle; // used to select how circumnavigation of obstacles is tackled
-
-    enum preplannedRoute {Route1, Route2, Route3, Route4, Route5}; // defines up to 5 preplanned routes for the operator to select
-    enum preplannedRoute routeSelected; // to allow the operator to select which preplanned route to follow
-    
-    Waypoint* currentPosition;    // Waypoint to store the current position of the rover (updated often)
-
-    ListOfWaypoints pointsVisited;   // Doubly linked list to store the path that the rover has actually taken (whether it was planned or not)
-    Obstacle** obstacles;            // Pointer to dynamic array to store Obstacles in the way of the rover. ordered by x coordinate
-    ListOfWaypoints routes[5];       // Array to allow us to store multiple preplanned routes
-                                     // each route will be a doubly linked list that will hold several waypoints in the order that they should be visited 
-    Waypoint* lastFiveWaypoints[5];  // array to store the 5 most recent waypoints
-                                     // this will be used to estimate the rovers velocity
-
-    //////////////////////////////////////////
-    // Ros Stuff Definition
-    //////////////////////////////////////////
-
-    // Topics
-    navigation_interfaces::msg::Velocity currentVelocity = navigation_interfaces::msg::Velocity();
-    rclcpp::Publisher<navigation_interfaces::msg::Velocity>::SharedPtr VelocityPublisher; 
-
-    // Services
-
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr StopNavigatingServer;
-    rclcpp::Service<navigation_interfaces::srv::SelectRoute>::SharedPtr SelectRouteServer;
-    rclcpp::Service<navigation_interfaces::srv::ResetHome>::SharedPtr ResetHomeServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ClearRouteServer;
-        
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleDebugServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr TogglePreferenceServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleRouteServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleCircumnavigationStyleServer;
-    rclcpp::Service<navigation_interfaces::srv::VoidService>::SharedPtr ToggleDirectionServer;
-
-    rclcpp::Service<navigation_interfaces::srv::AddLocalWaypoint>::SharedPtr AddLocalWaypointServer;
-    rclcpp::Service<navigation_interfaces::srv::AddLocalWaypointAtIndex>::SharedPtr AddLocalWaypointAtIndexServer;
-    rclcpp::Service<navigation_interfaces::srv::AddLocalObstacle>::SharedPtr AddLocalObstacleServer;
-
-    rclcpp::Service<navigation_interfaces::srv::AddGeodeticWaypoint>::SharedPtr AddGeodeticWaypointServer;
-    rclcpp::Service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>::SharedPtr AddGeodeticWaypointAtIndexServer;
-    rclcpp::Service<navigation_interfaces::srv::AddGeodeticObstacle>::SharedPtr AddGeodeticObstacleServer;
-
-    rclcpp::Service<navigation_interfaces::srv::AddEarthCentredWaypoint>::SharedPtr AddEarthCentredWaypointServer;
-    rclcpp::Service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>::SharedPtr AddEarthCentredWaypointAtIndexServer;
-    rclcpp::Service<navigation_interfaces::srv::AddEarthCentredObstacle>::SharedPtr AddEarthCentredObstacleServer;
-
-    // Actions (work in progress)
-
-    //FollowRoute -> will begin the route (like hitting start on google maps)
-    //ConfirmRoute -> will check the route for collisions with obstacles
-
-    // Timers
-    rclcpp::TimerBase::SharedPtr timer;
-
-    ////////////////////////////////////////////
-    // End Ros stuff Definition
-    ////////////////////////////////////////////
-
-    /*
-        checkWaypointCollisions()
-        ---------------------------------
-        checks if any of the waypoints in the currently selected route are within the radius of any known obstacles
-        if a collision is detected, it automatically calls the waypointCollisionDetected function to handle the collision based on the selected circumnavigation style
-    */
-    void checkWaypointCollisions(){
-        std::sort(obstacles, obstacles + obstacleCount); 
-        //std::sort(obstacles, obstacles + sizeof(obstacles) / sizeof(obstacles[0])); // obstacles is a pointer/dynamic array: So sizeof(obstacles) does not give the number of obstacles. It only gives the size of the pointer itself.
-        ListNode* current = routes[routeSelected].getHead();
-        while (current != nullptr) {
-            for (int i = 0; i < obstacleCount; i++) {
-                double dx = current->point->getX() - obstacles[i]->getX();
-                double dy = current->point->getY() - obstacles[i]->getY();
-                if (sqrt(dx*dx + dy*dy) < obstacles[i]->getRadius()) {
-                    waypointCollisionDetected(current, obstacles[i]);
-                    break; // No need to check other obstacles if a collision is detected
-                }
-            }
-            current = current->next;
-        }
-    }
-
-    /*
-        findWaypointCollision(Waypoint* collidingWaypoint)
-        --------------------------------------------------
-        this method returns the index of the obstacle that is colliding with our waypoint
-    */
-    int findWaypointCollision(Waypoint* collidingWaypoint){
+void NAVnode::checkWaypointCollisions(){
+    std::sort(obstacles, obstacles + obstacleCount); 
+    ListNode* current = routes[routeToEdit].getHead();
+    while (current != nullptr) {
         for (int i = 0; i < obstacleCount; i++) {
-                double dx = collidingWaypoint->getX() - obstacles[i]->getX();
-                double dy = collidingWaypoint->getY() - obstacles[i]->getY();
-                if (sqrt(dx*dx + dy*dy) < obstacles[i]->getRadius()) {
-                    return i;
-                }
-            }
-        return -1;
-    }
-
-    /*
-        isWaypointColliding(ListNode* node)
-        ---------------------------------
-        checks if the given node is within the radius of any of the obstacles currently stored in the system.
-    */
-    bool isWaypointColliding(ListNode* node){
-        return isWaypointColliding(node->point);
-    }
-
-     /*
-        isWaypointColliding(Waypoint* point)
-        ---------------------------------
-        checks if the given point is within the radius of any of the obstacles currently stored in the system.
-    */
-    bool isWaypointColliding(Waypoint* point){
-        for (int i = 0; i < obstacleCount; i++) {
-            double dx = point->getX() - obstacles[i]->getX();
-            double dy = point->getY() - obstacles[i]->getY();
+            double dx = current->point->getX() - obstacles[i]->getX();
+            double dy = current->point->getY() - obstacles[i]->getY();
             if (sqrt(dx*dx + dy*dy) < obstacles[i]->getRadius()) {
-                return true;
+                waypointCollisionDetected(current, obstacles[i]);
+                break; // No need to check other obstacles if a collision is detected
             }
         }
-        return false;
-    }
-
-    void checkTrackCollisions(){
-        ListNode* current = routes[routeSelected].getHead();
         current = current->next;
-        while (current != nullptr) {
-            for (int i = 0; i < obstacleCount; i++) {
-                auto pointOfInterest = calculatePointOfInterest(current->previous, current, obstacles[i]);
-                double dx = obstacles[i]->getX() - pointOfInterest[0]; 
-                double dy = obstacles[i]->getY() - pointOfInterest[1];
-                double distanceToCenter = sqrt(dx * dx + dy * dy);
-                if (distanceToCenter < obstacles[i]->getRadius()){
-                    trackCollisionDetected(current, obstacles[i]);
-                }
-            }
-            current = current->next;
-        }
     }
+}
 
-    void checkTrackCollisions(ListNode* start, ListNode* end, Obstacle* obstacle){
-        
-        auto pointOfInterest = calculatePointOfInterest(start, end, obstacle);
-        double dx = obstacle->getX() - pointOfInterest[0]; 
-        double dy = obstacle->getY() - pointOfInterest[1];
-        double distanceToCenter = sqrt(dx * dx + dy * dy);
-        if (distanceToCenter < obstacle->getRadius()){
-            generateDetour(pointOfInterest[0], pointOfInterest[1], end, obstacle);
+int NAVnode::findWaypointCollision(Waypoint* collidingWaypoint){
+    for (int i = 0; i < obstacleCount; i++) {
+            double dx = collidingWaypoint->getX() - obstacles[i]->getX();
+            double dy = collidingWaypoint->getY() - obstacles[i]->getY();
+            if (sqrt(dx*dx + dy*dy) < obstacles[i]->getRadius()) {
+                return i;
+            }
+        }
+    return -1;
+}
+
+bool NAVnode::isWaypointColliding(ListNode* node){
+    return isWaypointColliding(node->point);
+}
+
+bool NAVnode::isWaypointColliding(Waypoint* point){
+    for (int i = 0; i < obstacleCount; i++) {
+        double dx = point->getX() - obstacles[i]->getX();
+        double dy = point->getY() - obstacles[i]->getY();
+        if (sqrt(dx*dx + dy*dy) < obstacles[i]->getRadius()) {
+            return true;
         }
     }
+    return false;
+}
+
+void NAVnode::checkTrackCollisions(){
+    ListNode* current = routes[routeToEdit].getHead();
+
+    if(current == nullptr)
+        return;
+
+    current = current->next;
+    while (current != nullptr) {
+        for (int i = 0; i < obstacleCount; i++) {
+            auto pointOfInterest = calculatePointOfInterest(current->previous, current, obstacles[i]);
+            double dx = obstacles[i]->getX() - pointOfInterest[0]; 
+            double dy = obstacles[i]->getY() - pointOfInterest[1];
+            double distanceToCenter = sqrt(dx * dx + dy * dy);
+            if (distanceToCenter < obstacles[i]->getRadius()){
+                trackCollisionDetected(current, obstacles[i]);
+            }
+        }
+        current = current->next;
+    }
+}
+
+void NAVnode::checkTrackCollisions(ListNode* start, ListNode* end, Obstacle* obstacle){
+        
+    auto pointOfInterest = calculatePointOfInterest(start, end, obstacle);
+    double dx = obstacle->getX() - pointOfInterest[0]; 
+    double dy = obstacle->getY() - pointOfInterest[1];
+    double distanceToCenter = sqrt(dx * dx + dy * dy);
+    if (distanceToCenter < obstacle->getRadius()){
+        generateDetour(pointOfInterest[0], pointOfInterest[1], end, obstacle);
+    }
+}
     
     /*
         Description of Circumnavigation Styles:
@@ -272,147 +117,216 @@ private:
     
     */
 
-    /*
-        waypointCollisionDetected(ListNode* node, Obstacle* obstacle)
-        ---------------------------------
-        this method is called when a collision is detected between a waypoint and an obstacle. 
-        it takes in the node that is colliding and the obstacle that it is colliding with and then handles the collision based on the selected circumnavigation style.
-    */
-    void waypointCollisionDetected(ListNode* node, Obstacle* obstacle){
-        switch (circumnavigationStyle){
-            case(reroute): routes[routeSelected].remove(node); break;
-            case(trackCrawling): {
-                auto pointOfInterest = calculatePointOfInterest(node->previous, node, obstacle);
+void NAVnode::waypointCollisionDetected(ListNode* node, Obstacle* obstacle){
+    switch (circumnavigationStyle){
+        case(reroute): routes[routeToEdit].remove(node); break;
+        case(trackCrawling): {
+            auto pointOfInterest = calculatePointOfInterest(node->previous, node, obstacle);
                 
-                /* create a new node to store another waypoint
-                   to get this new waypoint, we will move back 1 Radii + 1m from the Point if Interest (POI) towards the previous waypoint
-                   if the POI is the centre of the waypoint, this will make a new waypoint 1m from the edge of the obstacle
-                   if not, the new waypoint will be further from the edge of the obstacle
-                   this was done for simplicity, but it really doesn't matter because the further the POI is from the centre, the less drastic the course correction anyway
-                   so we'll still be following the original route reasonably closely
-                */ 
-                ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
-                    new Waypoint(pointOfInterest[0] - (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] - (obstacle->getRadius() + 1) * pointOfInterest[3]));
+            /* create a new node to store another waypoint
+               to get this new waypoint, we will move back 1 Radii + 1m from the Point if Interest (POI) towards the previous waypoint
+               if the POI is the centre of the waypoint, this will make a new waypoint 1m from the edge of the obstacle
+               if not, the new waypoint will be further from the edge of the obstacle
+               this was done for simplicity, but it really doesn't matter because the further the POI is from the centre, the less drastic the course correction anyway
+               so we'll still be following the original route reasonably closely
+            */ 
+            ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
+                new Waypoint(node->point->getX() - (obstacle->getRadius() + 1) * pointOfInterest[2], node->point->getY() - (obstacle->getRadius() + 1) * pointOfInterest[3]));
+            
+            //check if our new waypoint is colliding with an obstacle
+            if (isWaypointColliding(newWaypoint)){
+                // we'll try the same thing again, taking care not to go past the previous waypoint
+
+                // check if the previous waypoint is within 1 radii of the waypoint we just made
+                double dx = node->previous->point->getX() - newWaypoint->point->getX();
+                double dy = node->previous->point->getY() - newWaypoint->point->getY();
+                delete newWaypoint;
                 
-                routes[routeSelected].addBefore(newWaypoint, node);
+                if (!(sqrt(dx * dx + dy * dy) < obstacle->getRadius())){
+                    // if moving back one more radii will NOT make a new waypoint behind the first one, then we add a new waypoint 1 radii back from the last one, else we simply omit it
+                    newWaypoint = new ListNode(nullptr, nullptr, 
+                        new Waypoint(node->point->getX() - (obstacle->getRadius() * 2 + 1) * pointOfInterest[2], node->point->getY() - (obstacle->getRadius() * 2+ 1) * pointOfInterest[3]));
+                    
+                    routes[routeToEdit].addBefore(newWaypoint, node);
+                }
+            }
+            else{
+                routes[routeToEdit].addBefore(newWaypoint, node);
+            }
 
-                /*  for the next waypoint, we will need to calculate the unit vector to the next waypoint as there's a good change the the path turns to some degree at the waypoint
-                    therefore, the direction described by the unit vector calculated with the POI will be incorrect
-
-                    once we have that, the process is identical to above
-                */
-                double dx = node->next->point->getX() - node->point->getX();
-                double dy = node->next->point->getY() - node->point->getY();
-                double* unitVectorToNextWaypoint = new double[2]{dx / sqrt(dx * dx + dy* dy), dy / sqrt(dx * dx + dy * dy)};
+            /*  for the next waypoint, we will need to calculate the unit vector to the next waypoint as there's a good change the the path turns to some degree at the waypoint
+                therefore, the direction described by the unit vector calculated with the POI will be incorrect
+            
+                once we have that, the process is identical to above
+            */
+            double dx = node->next->point->getX() - node->point->getX();
+            double dy = node->next->point->getY() - node->point->getY();
+            double* unitVectorToNextWaypoint = new double[2]{dx / sqrt(dx * dx + dy* dy), dy / sqrt(dx * dx + dy * dy)};
                 
-                newWaypoint = new ListNode(nullptr, nullptr, 
-                    new Waypoint(pointOfInterest[0] + (obstacle->getRadius() + 1) * unitVectorToNextWaypoint[0], pointOfInterest[1] + (obstacle->getRadius() + 1) * unitVectorToNextWaypoint[1]));
+            newWaypoint = new ListNode(nullptr, nullptr, 
+                new Waypoint(node->point->getX() + (obstacle->getRadius() + 1) * unitVectorToNextWaypoint[0], node->point->getY() + (obstacle->getRadius() + 1) * unitVectorToNextWaypoint[1]));
+            
+            // check if our new waypoint is colliding with an obstacle
+            if (isWaypointColliding(newWaypoint)){
+                // we'll try the same thing again, taking care not to go past the next waypoint
 
-                routes[routeSelected].addBefore(newWaypoint, node);
-
-                delete unitVectorToNextWaypoint;
-                newWaypoint = nullptr;
-            }; break;
-            case(automatic_Circumnavigation_Off): cout << "collision Detected at waypoint (" << node->point->getX() << ", " << node->point->getY() << ")" << endl; break;
-        };
-    }
-
-    /*
-        TrackCollisionDetected(ListNode* node, Obstacle* obstacle)
-        ---------------------------------
-        this method is called when a collision is detected along the route 
-        it handles the collision based on the selected circumnavigation style
-    */
-    void trackCollisionDetected(ListNode* nextNode, Obstacle* obstacle){
-        auto pointOfInterest = calculatePointOfInterest(nextNode->previous, nextNode, obstacle);
-        switch (circumnavigationStyle){
-            case(reroute): generateDetour(pointOfInterest[0], pointOfInterest[1], nextNode, obstacle); break;
-            case(trackCrawling): {
-                // to start, the process is identical to when a waypoint collision is detected, but it's even simpler since we know that there isn't a turn or a bend
-                // in the route midway through the obstacle
+                // check if the next waypoint is within 1 radii of the waypoint we just made
+                double dx = node->next->point->getX() - newWaypoint->point->getX();
+                double dy = node->next->point->getY() - newWaypoint->point->getY();
+                delete newWaypoint;
                 
-                /* create a new node to store another waypoint
-                   to get this new waypoint, we will move back 1 Radii + 1m from the Point of Interest (POI) towards the previous waypoint
-                   if not, the new waypoint will be further from the edge of the obstacle
-                   this was done for simplicity, but it really doesn't matter because the further the POI is from the centre, the less drastic the course correction anyway
-                   so we'll still be following the original route reasonably closely
-                */ 
-                ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
-                    new Waypoint(pointOfInterest[0] - (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] - (obstacle->getRadius() + 1) * pointOfInterest[3]));
+                if (!(sqrt(dx * dx + dy * dy) < obstacle->getRadius())){
+                    // if moving back one more radii will NOT make a new waypoint behind the first one, then we add a new waypoint 1 radii back from the last one, else we simply omit it
+                    newWaypoint = new ListNode(nullptr, nullptr, 
+                        new Waypoint(node->point->getX() + (obstacle->getRadius() * 2 + 1) * pointOfInterest[2], node->point->getY() + (obstacle->getRadius() * 2+ 1) * pointOfInterest[3]));
+                    
+                    routes[routeToEdit].addBefore(newWaypoint, node);
+                }
+            }
+            else{
+                routes[routeToEdit].addBefore(newWaypoint, node);
+            }
+
+            routes[routeToEdit].remove(node);
+            delete unitVectorToNextWaypoint;
+        }; break;
+        case(automatic_Circumnavigation_Off): cout << "collision Detected at waypoint (" << node->point->getX() << ", " << node->point->getY() << ")" << endl; break;
+    };
+}
+
+void NAVnode::trackCollisionDetected(ListNode* nextNode, Obstacle* obstacle){
+    auto pointOfInterest = calculatePointOfInterest(nextNode->previous, nextNode, obstacle);
+    switch (circumnavigationStyle){
+        case(reroute): generateDetour(pointOfInterest[0], pointOfInterest[1], nextNode, obstacle); break;
+        case(trackCrawling): {
+            // to start, the process is identical to when a waypoint collision is detected, but it's even simpler since we know that there isn't a turn or a bend
+            // in the route midway through the obstacle
                 
-                routes[routeSelected].addBefore(newWaypoint, nextNode);
+            /* create a new node to store another waypoint
+               to get this new waypoint, we will move back 1 Radii + 1m from the Point of Interest (POI) towards the previous waypoint
+               if not, the new waypoint will be further from the edge of the obstacle
+               this was done for simplicity, but it really doesn't matter because the further the POI is from the centre, the less drastic the course correction anyway
+               so we'll still be following the original route reasonably closely
+            */ 
+            ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
+                new Waypoint(pointOfInterest[0] - (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] - (obstacle->getRadius() + 1) * pointOfInterest[3]));
+            
+            //check if our new waypoint is colliding with an obstacle
+            if (isWaypointColliding(newWaypoint)){
+                // we'll try the same thing again, taking care not to go past the previous waypoint
 
-                newWaypoint = new ListNode(nullptr, nullptr, 
-                    new Waypoint(pointOfInterest[0] + (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] + (obstacle->getRadius() + 1) * pointOfInterest[3]));
+                // check if the previous waypoint is within 1 radii of the waypoint we just made
+                double dx = nextNode->previous->point->getX() - newWaypoint->point->getX();
+                double dy = nextNode->previous->point->getY() - newWaypoint->point->getY();
+                delete newWaypoint;
                 
-                routes[routeSelected].addBefore(newWaypoint, nextNode);
+                if (!(sqrt(dx * dx + dy * dy) < obstacle->getRadius())){
+                    // if moving back one more radii will NOT make a new waypoint behind the first one, then we add a new waypoint 1 radii back from the last one, else we simply omit it
+                    newWaypoint = new ListNode(nullptr, nullptr, 
+                        new Waypoint(pointOfInterest[0] - (obstacle->getRadius() * 2 + 1) * pointOfInterest[2], pointOfInterest[1] - (obstacle->getRadius() * 2 + 1) * pointOfInterest[3]));
+                    
+                    routes[routeToEdit].addBefore(newWaypoint, nextNode);
+                }
+            }
+            else{
+                routes[routeToEdit].addBefore(newWaypoint, nextNode);
+            }
 
-                newWaypoint = nullptr;
-            }; break;
-            case(automatic_Circumnavigation_Off): cout << "collision Detected with Obstacle (" << obstacle->getX() << ", " << obstacle->getY() << ")" << endl; break;
-        };
-    }
+            newWaypoint = new ListNode(nullptr, nullptr, 
+                new Waypoint(pointOfInterest[0] + (obstacle->getRadius() + 1) * pointOfInterest[2], pointOfInterest[1] + (obstacle->getRadius() + 1) * pointOfInterest[3]));
+                
+            //check if our new waypoint is colliding with an obstacle
+            if (isWaypointColliding(newWaypoint)){
+                // we'll try the same thing again, taking care not to go past the previous waypoint
 
-    /*
-        generateDetour(double pointOfInterest_X, double pointOfInterest_Y, ListNode* nextNode, Obstacle* obstacle)
-        ---------------------------------------------------------------------------------------------------
-        this method adds a new waypoint 1m past the edge of the obstacle
-        If the new waypoint that it creates is inside of another obstacle, it will try placing it at the nearest apex
+                // check if the previous waypoint is within 1 radii of the waypoint we just made
+                double dx = nextNode->previous->point->getX() - newWaypoint->point->getX();
+                double dy = nextNode->previous->point->getY() - newWaypoint->point->getY();
+                delete newWaypoint;
+                
+                if (!(sqrt(dx * dx + dy * dy) < obstacle->getRadius())){
+                    // if moving back one more radii will NOT make a new waypoint behind the first one, then we add a new waypoint 1 radii back from the last one, else we simply omit it
+                    newWaypoint = new ListNode(nullptr, nullptr, 
+                        new Waypoint(pointOfInterest[0] + (obstacle->getRadius() * 2 + 1) * pointOfInterest[2], pointOfInterest[1] + (obstacle->getRadius() * 2 + 1) * pointOfInterest[3]));
+                    
+                    routes[routeToEdit].addBefore(newWaypoint, nextNode);
+                }
+            }
+            else{
+                routes[routeToEdit].addBefore(newWaypoint, nextNode);
+            }
 
-        note: by the "nearest apex" I am talking about the point on the edge of the obstacle's radius that lines up with the POI and the centre
-        it's the nearest one to the original path an thus will be on the same side of the centre mark as the POI
-        Check the design guild for my drawings further discussing this
-    */
-    void generateDetour(double pointOfInterest_X, double pointOfInterest_Y, ListNode* nextNode, Obstacle* obstacle){
+            newWaypoint = nullptr;
+        }; break;
+        case(automatic_Circumnavigation_Off): cout << "collision Detected with Obstacle (" << obstacle->getX() << ", " << obstacle->getY() << ")" << endl; break;
+    };
+}
+
+void NAVnode::generateDetour(double pointOfInterest_X, double pointOfInterest_Y, ListNode* nextNode, Obstacle* obstacle){
         
-        // define unit vector going from POI to centre
-        double dx = obstacle->getX() - pointOfInterest_X;
-        double dy = obstacle->getY() - pointOfInterest_Y;
-        double length = sqrt(dx * dx + dy * dy);
-        double* unitVector = new double[2]{dx / length, dy / length}; // only has two places at index 0 and 1
+    // define unit vector going from POI to centre
+    double dx = obstacle->getX() - pointOfInterest_X;
+    double dy = obstacle->getY() - pointOfInterest_Y;
+    double length = sqrt(dx * dx + dy * dy);
+    double* unitVector = new double[2]{dx / length, dy / length}; // only has two places at index 0 and 1
 
-        // following obstacles are used in the worst case scenario of chaining obstacles
-        int obstacle1_index;
-        int obstacle2_index;
+    // following obstacles are used in the worst case scenario of chaining obstacles
+    int obstacle1_index;
+    int obstacle2_index;
     
-        // try to put new waypoint 1m past the nearest apex
-        ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
-                    new Waypoint(pointOfInterest_X - (obstacle->getRadius() + 1) * unitVector[0], pointOfInterest_Y - (obstacle->getRadius() + 1) * unitVector[1]));
+    // try to put new waypoint 1m past the nearest apex
+    ListNode* newWaypoint = new ListNode(nullptr, nullptr, 
+                 new Waypoint(pointOfInterest_X - (obstacle->getRadius() + 1) * unitVector[0], pointOfInterest_Y - (obstacle->getRadius() + 1) * unitVector[1]));
+        
+    if (!isWaypointColliding(newWaypoint)){
+        // putting it 1m past the nearest apex works fine
+        routes[routeToEdit].addBefore(newWaypoint, nextNode);
+        // check if the new waypoint created other track collisions. 
+        // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
+        checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
+        checkTrackCollisions(newWaypoint, nextNode, obstacle);
+    }
+    else {
+        // try to put the new waypoint at the nearest apex
+        obstacle1_index = findWaypointCollision(newWaypoint->point);
+        delete newWaypoint;
+        newWaypoint = new ListNode(nullptr, nullptr, 
+                new Waypoint(pointOfInterest_X - (obstacle->getRadius()) * unitVector[0], pointOfInterest_Y - (obstacle->getRadius()) * unitVector[1]));
         
         if (!isWaypointColliding(newWaypoint)){
-            // putting it 1m past the nearest apex works fine
-            routes[routeSelected].addBefore(newWaypoint, nextNode);
-
+            // putting it at the nearest apex works fine
+            routes[routeToEdit].addBefore(newWaypoint, nextNode);
+                
             // check if the new waypoint created other track collisions. 
             // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
             checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
             checkTrackCollisions(newWaypoint, nextNode, obstacle);
         }
         else {
-            // try to put the new waypoint at the nearest apex
-            obstacle1_index = findWaypointCollision(newWaypoint->point);
+            // try putting it 1m past the far apex
             delete newWaypoint;
             newWaypoint = new ListNode(nullptr, nullptr, 
-                    new Waypoint(pointOfInterest_X - (obstacle->getRadius()) * unitVector[0], pointOfInterest_Y - (obstacle->getRadius()) * unitVector[1]));
-            
-            if (!isWaypointColliding(newWaypoint)){
-                // putting it at the nearest apex works fine
-                routes[routeSelected].addBefore(newWaypoint, nextNode);
+                new Waypoint(pointOfInterest_X + (obstacle->getRadius() + 1) * unitVector[0], pointOfInterest_Y + (obstacle->getRadius() + 1) * unitVector[1]));
                 
+            if (!isWaypointColliding(newWaypoint)){
+                // putting it 1m past the far apex works fine
+                routes[routeToEdit].addBefore(newWaypoint, nextNode);
+                    
                 // check if the new waypoint created other track collisions. 
                 // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
                 checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
                 checkTrackCollisions(newWaypoint, nextNode, obstacle);
             }
             else {
-                // try putting it 1m past the far apex
+                // try putting it at the far apex
+                obstacle2_index = findWaypointCollision(newWaypoint->point);
                 delete newWaypoint;
                 newWaypoint = new ListNode(nullptr, nullptr, 
-                    new Waypoint(pointOfInterest_X + (obstacle->getRadius() + 1) * unitVector[0], pointOfInterest_Y + (obstacle->getRadius() + 1) * unitVector[1]));
-                
+                    new Waypoint(pointOfInterest_X + (obstacle->getRadius()) * unitVector[0], pointOfInterest_Y + (obstacle->getRadius()) * unitVector[1]));
+            
                 if (!isWaypointColliding(newWaypoint)){
-                    // putting it 1m past the far apex works fine
-                    routes[routeSelected].addBefore(newWaypoint, nextNode);
+                    // putting it at the far apex works fine
+                    routes[routeToEdit].addBefore(newWaypoint, nextNode);
                     
                     // check if the new waypoint created other track collisions. 
                     // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
@@ -420,459 +334,675 @@ private:
                     checkTrackCollisions(newWaypoint, nextNode, obstacle);
                 }
                 else {
-                    // try putting it at the far apex
-                    obstacle2_index = findWaypointCollision(newWaypoint->point);
+                    /*
+                        At this point, we are dealing with a chain of obstacles where the first obstacle we looked at is not at the end
+                        This means that we must change our strategy
+                        now, we will leap frog along to find the ends of the chain and we will create 2 new waypointsd at either end
+                        we will then compare these to the POI to find out which one is the shortest detour
+                        the waypoint that takes us the least off track will be added and the other will be removed
+                    */
+                    int originalObstacleIndex = getIndexOfObstacle(obstacle);
+                    Waypoint* alternative1 = findAlternateRoute(originalObstacleIndex, obstacle1_index);
+                    Waypoint* alternative2 = findAlternateRoute(originalObstacleIndex, obstacle2_index);
                     delete newWaypoint;
-                    newWaypoint = new ListNode(nullptr, nullptr, 
-                        new Waypoint(pointOfInterest_X + (obstacle->getRadius()) * unitVector[0], pointOfInterest_Y + (obstacle->getRadius()) * unitVector[1]));
-                
-                    if (!isWaypointColliding(newWaypoint)){
-                        // putting it at the far apex works fine
-                        routes[routeSelected].addBefore(newWaypoint, nextNode);
                         
-                        // check if the new waypoint created other track collisions. 
-                        // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
-                        checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
-                        checkTrackCollisions(newWaypoint, nextNode, obstacle);
+                    // calculate the distance to alternative 1
+                    dx = alternative1->getX() - pointOfInterest_X;
+                    dy = alternative1->getY() - pointOfInterest_Y;
+                    double length1 = sqrt(dx * dx + dy * dy);
+
+                    // calculate the distancec to alternative 2
+                    dx = alternative2->getX() - pointOfInterest_X;
+                    dy = alternative2->getY() - pointOfInterest_Y;
+                    double length2 = sqrt(dx * dx + dy * dy);
+
+                    // compare and keep the nearest one
+                    if(length1 <= length2){
+                        newWaypoint = new ListNode(nullptr, nullptr, alternative1);
+                        delete alternative2;
                     }
                     else {
-                        /*
-                            At this point, we are dealing with a chain of obstacles where the first obstacle we looked at is not at the end
-                            This means that we must change our strategy
-                            now, we will leap frog along to find the ends of the chain and we will create 2 new waypointsd at either end
-                            we will then compare these to the POI to find out which one is the shortest detour
-                            the waypoint that takes us the least off track will be added and the other will be removed
-                        */
-                        int originalObstacleIndex = getIndexOfObstacle(obstacle);
-                        Waypoint* alternative1 = findAlternateRoute(originalObstacleIndex, obstacle1_index);
-                        Waypoint* alternative2 = findAlternateRoute(originalObstacleIndex, obstacle2_index);
-                        delete newWaypoint;
-                        
-                        // calculate the distance to alternative 1
-                        dx = alternative1->getX() - pointOfInterest_X;
-                        dy = alternative1->getY() - pointOfInterest_Y;
-                        double length1 = sqrt(dx * dx + dy * dy);
-
-                        // calculate the distancec to alternative 2
-                        dx = alternative2->getX() - pointOfInterest_X;
-                        dy = alternative2->getY() - pointOfInterest_Y;
-                        double length2 = sqrt(dx * dx + dy * dy);
-
-                        // compare and keep the nearest one
-                        if(length1 <= length2){
-                            newWaypoint = new ListNode(nullptr, nullptr, alternative1);
-                            delete alternative2;
-                        }
-                        else {
-                            newWaypoint = new ListNode(nullptr, nullptr, alternative2);
-                            delete alternative1;
-                        }
-                        routes[routeSelected].addBefore(newWaypoint, nextNode);
-                        
-                        // check if the new waypoint created other track collisions. 
-                        // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
-                        checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
-                        checkTrackCollisions(newWaypoint, nextNode, obstacle);
+                        newWaypoint = new ListNode(nullptr, nullptr, alternative2);
+                        delete alternative1;
                     }
+                    routes[routeToEdit].addBefore(newWaypoint, nextNode);
+                        
+                    // check if the new waypoint created other track collisions. 
+                    // Next two lines will recursively check for problems and fix them until there are no more collisions resulting from our rerouting
+                    checkTrackCollisions(nextNode->previous, newWaypoint, obstacle);
+                    checkTrackCollisions(newWaypoint, nextNode, obstacle);
                 }
             }
-
         }
-        delete[] unitVector;
+
     }
+    delete[] unitVector;
+}
 
-    Waypoint* findAlternateRoute(int first, int second){
-        // define unit vector going from the centre of the original obstacle to the next one
-        double dx = obstacles[second]->getX() - obstacles[first]->getX();
-        double dy = obstacles[second]->getY() - obstacles[first]->getY();
-        double length = sqrt(dx * dx + dy * dy);
-        double* unitVector = new double[2]{dx / length, dy / length};
+Waypoint* NAVnode::findAlternateRoute(int first, int second){
+    // define unit vector going from the centre of the original obstacle to the next one
+    double dx = obstacles[second]->getX() - obstacles[first]->getX();
+    double dy = obstacles[second]->getY() - obstacles[first]->getY();
+    double length = sqrt(dx * dx + dy * dy);
+    double* unitVector = new double[2]{dx / length, dy / length};
 
-        Waypoint* possibleWaypoint = new Waypoint(obstacles[second]->getX() + (obstacles[second]->getRadius() + 1) * unitVector[0], obstacles[second]->getY() + (obstacles[second]->getRadius() + 1) * unitVector[1]);
+    Waypoint* possibleWaypoint = new Waypoint(obstacles[second]->getX() + (obstacles[second]->getRadius() + 1) * unitVector[0], obstacles[second]->getY() + (obstacles[second]->getRadius() + 1) * unitVector[1]);
 
+    if(!isWaypointColliding(possibleWaypoint)){
+        // We found a potential waypoint
+        delete unitVector;
+        return possibleWaypoint;
+    }
+    else {
+        //try the same trick as before where we put the new point right on the edge of the obstacle to thread the nedle between 2 adjacent obstacles
+        delete possibleWaypoint;
+        possibleWaypoint = new Waypoint(obstacles[second]->getX() + obstacles[second]->getRadius() * unitVector[0], obstacles[second]->getY() + obstacles[second]->getRadius() * unitVector[1]);
+            
         if(!isWaypointColliding(possibleWaypoint)){
-            // We found a potential waypoint
+            // we found a potential waypoint
             delete unitVector;
             return possibleWaypoint;
         }
+
         else {
-            //try the same trick as before where we put the new point right on the edge of the obstacle to thread the nedle between 2 adjacent obstacles
+            //the chain continues. if this is the case, we recursively call this function until we get to the end
+            delete unitVector;
+            int indexOfNextObstacle = findWaypointCollision(possibleWaypoint);
             delete possibleWaypoint;
-            possibleWaypoint = new Waypoint(obstacles[second]->getX() + obstacles[second]->getRadius() * unitVector[0], obstacles[second]->getY() + obstacles[second]->getRadius() * unitVector[1]);
-            
-            if(!isWaypointColliding(possibleWaypoint)){
-                // we found a potential waypoint
-                delete unitVector;
-                return possibleWaypoint;
-            }
-
-            else {
-                //the chain continues. if this is the case, we recursively call this function until we get to the end
-                delete unitVector;
-                int indexOfNextObstacle = findWaypointCollision(possibleWaypoint);
-                delete possibleWaypoint;
-                return findAlternateRoute(second, indexOfNextObstacle);
-            }
+            return findAlternateRoute(second, indexOfNextObstacle);
         }
     }
+}
 
+array<double, 4> NAVnode::calculatePointOfInterest(ListNode* start, ListNode* end, Obstacle* obstacle){
+    double x, y, x_hat, y_hat;
 
+    // calculate vectors to the next waypoint and to the obstacle
+    double* vectorToNextWaypoint = new double[2]{end->point->getX() - start->point->getX(), end->point->getY() - start->point->getY()};
+    double* vectorToObstacle = new double[2]{obstacle->getX() - start->point->getX(), obstacle->getY() - start->point->getY()};
 
-    /*
-        calculatePointOfInterest(ListNode* start, ListNode* end, Obstacle* obstacle)
-        ------------------------------------------------------  
-        this method calculates the "point of interest" which is a point that lies exacly halfway between the 2 intersection points of the route with the obstacle.
-
-        this method also returns the unit vector representing the direction of the route at this point so that we can use it in futur calculations
-
-        this is done via some vector math. we get the unit vector for the direction of the route and then project the vector going from the first waypoint to the centre
-        of the obstacle. The tip of this projection marks our POI.
-
-        this POI will be used when the "track crawling" circumnavigation style is selected to find waypoints that are barely past the edge of the obstacle and still on the original path
-        It will also be used to detect track collisions as if this POI is within 1 radii of the obstacle's center, then we have a collision
-
-        Check the design guild for the associated drawing further breaking down the math
-    */
-    array<double, 4> calculatePointOfInterest(ListNode* start, ListNode* end, Obstacle* obstacle){
-        double x, y, x_hat, y_hat;
-
-        // calculate vectors to the next waypoint and to the obstacle
-        double* vectorToNextWaypoint = new double[2]{end->point->getX() - start->point->getX(), end->point->getY() - start->point->getY()};
-        double* vectorToObstacle = new double[2]{obstacle->getX() - start->point->getX(), obstacle->getY() - start->point->getY()};
-
-        // calculate unit vector representing the direction of the route
-        double* unitVectorToNextWaypoint = new double [2]{vectorToNextWaypoint[0] / sqrt(vectorToNextWaypoint[0]*vectorToNextWaypoint[0] + vectorToNextWaypoint[1]*vectorToNextWaypoint[1]), 
-                                            vectorToNextWaypoint[1] / sqrt(vectorToNextWaypoint[0]*vectorToNextWaypoint[0] + vectorToNextWaypoint[1]*vectorToNextWaypoint[1])};
+    // calculate unit vector representing the direction of the route
+    double* unitVectorToNextWaypoint = new double [2]{vectorToNextWaypoint[0] / sqrt(vectorToNextWaypoint[0]*vectorToNextWaypoint[0] + vectorToNextWaypoint[1]*vectorToNextWaypoint[1]), 
+                                        vectorToNextWaypoint[1] / sqrt(vectorToNextWaypoint[0]*vectorToNextWaypoint[0] + vectorToNextWaypoint[1]*vectorToNextWaypoint[1])};
         
-        // project one vector onto the other to find out how far along the route the POI is
-        double projectionLength = vectorToObstacle[0] * unitVectorToNextWaypoint[0] + vectorToObstacle[1] * unitVectorToNextWaypoint[1];
+    // project one vector onto the other to find out how far along the route the POI is
+    double projectionLength = vectorToObstacle[0] * unitVectorToNextWaypoint[0] + vectorToObstacle[1] * unitVectorToNextWaypoint[1];
         
-        // use the projection length and the direction to get the coordinates of the POI
-        x = start->point->getX() + projectionLength * unitVectorToNextWaypoint[0];
-        y = start->point->getY() + projectionLength * unitVectorToNextWaypoint[1];
+    // use the projection length and the direction to get the coordinates of the POI
+    x = start->point->getX() + projectionLength * unitVectorToNextWaypoint[0];
+    y = start->point->getY() + projectionLength * unitVectorToNextWaypoint[1];
         
-        x_hat = unitVectorToNextWaypoint[0];
-        y_hat = unitVectorToNextWaypoint[1];
+    x_hat = unitVectorToNextWaypoint[0];
+    y_hat = unitVectorToNextWaypoint[1];
 
-        // free up memory
-        delete vectorToNextWaypoint;
-        delete vectorToObstacle;
-        delete unitVectorToNextWaypoint;
+    // free up memory
+    delete vectorToNextWaypoint;
+    delete vectorToObstacle;
+    delete unitVectorToNextWaypoint;
 
-        return {x, y, x_hat, y_hat};
+    return {x, y, x_hat, y_hat};
+}
+
+int NAVnode::getIndexOfObstacle(Obstacle* thing){
+    for(int i = 0; i < obstacleCount; i++){
+        if(thing->getX() == obstacles[i]->getX() && thing->getY() == obstacles[i]->getY())
+            return i;
     }
+    return -1;
+}
 
-    int getIndexOfObstacle(Obstacle* thing){
-        for(int i = 0; i < obstacleCount; i++){
-            if(thing->getX() == obstacles[i]->getX() && thing->getY() == obstacles[i]->getY())
-                return i;
-        }
-        return -1;
+std::string NAVnode::getRouteToFollowName(){
+    string name;
+    switch(routeToFollow){
+        case Route1: name = "Route 1"; break;
+        case Route2: name = "Route 2"; break;
+        case Route3: name = "Route 3"; break;
+        case Route4: name = "Route 4"; break;
+        case Route5: name = "Route 5"; break;
     }
+    return name;
+}
+
+std::string NAVnode::getRouteToEditName(){
+    string name;
+    switch(routeToEdit){
+        case Route1: name = "Route 1"; break;
+        case Route2: name = "Route 2"; break;
+        case Route3: name = "Route 3"; break;
+        case Route4: name = "Route 4"; break;
+        case Route5: name = "Route 5"; break;
+    }
+    return name;
+}
+
+std::string NAVnode::getPreferenceName(){
+    string name;
+    switch(preference){
+        case geodetic: name = "Geodetic"; break;
+        case local: name = "Local"; break;
+        case earthCentered: name = "Earth Centred Earth Fixed"; break;
+    }
+    return name;
+}
+
+std::string NAVnode::getCircumnavigationStyleName(){
+    string name;
+    switch(circumnavigationStyle){
+        case reroute: name = "Reroute"; break;
+        case trackCrawling: name = "Track Crawling"; break;
+        case automatic_Circumnavigation_Off: name = "Automatic Circumnavigation Off"; break;
+    }
+    return name;
+}
 
     // Constructor
-public:
-    NAVnode() : Node("NAVnode") {
+NAVnode::NAVnode() : Node("NAVnode") {
         
-        currentPosition = new Waypoint(0.0, 0.0);
-        currentVelocity.speed = 0;
-        currentVelocity.heading = 0;
+    currentPosition = new Waypoint(0.0, 0.0);
+    currentVelocity.speed = 0;
+    currentVelocity.heading = 0;
 
-        debug = false;
-        returnToBase = false;
-        obstacleCount = 0;
-        obstacleLimit = 10;
-        obstacles = new Obstacle*[obstacleLimit];
-        waypointCount = 0;
+    debug = false;
+    returnToBase = false;
         
-        northernMapLimit = 100;
-        southernMapLimit = 100;
-        westernMapLimit = 100;
-        easternMapLimit = 100;
+    obstacleCount = 0;
+    obstacleLimit = 10;
+    waypointCount = 0;
+    timeSinceLastVelocityPublishing = 0;
+
+    obstacles = new Obstacle*[obstacleLimit];
+    for (int i = 0; i < obstacleLimit; i++) {
+        obstacles[i] = nullptr;
+    }
+
+    for (int i = 0; i < 5; i++) {
+        lastFiveWaypoints[i] = currentPosition;
+    }
         
-        preference = local;
-        circumnavigationStyle = reroute;
-        routeSelected = Route1;
-
-        // create topics
-        // here, we're using a queue size of 1 because it is more desireable to lose some data
-        // than to be using outdated position data
-        VelocityPublisher = this->create_publisher<navigation_interfaces::msg::Velocity>("Velocity", 1);
-
-
-        // create services
-        StopNavigatingServer = this->create_service<navigation_interfaces::srv::VoidService>("StopNavigating", std::bind(&NAVnode::stopNavigating, this, std::placeholders::_1, std::placeholders::_2));
-        SelectRouteServer = this->create_service<navigation_interfaces::srv::SelectRoute>("SelectRoute", std::bind(&NAVnode::selectRoute, this, std::placeholders::_1, std::placeholders::_2));
-        ResetHomeServer = this->create_service<navigation_interfaces::srv::ResetHome>("ResetHome", std::bind(&NAVnode::resetHome, this, std::placeholders::_1, std::placeholders::_2));
-        ClearRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("clearRoute", std::bind(&NAVnode::clearRoute, this, std::placeholders::_1, std::placeholders::_2));
+    northernMapLimit = 100;
+    southernMapLimit = 100;
+    westernMapLimit = 100;
+    easternMapLimit = 100;
         
-        ToggleDebugServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDebug", std::bind(&NAVnode::toggleDebug, this, std::placeholders::_1, std::placeholders::_2));
-        TogglePreferenceServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreference", std::bind(&NAVnode::togglePreference, this, std::placeholders::_1, std::placeholders::_2));
-        ToggleRouteServer = this->create_service<navigation_interfaces::srv::VoidService>("TogglePreferenc", std::bind(&NAVnode::togglePreference, this, std::placeholders::_1, std::placeholders::_2));
-        ToggleCircumnavigationStyleServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleCircumnavigationStyle", std::bind(&NAVnode::toggleCircumnavigationStyle, this, std::placeholders::_1, std::placeholders::_2));
-        ToggleDirectionServer = this->create_service<navigation_interfaces::srv::VoidService>("ToggleDirection", std::bind(&NAVnode::toggleDirection, this, std::placeholders::_1, std::placeholders::_2));
+    preference = local;
+    circumnavigationStyle = reroute;
+    routeToFollow = Route1;
 
-        AddLocalWaypointServer = this->create_service<navigation_interfaces::srv::AddLocalWaypoint>("AddLocalWaypoint", std::bind(&NAVnode::addLocalWaypoint, this, std::placeholders::_1, std::placeholders::_2));
-        AddLocalWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", std::bind(&NAVnode::addLocalWaypointAtIndex, this, std::placeholders::_1, std::placeholders::_2));
-        AddLocalObstacleServer = this->create_service<navigation_interfaces::srv::AddLocalObstacle>("AddLocalObstacle", std::bind(&NAVnode::addLocalObstacle, this, std::placeholders::_1, std::placeholders::_2));
+    std::string gnss_port = this->declare_parameter<std::string>("gnss_port", "/dev/ttyUSB0");
+    int gnss_baud = this->declare_parameter<int>("gnss_baudrate", 38400);
 
-        AddGeodeticWaypointServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypoint>("AddGeodeticWaypoint", std::bind(&NAVnode::addGeodeticWaypoint, this, std::placeholders::_1, std::placeholders::_2));
-        AddGeodeticWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddGeodeticWaypointAtIndex>("AddGeodeticWaypointAtIndex", std::bind(&NAVnode::addGeodeticWaypointAtIndex, this, std::placeholders::_1, std::placeholders::_2));
-        AddGeodeticObstacleServer = this->create_service<navigation_interfaces::srv::AddGeodeticObstacle>("AddGeodeticObstacle", std::bind(&NAVnode::addGeodeticObstacle, this, std::placeholders::_1, std::placeholders::_2));
+    // initialize serial port using the parameter
+    GNSS = new SerialPort(SerialPort::stringToCharacterArray(gnss_port.c_str()), gnss_baud);
+    GNSS->begin();
 
-        AddEarthCentredWaypointServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypoint>("AddEarthCentredWaypoint", std::bind(&NAVnode::addEarthCentredWaypoint, this, std::placeholders::_1, std::placeholders::_2));
-        AddEarthCentredWaypointAtIndexServer = this->create_service<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", std::bind(&NAVnode::addEarthCentredWaypointAtIndex, this, std::placeholders::_1, std::placeholders::_2));
-        AddEarthCentredObstacleServer = this->create_service<navigation_interfaces::srv::AddEarthCentredObstacle>("AddEarthCentredObstacle", std::bind(&NAVnode::addEarthCentredObstacle, this, std::placeholders::_1, std::placeholders::_2));
+    // create topics
+    // here, we're using a queue size of 1 because it is more desireable to lose some data
+    // than to be using outdated position data
+    VelocityPublisher = this->create_publisher<navigation_interfaces::msg::Velocity>("Velocity", 1);
+
+    // create services
+    StopNavigatingServer      = this->create_service<VoidService>("StopNavigating", std::bind(&NAVnode::stopNavigating, this, _1, _2));
+    SelectRouteToFollowServer = this->create_service<SelectRoute>("SelectRoute",    std::bind(&NAVnode::selectRoute, this, _1, _2));
+    SelectRouteToEditServer   = this->create_service<SelectRoute>("SelectRoute",    std::bind(&NAVnode::selectRouteToEdit, this, _1, _2));
+    ResetHomeServer           = this->create_service<ResetHome>  ("ResetHome",      std::bind(&NAVnode::resetHome, this, _1, _2));
+    ClearRouteServer          = this->create_service<VoidService>("clearRoute",     std::bind(&NAVnode::clearRoute, this, _1, _2));
         
-        // main timer will process gnss data once per second
-        timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
+    ToggleDebugServer                 = this->create_service<VoidService>("ToggleDebug",                 std::bind(&NAVnode::toggleDebug, this, _1, _2));
+    TogglePreferenceServer            = this->create_service<VoidService>("TogglePreference",            std::bind(&NAVnode::togglePreference, this, _1, _2));
+    ToggleRouteToFollowServer         = this->create_service<VoidService>("ToggleRouteToFollow",         std::bind(&NAVnode::toggleRoute, this, _1, _2));
+    ToggleRouteToEditServer           = this->create_service<VoidService>("ToggleRouteToEdit",           std::bind(&NAVnode::toggleRouteToEdit, this, _1, _2));
+    ToggleCircumnavigationStyleServer = this->create_service<VoidService>("ToggleCircumnavigationStyle", std::bind(&NAVnode::toggleCircumnavigationStyle, this, _1, _2));
+    ToggleDirectionServer             = this->create_service<VoidService>("ToggleDirection",             std::bind(&NAVnode::toggleDirection, this, _1, _2));
 
-        // velocity timer will calculate and publish current velocity vector every 5 seconds
-        //auto secondaryTimer = this->create_wall_timer(5s, std::bind(&NavigationSystem::velocityTimer, this));
+    AddLocalWaypointServer        = this->create_service<AddLocalWaypoint>       ("AddLocalWaypoint",        std::bind(&NAVnode::addLocalWaypoint, this, _1, _2));
+    AddLocalWaypointAtIndexServer = this->create_service<AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", std::bind(&NAVnode::addLocalWaypointAtIndex, this, _1, _2));
+    AddLocalObstacleServer        = this->create_service<AddLocalObstacle>       ("AddLocalObstacle",        std::bind(&NAVnode::addLocalObstacle, this, _1, _2));
+
+    AddGeodeticWaypointServer        = this->create_service<AddGeodeticWaypoint>       ("AddGeodeticWaypoint",        std::bind(&NAVnode::addGeodeticWaypoint, this, _1, _2));
+    AddGeodeticWaypointAtIndexServer = this->create_service<AddGeodeticWaypointAtIndex>("AddGeodeticWaypointAtIndex", std::bind(&NAVnode::addGeodeticWaypointAtIndex, this, _1, _2));
+    AddGeodeticObstacleServer        = this->create_service<AddGeodeticObstacle>       ("AddGeodeticObstacle",        std::bind(&NAVnode::addGeodeticObstacle, this, _1, _2));
+
+    AddEarthCentredWaypointServer        = this->create_service<AddEarthCentredWaypoint>       ("AddEarthCentredWaypoint",        std::bind(&NAVnode::addEarthCentredWaypoint, this, _1, _2));
+    AddEarthCentredWaypointAtIndexServer = this->create_service<AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", std::bind(&NAVnode::addEarthCentredWaypointAtIndex, this, _1, _2));
+    AddEarthCentredObstacleServer        = this->create_service<AddEarthCentredObstacle>       ("AddEarthCentredObstacle",        std::bind(&NAVnode::addEarthCentredObstacle, this, _1, _2));
+
+    RemoveLocalObstacleServer        = this->create_service<RemoveLocal>        ("RemoveLocalObstacle",        std::bind(&NAVnode::removeLocalObstacle, this, _1, _2));
+    RemoveGeodeticObstacleServer     = this->create_service<RemoveGeodetic>     ("RemoveGeodeticObstacle",     std::bind(&NAVnode::removeGeodeticObstacle, this, _1, _2));
+    RemoveEarthCentredObstacleServer = this->create_service<RemoveEarthCentred> ("RemoveEarthCentredObstacle", std::bind(&NAVnode::removeEarthCentredObstacle, this, _1, _2));
+
+    RemoveLocalWaypointServer        = this->create_service<RemoveLocal>        ("RemoveLocalWaypoint",        std::bind(&NAVnode::removeLocalWaypoint, this, _1, _2));
+    RemoveGeodeticWaypointServer     = this->create_service<RemoveGeodetic>     ("RemoveGeodeticWaypoint",     std::bind(&NAVnode::removeGeodeticWaypoint, this, _1, _2));
+    RemoveEarthCentredWaypointServer = this->create_service<RemoveEarthCentred> ("RemoveEarthCentredWaypoint", std::bind(&NAVnode::removeEarthCentredWaypoint, this, _1, _2));
+    RemoveLastWaypointServer         = this->create_service<RemoveLastWaypoint> ("RemoveLastWaypoint",         std::bind(&NAVnode::removeLastWaypoint, this, _1, _2));
+
+    SendToGNSSServer   = this->create_service<SendToGNSS>   ("SendToGNSS",   std::bind(&NAVnode::sendToGNSS, this, _1, _2));
+    ReadFromGNSSServer = this->create_service<ReadFromGNSS> ("ReadFromGNSS", std::bind(&NAVnode::readFromGNSS, this, _1, _2));
+
+    // create action server
+    FollowRouteServer = rclcpp_action::create_server<NAVaction>(
+        this,
+        "FollowRoute",
+        std::bind(&NAVnode::followRoute_Goal, this, _1, _2),
+        std::bind(&NAVnode::followRoute_Cancel, this, _1),
+        std::bind(&NAVnode::followRoute_Accepted, this, _1)
+    );
+
+    //main timer will process gnss data once per second
+    timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
+
     }
 
     // timers
-    void mainTimer(){
-        updatePositonData();
-        pointsVisited.add(currentPosition);
+void NAVnode::mainTimer(){
+    updatePositonData();
 
-        if (debug){
-            // debug mode will print the current value for all our variables to the ros terminal thatt the navigation node is active in
-            RCLCPP_INFO(this->get_logger(), 
-                "Current coordinates: %f N %f W \n\r" 
-                "Current velocity: %f m/s @ %f degrees \n\r" 
-                "Route Selected: %d Coordinate Preference: %d Circumnavigation style: %d \n\r" 
-                "Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", 
-                currentPosition->getLatitude(), currentPosition->getLongitude(),
-                currentVelocity.speed, currentVelocity.heading,
-                static_cast<int>(routeSelected), static_cast<int>(preference), static_cast<int>(circumnavigationStyle),
-                waypointCount, obstacleCount, obstacleLimit);
-        }
+    if (debug){
+        // debug mode will print the current value for all our variables to the ros terminal thatt the navigation node is active in
+        
+        printf("Current coordinates: %f N %f W \n", currentPosition->getLatitude(), currentPosition->getLatitude());
+        printf("Current velocity: %f m/s @ %f degrees \n", currentVelocity.speed, currentVelocity.heading);
+        printf("Route to Follow: %s Route to Edit: %s Coordinate Preference: %s Circumnavigation style: %s \n", getRouteToFollowName().c_str(), getRouteToEditName().c_str(), getPreferenceName().c_str(), getCircumnavigationStyleName().c_str());
+        printf("Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", waypointCount, obstacleCount, obstacleLimit);
+    }
 
+    if (timeSinceLastVelocityPublishing < 5) {
         lastFiveWaypoints[timeSinceLastVelocityPublishing] = currentPosition;
-
-        if (timeSinceLastVelocityPublishing >= 5){
-            updateVelocity();
-            VelocityPublisher->publish(currentVelocity);
-        }
+        timeSinceLastVelocityPublishing++;
     }
 
-    //void velocityTimer(){}
+    if (timeSinceLastVelocityPublishing >= 5){
+        pointsVisited.add(currentPosition);
+        updateVelocity();
+        VelocityPublisher->publish(currentVelocity);
+        timeSinceLastVelocityPublishing = 0;
+    }
+}
 
-    /*
-        updatePositionData()
-        --------------------
-        method that will get the current position of the rover from the gnss module and update the "currentPosition" Waypoint
-    */
-    void updatePositonData(){
-        
+void NAVnode::updatePositonData(){
+        cout << GNSS->read() << '\n';
+
+        currentPosition = new Waypoint(0,0); // change these coordinatesonce we learn how to parse the message from the GNSS
     }
 
-    /*
-        updateVelocity()
-        --------------------
-        method that will estimate the current velocity of the rover
-        it will use a vector average over the last 4 waypoints with respect to the position of the 5th to get the velocity
+void NAVnode::updateVelocity(){
+    double x = 0.0, y = 0.0, dX = 0.0, dY = 0.0;
 
-        **NOTE** this calculates the average velocity of the rover over the last 5 seconds
-        (or more accurately its an average of the last 4 seconds and there's a 1 second gap between intervals where we calculate the velocity)
-        this is aweful, but since we are mainly going to be using the directional data to calibrate the heading indicator that is 
-        powered by the IMU, this is good enough
-    */
-    void updateVelocity(){
-        double x,y,dX,dY;
+    if (!lastFiveWaypoints[0]) return;
 
-        for(int i = 1; i < 5; i++){
-            dX += lastFiveWaypoints[i]->getX() - lastFiveWaypoints[0]->getX();
-            dY += lastFiveWaypoints[i]->getY() - lastFiveWaypoints[0]->getY();
-        }
-
-        x = abs(dX/4); 
-        y = abs(dY/4);
-
-        // calculate speed
-        currentVelocity.speed = sqrt(x*x + y*y)/4;
-
-        //calculate heading
-        if (dX == 0 && dY == 0);
-        else if (dX > 0 && dY > 0) // 1st quadrant
-            currentVelocity.heading = 90  - currentPosition->radToDeg(std::asin(y/x));
-        else if (dX < 0 && dY > 0) // 2nd quadrant
-            currentVelocity.heading = 270 + currentPosition->radToDeg(std::asin(y/x));
-        else if (dX < 0 && dY < 0) // 3rd quadrant
-            currentVelocity.heading = 270 - currentPosition->radToDeg(std::asin(y/x));
-        else if (dX > 0 && dY < 0) // 4th quadrant
-            currentVelocity.heading = 90  + currentPosition->radToDeg(std::asin(y/x));
-        
+    for(int i = 1; i < 5; i++){
+        if (!lastFiveWaypoints[i]) continue;
+        dX += lastFiveWaypoints[i]->getX() - lastFiveWaypoints[0]->getX();
+        dY += lastFiveWaypoints[i]->getY() - lastFiveWaypoints[0]->getY();
     }
+
+    x = std::abs(dX / 4.0); 
+    y = std::abs(dY / 4.0);
+
+    // calculate speed
+    currentVelocity.speed = std::sqrt(x * x + y * y) / 4.0;
+
+    // calculate heading
+    if (dX == 0.0 && dY == 0.0) {
+        // stationary
+    } else if (x > 0.0) {
+        double ratio = y / x;
+        if (ratio > 1.0) ratio = 1.0;
+        double angleDeg = currentPosition->radToDeg(std::asin(ratio));
+
+        if (dX > 0 && dY >= 0) currentVelocity.heading = 90.0 - angleDeg;
+        else if (dX < 0 && dY >= 0) currentVelocity.heading = 270.0 + angleDeg;
+        else if (dX < 0 && dY < 0) currentVelocity.heading = 270.0 - angleDeg;
+        else if (dX > 0 && dY < 0) currentVelocity.heading = 90.0 + angleDeg;
+    }
+}
 
     // service callback functions
-    void stopNavigating(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
+void NAVnode::stopNavigating(const std::shared_ptr<VoidService::Request> request, 
+                                std::shared_ptr<VoidService::Response> response){
 
+}
+
+void NAVnode::togglePreference(const std::shared_ptr<VoidService::Request> request, 
+                                std::shared_ptr<VoidService::Response> response){
+    switch(preference){
+        case(local): preference = geodetic;          break;
+        case(geodetic): preference = earthCentered;  break;
+        default: preference = local;                 break;
     }
+}
 
-    void togglePreference(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-        switch(preference){
-            case(local): preference = geodetic;
-            case(geodetic): preference = earthCentered;
-            default: preference = local;
+void NAVnode::toggleRoute(const std::shared_ptr<VoidService::Request> request, 
+                            std::shared_ptr<VoidService::Response> response){
+    switch(routeToFollow){
+        case(Route1): routeToFollow = Route2; break;
+        case(Route2): routeToFollow = Route3; break;
+        case(Route3): routeToFollow = Route4; break;
+        case(Route4): routeToFollow = Route5; break;
+        default: routeToFollow = Route1;      break;
+    }
+}
+
+void NAVnode::toggleRouteToEdit(const std::shared_ptr<VoidService::Request> request, 
+                            std::shared_ptr<VoidService::Response> response){
+    switch(routeToEdit){
+        case(Route1): routeToEdit = Route2; break;
+        case(Route2): routeToEdit = Route3; break;
+        case(Route3): routeToEdit = Route4; break;
+        case(Route4): routeToEdit = Route5; break;
+        default: routeToEdit = Route1;      break;
+    }
+}
+
+void NAVnode::toggleDebug(const std::shared_ptr<VoidService::Request> request, 
+                            std::shared_ptr<VoidService::Response> response){
+    debug = !debug;
+}
+
+void NAVnode::toggleDirection(const std::shared_ptr<VoidService::Request> request, 
+                                std::shared_ptr<VoidService::Response> response){
+    returnToBase = !returnToBase;
+}
+
+void NAVnode::toggleCircumnavigationStyle(const std::shared_ptr<VoidService::Request> request, 
+                                            std::shared_ptr<VoidService::Response> response){
+    switch(circumnavigationStyle){
+        case(reroute):       circumnavigationStyle = trackCrawling;                  break;
+        case(trackCrawling): circumnavigationStyle = automatic_Circumnavigation_Off; break;
+        default:             circumnavigationStyle = reroute;                        break;
+    }
+}
+
+void NAVnode::selectRoute(const std::shared_ptr<SelectRoute::Request> request, 
+                            std::shared_ptr<SelectRoute::Response> response){
+    switch(request->route){
+        case Route1: routeToFollow = Route1; break;
+        case Route2: routeToFollow = Route2; break;
+        case Route3: routeToFollow = Route3; break;
+        case Route4: routeToFollow = Route4; break;
+        case Route5: routeToFollow = Route5; break;
+        default: cout << "Error: invalid Route selection" << endl;
+    }
+}
+
+void NAVnode::selectRouteToEdit(const std::shared_ptr<SelectRoute::Request> request, 
+                            std::shared_ptr<SelectRoute::Response> response){
+    switch(request->route){
+        case Route1: routeToEdit = Route1; break;
+        case Route2: routeToEdit = Route2; break;
+        case Route3: routeToEdit = Route3; break;
+        case Route4: routeToEdit = Route4; break;
+        case Route5: routeToEdit = Route5; break;
+        default: cout << "Error: invalid Route selection" << endl;
+    }
+}
+
+void NAVnode::resetHome(const std::shared_ptr<ResetHome::Request> request, 
+                        std::shared_ptr<ResetHome::Response> response){
+    if (Waypoint::checkPassword(request->password))
+        response->success = true;
+    else 
+        response->success = false;
+}
+
+void NAVnode::clearRoute(const std::shared_ptr<VoidService::Request> request, 
+                            std::shared_ptr<VoidService::Response> response){
+    routes[routeToEdit].clear();
+}
+
+void NAVnode::addLocalWaypoint(const std::shared_ptr<AddLocalWaypoint::Request> request, 
+                                std::shared_ptr<AddLocalWaypoint::Response> response){
+    routes[routeToEdit].add(new Waypoint(request->x, request->y));
+}
+
+void NAVnode::addLocalWaypointAtIndex(const std::shared_ptr<AddLocalWaypointAtIndex::Request> request, 
+                                        std::shared_ptr<AddLocalWaypointAtIndex::Response> response){
+    routes[routeToEdit].add(new Waypoint(request->x, request->y), request->index);
+}
+
+void NAVnode::addLocalObstacle(const std::shared_ptr<AddLocalObstacle::Request> request, 
+                                std::shared_ptr<AddLocalObstacle::Response> response){
+    (void)response;
+    // check if the array of obstacles is full
+    if (obstacleCount == obstacleLimit){
+        int newLimit = obstacleLimit + 10;
+        Obstacle** biggerArray = new Obstacle*[newLimit];
+
+        for(int i = 0; i < obstacleCount; i++){
+            biggerArray[i] = obstacles[i];
         }
-    }
-
-    void toggleRoute(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-        switch(routeSelected){
-            case(Route1): routeSelected = Route2;
-            case(Route2): routeSelected = Route3;
-            case(Route3): routeSelected = Route4;
-            case(Route4): routeSelected = Route5;
-            default: routeSelected = Route1;
-        }
-    }
-
-    void toggleDebug(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-        debug = !debug;
-    }
-
-    void toggleDirection(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-        returnToBase = !returnToBase;
-    }
-
-    void toggleCircumnavigationStyle(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-        switch(circumnavigationStyle){
-            case(reroute): circumnavigationStyle = trackCrawling;
-            case(trackCrawling): circumnavigationStyle = automatic_Circumnavigation_Off;
-            default: circumnavigationStyle = reroute;
-        }
-    }
-
-    void selectRoute(const std::shared_ptr<navigation_interfaces::srv::SelectRoute::Request> request, std::shared_ptr<navigation_interfaces::srv::SelectRoute::Response> response){
-        switch(request->route){
-            case Route1: routeSelected = Route1; break;
-            case Route2: routeSelected = Route2; break;
-            case Route3: routeSelected = Route3; break;
-            case Route4: routeSelected = Route4; break;
-            case Route5: routeSelected = Route5; break;
-            default: cout << "Error: invalid Route selection" << endl;
-        }
-    }
-
-    void resetHome(const std::shared_ptr<navigation_interfaces::srv::ResetHome::Request> request, std::shared_ptr<navigation_interfaces::srv::ResetHome::Response> response){
-        if (Waypoint::checkPassword(request->password))
-            response->success = true;
-        else 
-            response->success = false;
-    }
-
-    void clearRoute(const std::shared_ptr<navigation_interfaces::srv::VoidService::Request> request, std::shared_ptr<navigation_interfaces::srv::VoidService::Response> response){
-        routes[routeSelected].clear();
-    }
-
-    void addLocalWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypoint::Response> response){
-        routes[routeSelected].add(new Waypoint(request->x, request->y));
-    }
-
-    void addLocalWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalWaypointAtIndex::Response> response){
-        routes[routeSelected].add(new Waypoint(request->x, request->y), request->index);
-    }
-
-    void addLocalObstacle(const std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddLocalObstacle::Response> response){
-        // check if the array of obstacles is full
-        if (obstacleCount == obstacleLimit){
-            // increase make a larger array to store obstacles
-            obstacleLimit += 10;
-            Obstacle* biggerArray[obstacleLimit] = {};
-
-            // copy over existing obstacles (by iterating through existing array)
-            for(int i = 0; i < obstacleLimit - 10; i++){
-                biggerArray[i] = obstacles[i];
-                obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
-            }
-
-            // clean up memory and rename our new array (by reusing the old pointer);
-            delete obstacles;
-            obstacles = biggerArray;
-        }
-
-        // add new obstacle. post incrementing to handle indexing differences
-        if (request->radius <= 0)
-            obstacles[obstacleCount++] = new Obstacle(request->x, request->y); // use default radius if no radius is entered
-        else
-            obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->radius);
-    }
-
-    void addGeodeticWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypoint::Response> response){
-        routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true));
-    }
-
-    void addGeodeticWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticWaypointAtIndex::Response> response){
-        routes[routeSelected].add(new Waypoint(request->longitude, request->latitude, request->altitude, true), request->index);
-    }
-
-    void addGeodeticObstacle(const std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddGeodeticObstacle::Response> response){
-        // check if the array of obstacles is full
-        if (obstacleCount == obstacleLimit){
-            // increase make a larger array to store obstacles
-            obstacleLimit += 10;
-            Obstacle* biggerArray[obstacleLimit] = {};
-
-            // copy over existing obstacles (by iterating through existing array)
-            for(int i = 0; i < obstacleLimit - 10; i++){
-                biggerArray[i] = obstacles[i];
-                obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
-            }
-
-            // clean up memory and rename our new array (by reusing the old pointer);
-            delete obstacles;
-            obstacles = biggerArray;
+        for(int i = obstacleCount; i < newLimit; i++){
+            biggerArray[i] = nullptr; // this is so our newly expanded slots don't contain garbage pointers
         }
 
-        // add new obstacle. post incrementing to handle indexing differences
-        if (request->radius <= 0)
-            obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, true); // use default radius if no radius is entered
-        else
-            obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, request->radius, true);
+        // clean up memory and rename our new array (by reusing the old pointer);
+        delete[] obstacles;
+        obstacles = biggerArray;
+        obstacleLimit = newLimit;
     }
 
-    void addEarthCentredWaypoint(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypoint::Response> response){
-        routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false));
-    }
+    // add new obstacle. post incrementing to handle indexing differences
+    if (request->radius <= 0)
+        obstacles[obstacleCount++] = new Obstacle(request->x, request->y);
+    else
+        obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->radius);
 
-    void addEarthCentredWaypointAtIndex(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredWaypointAtIndex::Response> response){
-        routes[routeSelected].add(new Waypoint(request->x, request->y, request->z, false), request->index);
-    }
+    checkWaypointCollisions();
+    checkTrackCollisions();
+}
 
-    void addEarthCentredObstacle(const std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Request> request, std::shared_ptr<navigation_interfaces::srv::AddEarthCentredObstacle::Response> response){
-        // check if the array of obstacles is full
-        if (obstacleCount == obstacleLimit){
-            // increase make a larger array to store obstacles
-            obstacleLimit += 10;
-            Obstacle* biggerArray[obstacleLimit] = {};
+void NAVnode::addGeodeticWaypoint(const std::shared_ptr<AddGeodeticWaypoint::Request> request, 
+                                    std::shared_ptr<AddGeodeticWaypoint::Response> response){
+    routes[routeToEdit].add(new Waypoint(request->longitude, request->latitude, request->altitude, true));
+}
 
-            // copy over existing obstacles (by iterating through existing array)
-            for(int i = 0; i < obstacleLimit - 10; i++){
-                biggerArray[i] = obstacles[i];
-                obstacles[i] = nullptr; // this is so we don't delete our obstacles when we purge the old array from memory
-            }
+void NAVnode::addGeodeticWaypointAtIndex(const std::shared_ptr<AddGeodeticWaypointAtIndex::Request> request, 
+                                            std::shared_ptr<AddGeodeticWaypointAtIndex::Response> response){
+    routes[routeToEdit].add(new Waypoint(request->longitude, request->latitude, request->altitude, true), request->index);
+}
 
-            // clean up memory and rename our new array (by reusing the old pointer);
-            delete obstacles;
-            obstacles = biggerArray;
+void NAVnode::addGeodeticObstacle(const std::shared_ptr<AddGeodeticObstacle::Request> 
+                                    request, std::shared_ptr<AddGeodeticObstacle::Response> response){
+    (void)response;
+    // check if the array of obstacles is full
+    if (obstacleCount == obstacleLimit){
+        // increase make a larger array to store obstacles
+        int newLimit = obstacleLimit + 10;
+        Obstacle** biggerArray = new Obstacle*[newLimit];
+
+        // copy over existing obstacles (by iterating through existing array)
+        for(int i = 0; i < obstacleCount; i++){
+            biggerArray[i] = obstacles[i];
+        }
+        for(int i = obstacleCount; i < newLimit; i++){
+            biggerArray[i] = nullptr;
         }
 
-        // add new obstacle. post incrementing to handle indexing differences
-        if (request->radius <= 0)
-            obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, false); // use default radius if no radius is entered
-        else
-            obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, request->radius, false);
+        // clean up memory and rename our new array (by reusing the old pointer);
+        delete[] obstacles;
+        obstacles = biggerArray;
+        obstacleLimit = newLimit;
     }
 
+    // add new obstacle. post incrementing to handle indexing differences
+    if (request->radius <= 0)
+        obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, true);
+    else
+        obstacles[obstacleCount++] = new Obstacle(request->longitude, request->latitude, request->altitude, request->radius, true);
+
+    checkWaypointCollisions();
+    checkTrackCollisions();
+}
+
+void NAVnode::addEarthCentredWaypoint(const std::shared_ptr<AddEarthCentredWaypoint::Request> request, 
+                                        std::shared_ptr<AddEarthCentredWaypoint::Response> response){
+    routes[routeToEdit].add(new Waypoint(request->x, request->y, request->z, false));
+}
+
+void NAVnode::addEarthCentredWaypointAtIndex(const std::shared_ptr<AddEarthCentredWaypointAtIndex::Request> request, 
+                                                std::shared_ptr<AddEarthCentredWaypointAtIndex::Response> response){
+    routes[routeToEdit].add(new Waypoint(request->x, request->y, request->z, false), request->index);
+}
+
+void NAVnode::addEarthCentredObstacle(const std::shared_ptr<AddEarthCentredObstacle::Request> request, 
+                                        std::shared_ptr<AddEarthCentredObstacle::Response> response){
+    (void)response;
+    // check if the array of obstacles is full
+    if (obstacleCount == obstacleLimit){
+        // increase make a larger array to store obstacles
+        int newLimit = obstacleLimit + 10;
+        Obstacle** biggerArray = new Obstacle*[newLimit];
+
+        // copy over existing obstacles (by iterating through existing array)
+        for(int i = 0; i < obstacleCount; i++){
+            biggerArray[i] = obstacles[i];
+        }
+        for(int i = obstacleCount; i < newLimit; i++){
+            biggerArray[i] = nullptr;
+        }
+
+        // clean up memory and rename our new array (by reusing the old pointer);
+        delete[] obstacles;
+        obstacles = biggerArray;
+        obstacleLimit = newLimit;
+    }
+
+    // add new obstacle. post incrementing to handle indexing differences
+    if (request->radius <= 0)
+        obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, false);
+    else
+        obstacles[obstacleCount++] = new Obstacle(request->x, request->y, request->z, request->radius, false);
+
+    checkWaypointCollisions();
+    checkTrackCollisions();
+}
 
 
+void NAVnode::removeLocalWaypoint(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response){
+    if(routes[routeToFollow].removePoint(request->x, request-> y))
+        response->output = "Waypoint removed successfully";
+    else
+        response->output = "Waypoint not in Route";
+}
 
+void NAVnode::removeLocalObstacle(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response){
+    
+}
+
+void NAVnode::removeGeodeticWaypoint(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response){
+    if(routes[routeToFollow].removeGeodeticPoint(request->latitude, request-> longitude))
+        response->output = "Waypoint removed successfully";
+    else
+        response->output = "Waypoint not in Route";
+}
+
+void NAVnode::removeGeodeticObstacle(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response){
+
+}
+
+void NAVnode::removeEarthCentredWaypoint(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response){
+    if(routes[routeToFollow].removeEarthCentredPoint(request->x, request->y, request->z))
+        response->output = "Waypoint removed successfully";
+    else
+        response->output = "Waypoint not in Route";
+}
+
+void NAVnode::removeEarthCentredObstacle(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response){
+
+}
+
+void NAVnode::removeLastWaypoint(const std::shared_ptr<RemoveLastWaypoint::Request> request, std::shared_ptr<RemoveLastWaypoint::Response> response){
+    ListNode* temp = routes[routeToFollow].getHead();
+
+    if(temp == nullptr)
+        response->output = "List is already empty";
+    else {
+        routes[routeToFollow].removeLast();
+        response->output = "Last Waypoint Successfull Removed";
+    }
+}
+
+void NAVnode::sendToGNSS(const std::shared_ptr<SendToGNSS::Request> request, std::shared_ptr<SendToGNSS::Response> response){
+    GNSS->write(request->outgoing);
+}
+
+void NAVnode::readFromGNSS(const std::shared_ptr<ReadFromGNSS::Request> request, std::shared_ptr<ReadFromGNSS::Response> response){
+    response->incoming = GNSS->read();
+    cout << response->incoming << '\n';
+}
 
 
     // action callback functions
-};
+rclcpp_action::GoalResponse NAVnode::followRoute_Goal(const rclcpp_action::GoalUUID & uuid, std::shared_ptr<const NAVaction::Goal> goal){
+    cout << "Received goal6 request" << '\n';
+    (void)uuid;
+    return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE; // accept all new goals without question
+}
+
+rclcpp_action::CancelResponse NAVnode::followRoute_Cancel(const std::shared_ptr<NAVGoalHandle> goal_handle){
+    cout<< "Received cancel request" << '\n';
+    (void)goal_handle;
+    return rclcpp_action::CancelResponse::ACCEPT; // blindly accepts all cancel requests
+}
+
+void NAVnode::followRoute_Accepted(const std::shared_ptr<NAVGoalHandle> goal_handle){
+    // this needs to return quickly, lest we block the executor, so we spin up a new thread
+    std::thread{std::bind(&NAVnode::followRoute_Execute, this, _1), goal_handle}.detach();
+}
+
+void NAVnode::followRoute_Execute(const std::shared_ptr<NAVGoalHandle> goal_handle){
+    // actual method that executes the action
+    rclcpp::Rate loop_rate(1);
+    auto feedback = std::make_shared<NAVaction::Feedback>();
+    auto result = std::make_shared<NAVaction::Result>();
+
+    ListNode* current = routes[routeToFollow].getHead();
+    int count = 0;
+    const double arrivalThreshold = 1.0; // arrival tolerance in meters
+
+    if (current == nullptr) {
+        feedback->progress = "Route is empty. Standing by at current position.";
+        goal_handle->publish_feedback(feedback);
+        loop_rate.sleep();
+        result->success = "Route is empty. No waypoints to follow.";
+        goal_handle->succeed(result);
+        return;
+    }
+
+    while(current != nullptr && rclcpp::ok()){
+        if (goal_handle->is_canceling()){
+            result->success = "Navigation Prematurely Terminated";
+            goal_handle->canceled(result);
+            return;
+        }
+
+        // calculate the distance from rover's currentPosition to current target waypoint
+        double dx = currentPosition->getX() - current->point->getX();
+        double dy = currentPosition->getY() - current->point->getY();
+        double distance = std::sqrt(dx * dx + dy * dy);
+
+        std::stringstream ss;
+        ss << "Navigating to Waypoint " << (count + 1)
+           << " [Target: (" << current->point->getX() << ", " << current->point->getY() 
+           << ") | Current: (" << currentPosition->getX() << ", " << currentPosition->getY()
+           << ") | Dist: " << std::fixed << std::setprecision(2) << distance << "m]";
+        
+        feedback->progress = ss.str();
+        goal_handle->publish_feedback(feedback);
+
+        // advance to next waypoint once within arrival threshold distance
+        if (distance <= arrivalThreshold) {
+            count++;
+            current = current->next;
+        }
+
+        loop_rate.sleep();
+    }
+
+    if(rclcpp::ok()){
+        result->success = "great success";
+        goal_handle->succeed(result);
+    }
+}
 
 //////////////////////////////////////////////////////////////////////////
 // TODO

@@ -49,6 +49,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/AddEarthCentredWaypointAtIndex.srv"
   "srv/AddEarthCentredObstacle.srv"
 
+  "srv/RemoveLocalWaypoint.srv"
+  "srv/RemoveGeodeticWaypoint.srv"
+  "srv/RemoveEarthCentredWaypoint.srv"
+  "srv/RemoveLastWaypoint.srv"
+
 )
 
 ament_export_dependencies(rosidl_default_runtime)
