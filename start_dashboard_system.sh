@@ -4,6 +4,14 @@
 # Resolve the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+# Removed FastDDS profiles configuration as it was breaking IPC
+echo "Cleaning up any old background processes..."
+pkill -f dashboard_helper 2>/dev/null
+pkill -f rosbridge_websocket 2>/dev/null
+pkill -f rosapi 2>/dev/null
+pkill -f python.*http.server 2>/dev/null
+sleep 1
+
 echo "=== Starting D.A.V.E. Dashboard Backend System ==="
 echo "Project Directory: $SCRIPT_DIR"
 

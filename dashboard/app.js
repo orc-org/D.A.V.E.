@@ -220,7 +220,7 @@ function setupROSInterfaces() {
     gripperActionClient = new ROSLIB.ActionClient({
         ros: ros,
         serverName: '/gripper_command',
-        actionName: 'arm_interfaces/action/GripperCommand'
+        actionName: 'arm_interfaces/GripperCommand'
     });
 
     // Subscribers
@@ -1606,7 +1606,7 @@ function loadURDFClient() {
         ros: ros,
         tfClient: tfClient,
         rootObject: viewer3D.scene,
-        param: '/robot_state_publisher:robot_description'
+        param: 'robot_description'
     });
 }
 

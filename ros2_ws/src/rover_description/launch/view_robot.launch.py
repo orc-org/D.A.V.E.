@@ -2,10 +2,14 @@ import os
 import xacro
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
 from launch_ros.actions import Node
 
 def generate_launch_description():
     package_name = 'rover_description'
+    use_rviz = LaunchConfiguration('use_rviz', default='true')
     
     # path to Xacro file
     xacro_path = os.path.join(
@@ -23,6 +27,11 @@ def generate_launch_description():
         'default.rviz')
 
     return LaunchDescription([
+        DeclareLaunchArgument(
+            'use_rviz',
+            default_value='true',
+            description='Whether to start the desktop RViz GUI'
+        ),
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
@@ -33,6 +42,7 @@ def generate_launch_description():
             package='rviz2',
             executable='rviz2',
             name='rviz2',
-            arguments=['-d', rviz_config_path]
+            arguments=['-d', rviz_config_path],
+            condition=IfCondition(use_rviz)
         )
     ])
