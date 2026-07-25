@@ -10,12 +10,16 @@ class JoyDrive : public rclcpp::Node
 public:
     JoyDrive() : Node("drive_node")
     {
+        rclcpp::QoS sub_qos(10);
+        sub_qos.reliable();
+        sub_qos.durability_volatile();
+
         joy_sub_ = this->create_subscription<sensor_msgs::msg::Joy>(
-            "/joy", 10,
+            "/joy", sub_qos,
             std::bind(&JoyDrive::joyCallback, this, std::placeholders::_1));
 
         cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-            "/cmd_vel", 10,
+            "/cmd_vel", sub_qos,
             std::bind(&JoyDrive::cmdVelCallback, this, std::placeholders::_1));
         
         mode_sub_ = this->create_subscription<std_msgs::msg::String>(
@@ -27,12 +31,16 @@ public:
             std::bind(&JoyDrive::sensitivityCallback, this, std::placeholders::_1));
 
 
-        front_left_pub_  = this->create_publisher<std_msgs::msg::Float32>("/motor/front_left", 10); 
-        front_right_pub_ = this->create_publisher<std_msgs::msg::Float32>("/motor/front_right", 10);
-        rear_left_pub_   = this->create_publisher<std_msgs::msg::Float32>("/motor/rear_left", 10);
-        rear_right_pub_  = this->create_publisher<std_msgs::msg::Float32>("/motor/rear_right", 10);
+        rclcpp::QoS pub_qos(10);
+        pub_qos.reliable();
+        pub_qos.durability_volatile();
 
-        RCLCPP_INFO(this->get_logger(), "Drive node running");
+        front_left_pub_  = this->create_publisher<std_msgs::msg::Float32>("/motor/front_left", pub_qos); 
+        front_right_pub_ = this->create_publisher<std_msgs::msg::Float32>("/motor/front_right", pub_qos);
+        rear_left_pub_   = this->create_publisher<std_msgs::msg::Float32>("/motor/rear_left", pub_qos);
+        rear_right_pub_  = this->create_publisher<std_msgs::msg::Float32>("/motor/rear_right", pub_qos);
+
+        RCLCPP_INFO(this->get_logger(), "Drive node running (QoS Mismatch Protection Active)");
     }
 
 private:
