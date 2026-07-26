@@ -39,7 +39,7 @@ class DashboardHelperNode(Node):
             },
             "vesc_driver": {
                 "name": "VESC BLDC Wheel Driver",
-                "cmd": ["ros2", "run", "drive_package", "vesc_can_driver_node", "--ros-args", "-p", "fl_can_id:=53", "-p", "fr_can_id:=44", "-p", "rl_can_id:=-1", "-p", "rr_can_id:=-1"],
+                "cmd": ["ros2", "run", "drive_package", "vesc_can_driver_node", "--ros-args", "-p", "fl_can_id:=53", "-p", "fr_can_id:=44", "-p", "rl_can_id:=48", "-p", "rr_can_id:=7"],
                 "pattern": "vesc_can_driver_node",
                 "proc": None
             },

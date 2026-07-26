@@ -30,8 +30,8 @@ public:
         // CAN IDs for the 4 wheels
         this->declare_parameter<int>("fl_can_id", 53);
         this->declare_parameter<int>("fr_can_id", 44);
-        this->declare_parameter<int>("rl_can_id", -1);
-        this->declare_parameter<int>("rr_can_id", -1);
+        this->declare_parameter<int>("rl_can_id", 48);
+        this->declare_parameter<int>("rr_can_id", 7);
 
         can_interface_ = this->get_parameter("can_interface").as_string();
         control_mode_ = this->get_parameter("control_mode").as_string();
