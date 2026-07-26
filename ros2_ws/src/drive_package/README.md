@@ -129,7 +129,7 @@ ros2 topic pub --once /motor/front_left std_msgs/msg/Float32 "{data: 0.5}"
 
 
 
-VESC_ID="00000035"
+VESC_ID="00000007"
     INTERFACE="can0"
     
     echo "Ramping up to 50%..."
