@@ -1,15 +1,15 @@
 ROS BRIDGE ------------------
+Emergency stop
 Ros connection check
 Controller connection check
+Set drive mode
 Arm position
 Hand state
 Arm button push trigger
 Wheel power monitor
-Set control sensitivity
-Set drive mode
 Toggle lights
 Camera servo position
-Emergency stop
+Set control sensitivity
 Bearing monitor
 Latitude/Longitude monitor
 Terminal input
