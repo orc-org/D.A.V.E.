@@ -18,3 +18,4 @@ Terminal output
 FRONT END -----------------
 Gnss options - in progress
 fix camera servo position css - in progress
+responsive buttons (if time permits)
