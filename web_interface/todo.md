@@ -1,5 +1,5 @@
 ROS BRIDGE ------------------
-Emergency stop - in progress
+Emergency stop - done
 Ros connection check - done
 Controller connection check
 Set drive mode
