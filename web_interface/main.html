@@ -9,6 +9,7 @@
 
     <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
+    <script src="ros_bridge.js"></script>
 </head>
 
 <body>
@@ -22,7 +23,7 @@
         <div id="connection-status">
             <div class="circle" id="connection-status-indicator"></div>
             <span id="connection-status-text">Disconnected</span>
-            <input id="connection-port" placeholder="ws://localhost:9090"></input>
+            <input id="connection-port" placeholder="ws://localhost:9090" value="ws://localhost:9090"></input>
             <button id="connect-button">CONNECT</button>
         </div>
 

@@ -1,6 +1,6 @@
 ROS BRIDGE ------------------
 Emergency stop - in progress
-Ros connection check - in progress
+Ros connection check - done
 Controller connection check
 Set drive mode
 Arm position

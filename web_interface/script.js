@@ -66,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Servo Position
-
 document.addEventListener('DOMContentLoaded', () => {
     const positionButtons = document.querySelectorAll('button.toggle-three[position]');
 
