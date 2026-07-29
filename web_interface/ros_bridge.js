@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const dataInput = document.getElementById("connection-status-text")
             const indicator = document.getElementById("connection-status-indicator")
 
+            console.log("A")
+
             var ros = new ROSLIB.Ros({
                 url: url
             });
