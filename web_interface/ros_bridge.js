@@ -1,6 +1,15 @@
 var connected = false;
 var stopAll = false;
 
+var ros = new ROSLIB.Ros({'url': 'ws://localhost:9090'});
+
+// ROS Topics
+
+// ROS Subscribers
+let armGlobalPosSub = null;
+
+
+
 document.addEventListener("DOMContentLoaded", () => {
     // Trigger emergency stop on button press
     function emergencyStop() {
@@ -9,15 +18,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     document.getElementById("emergency-stop").onclick = emergencyStop
 
-function checkStop() {
-    if (stopAll) {
-        console.log("Emergency Stop");
-        return true;
+    function checkStop() {
+        if (stopAll) {
+            console.log("Emergency Stop");
+            return true;
+        }
+        return false;
     }
-    return false;
-}
 
- 
+
     // Connect to ROS
     function connectROS() {
         const url = document.getElementById('connection-port').value
@@ -26,16 +35,14 @@ function checkStop() {
 
         if (checkStop()) return;
 
-
-        console.log("A")
-
-        var ros = new ROSLIB.Ros({
+        ros = new ROSLIB.Ros({
             url: url
         });
 
         ros.on('connection', function () {
             dataInput.textContent = "Connected"
             indicator.style.backgroundColor = 'var(--accent-active)';
+            setupROS();
         })
 
         ros.on('error', function () {
@@ -52,3 +59,33 @@ function checkStop() {
     document.getElementById("connect-button").onclick = connectROS;
 
 });
+
+
+function setupROS() {
+    // Arm Position Monitoring
+    armGlobalPosSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/arm_global_pos',
+        messageType: 'geometry_msgs/msg/Point'
+    });
+    armGlobalPosSub.subscribe((msg) => {
+        message = msg.z;
+        height = message.toFixed(2);
+        const div = document.getElementById('arm-height');
+        const dataInput = div.querySelector('.data-input');
+        dataInput.textContent = height + "m";
+    })
+
+    // Hand position Monitoring
+    handStateSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/gripper_state',
+        messageType: 'std_msgs/msg/Float32'
+    });
+    handStateSub.subscribe((msg) => {
+        message = msg.data;
+        const div = document.getElementById('hand-pos');
+        const dataInput = div.querySelector('.data-input');
+        dataInput.textContent = message.toFixed(2) + "m";
+    });
+}

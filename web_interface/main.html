@@ -34,7 +34,7 @@
     <div style="display: flex;">
         <div id="main-cont">
             <div id="video-stream"></div>
-            <div id="data-cont">
+            <div class="data-cont">
                 <p class="data-title">Arm Position</p>
                 <div class="cont">
                     <div class="data" id="arm-height" style="width: 45%;">
@@ -43,7 +43,7 @@
                     </div>
                     <div class="data" id="hand-pos">
                         <span class="data-title-inner">hand position</span>
-                        <span class="data-input">0.20m (open)</span>
+                        <span class="data-input">0.00m</span>
                     </div>
                 </div>
                 <div class="data" id="button-push" style="width: 95%;">
@@ -133,73 +133,6 @@
 
                 </div>
 
-                <div class="data-title">Camera Servo Positions</div>
-
-                <div class="cont" id="camera-servo">
-                    <div class="data" id="camera-servo-front">
-
-                        <span class="data-title-inner">front cam position</span>
-
-                        <div class="cont">
-                            <span class="data-input">centre</span>
-                            <button class="toggle-three" position="left">left</button>
-                            <button class="toggle-three" position="centre">centre</button>
-                            <button class="toggle-three" position="right">right</button>
-                        </div>
-
-                    </div>
-                    <div class="data" id="camera-servo-arm">
-
-                        <span class="data-title-inner">arm cam position</span>
-
-                        <div class="cont">
-                            <span class="data-input">centre</span>
-                            <button class="toggle-three" position="left">left</button>
-                            <button class="toggle-three" position="centre">centre</button>
-                            <button class="toggle-three" position="right">right</button>
-                        </div>
-
-                    </div>
-                </div>
-                <div class="cont">
-                    <div class="data" id="camera-servo-left">
-
-                        <span class="data-title-inner">left cam position</span>
-
-                        <div class="cont">
-                            <span class="data-input">centre</span>
-                            <button class="toggle-three" position="left">left</button>
-                            <button class="toggle-three" position="centre">centre</button>
-                            <button class="toggle-three" position="right">right</button>
-                        </div>
-
-                    </div>
-                    <div class="data" id="camera-servo-right">
-
-                        <span class="data-title-inner">right cam position</span>
-
-                        <div class="cont">
-                            <span class="data-input">centre</span>
-                            <button class="toggle-three" position="left">left</button>
-                            <button class="toggle-three" position="centre">centre</button>
-                            <button class="toggle-three" position="right">right</button>
-                        </div>
-
-                    </div>
-                </div>
-                <div class="data" id="camera-servo-rear" style="width: 50%;">
-
-                    <span class="data-title-inner">rear cam position</span>
-
-                    <div class="cont">
-                        <span class="data-input">centre</span>
-                            <button class="toggle-three" position="left">left</button>
-                            <button class="toggle-three" position="centre">centre</button>
-                            <button class="toggle-three" position="right">right</button>
-                    </div>
-
-                </div>
-
                 <div class="data">
                     <div class="cont">
                         <button class="button-single" id="emergency-stop">emergency stop</button>
@@ -210,18 +143,84 @@
             </div>
         </div>
 
+
         <div id="gnss-cont">
 
         </div>
     </div>
+    <div id="lower-cont">
 
-    <div id="terminal-cont">
-        <div class="cont" style="width: 98%;">
-            <span><u>Terminal</u></span>
-            <button id="terminal-submit">Submit</button>
+        <div class="data-cont" style="width: 60%; margin-bottom: 1%; height:200px">
+
+
+            <div class="data-title">Camera Servo Positions</div>
+
+            <div class="cont" id="camera-servo">
+                <div class="data" id="camera-servo-front">
+                    <div class="servo-header">
+                        <span class="data-title-inner">front cam position</span>
+                        <span class="data-input">centre</span>
+                    </div>
+                    <div class="cont servo-buttons">
+                        <button class="toggle-three" position="left">left</button>
+                        <button class="toggle-three" position="centre">centre</button>
+                        <button class="toggle-three" position="right">right</button>
+                    </div>
+                </div>
+                <div class="data" id="camera-servo-arm">
+                    <div class="servo-header">
+                        <span class="data-title-inner">arm cam position</span>
+                        <span class="data-input">centre</span>
+                    </div>
+                    <div class="cont servo-buttons">
+                        <button class="toggle-three" position="left">left</button>
+                        <button class="toggle-three" position="centre">centre</button>
+                        <button class="toggle-three" position="right">right</button>
+                    </div>
+                </div>
+                <div class="data" id="camera-servo-left">
+                    <div class="servo-header">
+                        <span class="data-title-inner">left cam position</span>
+                        <span class="data-input">centre</span>
+                    </div>
+                    <div class="cont servo-buttons">
+                        <button class="toggle-three" position="left">left</button>
+                        <button class="toggle-three" position="centre">centre</button>
+                        <button class="toggle-three" position="right">right</button>
+                    </div>
+                </div>
+                <div class="data" id="camera-servo-right">
+                    <div class="servo-header">
+                        <span class="data-title-inner">right cam position</span>
+                        <span class="data-input">centre</span>
+                    </div>
+                    <div class="cont servo-buttons">
+                        <button class="toggle-three" position="left">left</button>
+                        <button class="toggle-three" position="centre">centre</button>
+                        <button class="toggle-three" position="right">right</button>
+                    </div>
+                </div>
+                <div class="data" id="camera-servo-rear">
+                    <div class="servo-header">
+                        <span class="data-title-inner">rear cam position</span>
+                        <span class="data-input">centre</span>
+                    </div>
+                    <div class="cont servo-buttons">
+                        <button class="toggle-three" position="left">left</button>
+                        <button class="toggle-three" position="centre">centre</button>
+                        <button class="toggle-three" position="right">right</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="data-cont" style="width: 37.5%; margin-bottom: 1%; height: 200px">
+
+
         </div>
 
-        <textarea id="terminal-in"></textarea>
+
+
+
     </div>
 
 </body>

@@ -3,8 +3,8 @@ Emergency stop - done
 Ros connection check - done
 Controller connection check
 Set drive mode
-Arm position
-Hand state
+Arm position - done
+Hand state - done
 Arm button push trigger
 Wheel power monitor
 Toggle lights

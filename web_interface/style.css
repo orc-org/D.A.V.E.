@@ -55,6 +55,25 @@ button {
     border: 1.5px solid var(--border-colour);
 }
 
+#lower-cont {
+    background-color: var(--bg-secondary);
+    border-radius: 15px;
+    box-shadow: 0px 0px 50px rgba(0, 0, 0, 0.5);
+
+    width: 97.5%;
+    height: fit-content;
+
+    margin-top: 1%;
+    margin-left: auto;
+    margin-right: auto;
+
+    padding: 1%;
+    padding-bottom: 0;
+    display: flex;
+
+    border: 1.5px solid var(--border-colour);
+}
+
 .circle {
     background: var(--accent-inactive);
     width: 20px;
@@ -188,7 +207,7 @@ button {
 
 /* Data Container */
 
-#data-cont {
+.data-cont {
     border-radius: 15px;
     background-color: var(--bg-tertiary);
 
@@ -198,6 +217,25 @@ button {
     margin-right: auto;
     margin-left: auto;
     border: 1.5px solid var(--border-colour);
+}
+#lower-cont .data-cont .data-title {
+    margin-top: 1%;
+    margin-bottom: 0.5%;
+    margin-left: 3%;
+
+}
+#lower-cont .data-cont .cont .data-title-inner {
+    margin-top: 0%;
+    margin-bottom: 0.5%;
+    margin-left: 3%;
+}
+
+#lower-cont .data{
+    padding-top: 1%;
+    padding-bottom: 1%;
+    margin-top: 0%;
+    margin-bottom: 0.5%;
+    width: 98%
 }
 
 .data {
@@ -209,6 +247,8 @@ button {
     padding-top: 2%;
     padding-bottom: 2%;
 
+    margin-top: 1%;
+    margin-bottom: 1%;
     margin-left: auto;
     margin-right: auto;
 
@@ -335,58 +375,4 @@ text-align: center;
     margin-right: auto;
     margin-left: auto;
     border: 1.5px solid var(--border-colour);
-}
-
-/* Terminal */
-
-#terminal-cont {
-    background-color: var(--bg-secondary);
-
-    margin-top: 1%;
-    height: 250px;
-    border-radius: 15px;
-    box-shadow: 0px 0px 50px rgba(0, 0, 0, 0.5);
-
-    width: 98.5%;
-    margin-left: auto;
-    margin-right: auto;
-    justify-content: center;
-
-    padding: 0.5%;
-    padding-bottom: 0;
-
-    border: 1.5px solid var(--border-colour);
-}
-
-#terminal-cont span {
-    color: var(--text-light);
-    font-size: 18px;
-    margin-top: 0.2%;
-
-}
-
-#terminal-cont textarea {
-    color: var(--text-default);
-    height: 80%;
-    width: 99.5%;
-    margin-top: 0.5%;
-
-    text-align: start;
-
-    background-color: var(--bg-tertiary);
-    border: 1.5px solid var(--border-colour);
-    border-radius: 15px;
-
-}
-
-#terminal-submit {
-    background-color: var(--bg-tertiary);
-    color: var(--text-default);
-    border-radius: 8px;
-
-    height: 25px;
-    width: 100px;
-
-    margin-right: 0px;
-    margin-left: auto;
 }
