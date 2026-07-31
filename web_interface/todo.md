@@ -1,7 +1,7 @@
 ROS BRIDGE ------------------
 Emergency stop - done
 Ros connection check - done
-Controller connection check
+Controller connection check - done
 Set drive mode
 Arm position - done
 Hand state - done
