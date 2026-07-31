@@ -108,6 +108,18 @@ function setupROS() {
         valueDisplay.textContent = `${Math.round(percentage)}%`;
     })
 
+    // Joy Subscriber (So we can use controller)
+    const joySubscriber = new ROSLIB.Topic({
+        ros: ros,
+        name: "/joy",
+        messageType: "sensor_msgs/msg/Joy"
+    });
+
+    joySubscriber.subscribe(function(msg) {
+        controller.connected();
+        controller.update(msg);
+    });
+    
     // Arm Position Control
     armTargetPub = new ROSLIB.Topic({
         ros: ros,
