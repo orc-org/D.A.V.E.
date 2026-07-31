@@ -30,7 +30,7 @@ function checkStop() {
 
 
         console.log("A")
-
+        //This was originally var ros
         ros = new ROSLIB.Ros({
             url: url
         });
