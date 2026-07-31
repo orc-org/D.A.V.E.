@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const dataInput = sensitivityDiv.querySelector('.data-input');
     const buttons = sensitivityDiv.querySelectorAll('.toggle-two');
+
     function updateStates(clickedButton) {
         buttons.forEach(button => {
             if (button === clickedButton) {
@@ -33,11 +34,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    //Should make a function that both this js and controller.js can access
+    window.setModeButton = function(button){
+
+        dataInput.textContent = button.textContent;
+        updateStates(button);
+    };
+
+    //Mouse Click changes button
     buttons.forEach(button => {
         button.addEventListener('click', () => {
-            dataInput.textContent = button.textContent;
-            updateStates(button);
+            //dataInput.textContent = button.textContent;
+            setModeButton(button);
         });
+    
     });
 });
 
