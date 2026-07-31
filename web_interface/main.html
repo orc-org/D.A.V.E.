@@ -133,9 +133,10 @@
 
                 </div>
 
+                <div class="data-title">Emergency Stop</div>
                 <div class="data">
                     <div class="cont">
-                        <button class="button-single" id="emergency-stop">emergency stop</button>
+                        <button class="button-single" id="emergency-stop">stop all</button>
                     </div>
 
                 </div>
@@ -213,7 +214,20 @@
                 </div>
             </div>
         </div>
-        <div class="data-cont" style="width: 37.5%; margin-bottom: 1%; height: 200px">
+        <div class="data-cont" id="pos-cont" style="width: 37.5%; margin-bottom: 1%; height: 200px">
+            <div class="data-title">Arm Control</div>
+
+            <div class="slide-container">
+                <span class="data-title-inner">hand position</span>
+                <span class="data-input" id="hand-pos-value">50%</span>
+                <input type="range" min="0" max="100" value="50" class="slider" id="hand-pos-slider">
+            </div>
+
+            <div class="slide-container">
+                <span class="data-title-inner">arm position</span>
+                <span class="data-input" id="arm-pos-value">50%</span>
+                <input type="range" min="0" max="100" value="50" class="slider" id="arm-pos-slider">
+            </div>
 
 
         </div>
