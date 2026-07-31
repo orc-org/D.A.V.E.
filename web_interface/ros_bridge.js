@@ -1,5 +1,6 @@
 var connected = false;
 var stopAll = false;
+let ros; //Added this so "ros" can be used outside the connectROS function it was originally in
 
 document.addEventListener("DOMContentLoaded", () => {
     // Trigger emergency stop on button press
@@ -19,6 +20,7 @@ function checkStop() {
 
  
     // Connect to ROS
+    
     function connectROS() {
         const url = document.getElementById('connection-port').value
         const dataInput = document.getElementById("connection-status-text")
@@ -29,13 +31,27 @@ function checkStop() {
 
         console.log("A")
 
-        var ros = new ROSLIB.Ros({
+        ros = new ROSLIB.Ros({
             url: url
         });
 
         ros.on('connection', function () {
             dataInput.textContent = "Connected"
             indicator.style.backgroundColor = 'var(--accent-active)';
+            
+            //This subscribes to Joy Node so we can use the controller with the ui.
+            const joySubscriber = new ROSLIB.Topic({
+                ros: ros,
+                name: "/joy",
+                messageType: "sensor_msgs/msg/Joy"
+            });
+
+            joySubscriber.subscribe(function(msg) {
+                controller.connected();
+                controller.update(msg);
+                
+            });
+            
         })
 
         ros.on('error', function () {
