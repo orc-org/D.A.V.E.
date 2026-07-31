@@ -2,6 +2,7 @@
 #include "sensor_msgs/msg/joy.hpp"
 #include "std_msgs/msg/float32.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "std_msgs/msg/string.hpp"
 #include <algorithm>
 
 class JoyDrive : public rclcpp::Node
@@ -16,6 +17,11 @@ public:
         cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
             "/cmd_vel", 10,
             std::bind(&JoyDrive::cmdVelCallback, this, std::placeholders::_1));
+        
+        mode_sub_ = this->create_subscription<std_msgs::msg::String>(
+            "/control_mode", 10,
+            std::bind(&JoyDrive::modeCallback, this, std::placeholders::_1));
+
 
         front_left_pub_  = this->create_publisher<std_msgs::msg::Float32>("/motor/front_left", 10); 
         front_right_pub_ = this->create_publisher<std_msgs::msg::Float32>("/motor/front_right", 10);
@@ -26,8 +32,43 @@ public:
     }
 
 private:
+    void modeCallback(const std_msgs::msg::String::SharedPtr msg)
+    {
+        current_mode_ = msg->data;
+
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Drive mode changed to: %s",
+            current_mode_.c_str()
+        );
+        
+        //Should delete later once other control scheme enabled
+        if (current_mode_ != "drive")
+        {
+            stopMotors();
+        }
+    }
+
+    //Probably delete later
+    void stopMotors()
+    {
+        std_msgs::msg::Float32 stop;
+        stop.data = 0.0;
+
+        front_left_pub_->publish(stop);
+        front_right_pub_->publish(stop);
+        rear_left_pub_->publish(stop);
+        rear_right_pub_->publish(stop);
+    }
+
     void joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg)
     {
+        //Should change later to make rover drivable somehow while in arm mode
+        if (current_mode_ != "drive")
+        {
+            return;
+        }
+
         // Grabbing Controller Inputs
         float steering = msg->axes[0];   // left stick (X axis only for left/right)
         float lt_raw = msg->axes[4];     // left trigger
@@ -103,6 +144,12 @@ private:
 
     void cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
     {
+        //Should change later to make rover drivable somehow while in arm mode
+        if (current_mode_ != "drive")
+        {
+            return;
+        }
+
         float throttle = msg->linear.x;
         float steering = msg->angular.z;
 
@@ -127,9 +174,11 @@ private:
         RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
             "cmd_vel -> Left Wheels: %.2f | Right Wheels: %.2f", left, right);
     }
+    std::string current_mode_ = "drive";
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr mode_sub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr front_left_pub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr front_right_pub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr rear_left_pub_;
