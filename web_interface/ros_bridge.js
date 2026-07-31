@@ -14,6 +14,8 @@ let armTargetPub = null;
 
 // ROS Subscribers
 let armGlobalPosSub = null;
+let currentArmX = 0.0;
+let currentArmY = 0.0;
 
 
 
@@ -26,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("emergency-stop").onclick = emergencyStop
 
     // Connect to ROS
+
     function connectROS() {
         const url = document.getElementById('connection-port').value
         const dataInput = document.getElementById("connection-status-text")
@@ -88,25 +91,21 @@ function setupROS() {
         messageType: 'geometry_msgs/msg/Point'
     });
     armGlobalPosSub.subscribe((msg) => {
+        currentArmX = Number(msg.x);
+        currentArmY = Number(msg.y);
         const currentHeight = Number(msg.z);
         const height = currentHeight.toFixed(2);
         const div = document.getElementById('arm-height');
-        const dataInput = div?.querySelector('.data-input');
-        if (dataInput) {
-            dataInput.textContent = height + "m";
-        }
+        const dataInput = div.querySelector('.data-input');
+        dataInput.textContent = (height / 8.88).toFixed(2) + "m";
 
         const slider = document.getElementById('arm-pos-slider');
         const valueDisplay = document.getElementById('arm-pos-value');
-        const maxHeight = 4.0;
+        const maxHeight = 13.5;
         const percentage = Math.max(0, Math.min(100, (currentHeight / maxHeight) * 100));
 
-        if (slider) {
-            slider.value = percentage;
-        }
-        if (valueDisplay) {
-            valueDisplay.textContent = `${Math.round(percentage)}%`;
-        }
+        slider.value = percentage;
+        valueDisplay.textContent = `${Math.round(percentage)}%`;
     })
 
     // Arm Position Control
@@ -133,7 +132,7 @@ function setupROS() {
         message = msg.data;
         const div = document.getElementById('hand-pos');
         const dataInput = div.querySelector('.data-input');
-        dataInput.textContent = ((1 - message) * 0.2).toFixed(2)  + "m";
+        dataInput.textContent = ((1 - message) * 0.2).toFixed(2) + "m";
 
         const slider = document.getElementById('hand-pos-slider');
         slider.value = 100 * message;
@@ -157,13 +156,25 @@ function setupROS() {
 
 }
 
-function publishArmPosition() {
+function publishArmPosition(value) {
     if (checkStop()) return;
+    if (!armTargetPub) {
+        console.warn("armTargetPub not initialized");
+        return;
+    }
+
+    const percentage = Number(value);
+    const maxHeight = 13.5;
+    const clampedPerc = Math.max(0, Math.min(100, percentage));
+    const z = (clampedPerc / 100) * maxHeight;
+
     const msg = new ROSLIB.Message({
-        x: targetX,
-        y: targetY,
-        z: targetZ
+        x: currentArmX,
+        y: currentArmY,
+        z: z
     });
+
+    console.log("Publishing arm position (z): " + z);
 
     armTargetPub.publish(msg);
 }
@@ -191,7 +202,6 @@ function publishHandPosition(value) {
             position: clampedValue
         }
     });
-    
+
     handGoal.send();
 }
-
