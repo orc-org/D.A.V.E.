@@ -242,6 +242,121 @@
                 </div>
             </section>
 
+            <!-- MORSE CODE & ENIGMA DECODER SECTION -->
+            <section class="viewport-section glass-panel" id="morse-enigma-section" style="margin-bottom: 20px;">
+                <div class="panel-header">
+                    <h2>ENIGMA & MORSE CODE DECODER</h2>
+                    <span class="system-tag">CIRC_HEIST</span>
+                </div>
+                
+                <div style="padding: 15px; display: flex; flex-direction: column; gap: 15px;">
+                    <!-- Status Cards Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        
+                        <!-- Card 1: Node Statuses & Actions -->
+                        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <span style="font-weight: bold; font-size: 0.85rem; color: var(--text-main);">PROCESS CONTROLS</span>
+                                    <span style="font-size: 0.7rem; color: var(--accent-blue);">OPTICAL/UDP MORSE</span>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span class="module-status-dot stopped" id="status-dot-morse_recorder"></span>
+                                            <span style="font-size: 0.8rem; font-weight: 600;">Morse Recorder Node</span>
+                                        </div>
+                                        <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-morse_recorder" data-module="morse_recorder" style="padding: 4px 12px; font-size: 0.7rem;">START</button>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span class="module-status-dot stopped" id="status-dot-enigma_node"></span>
+                                            <span style="font-size: 0.8rem; font-weight: 600;">Enigma Decoder Node</span>
+                                        </div>
+                                        <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-enigma_node" data-module="enigma_node" style="padding: 4px 12px; font-size: 0.7rem;">START</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; gap: 8px;">
+                                    <button id="btn-morse-audio-toggle" class="neon-btn-blue" style="flex: 1; font-size: 0.7rem; padding: 6px 0;">🔊 CW BEEP: OFF</button>
+                                    <button id="btn-morse-simulate" class="neon-btn-green" style="flex: 1; font-size: 0.7rem; padding: 6px 0;">⚡ SIMULATE SIGNAL</button>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button id="btn-morse-get-password" class="neon-btn-green" style="flex: 2; font-size: 0.75rem; padding: 8px 0;">QUERY TERMINAL PASSWORD</button>
+                                    <button id="btn-morse-clear" class="neon-btn-red" style="flex: 1; font-size: 0.7rem; padding: 8px 0;">🧹 CLEAR</button>
+                                </div>
+                            </div>
+
+                            <!-- Live Optical Threshold Calibration Block -->
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 5px; display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted);">OPTICAL TELEMETRY:</span>
+                                    <span id="morse-pixel-telemetry" style="font-size: 0.7rem; font-family: monospace; font-weight: bold; color: var(--accent-amber);">WHITE PIXELS: 0 px</span>
+                                </div>
+
+                                <!-- Brightness Threshold Slider -->
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-muted);">
+                                        <span>BRIGHTNESS CUTOFF (0-255):</span>
+                                        <span id="val-brightness-thresh" style="color: var(--accent-cyan); font-family: monospace;">240</span>
+                                    </div>
+                                    <input type="range" id="slider-brightness-thresh" min="50" max="255" value="240" step="1" style="width: 100%; accent-color: var(--accent-cyan); cursor: pointer;">
+                                </div>
+
+                                <!-- Pixel Count Threshold Slider -->
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-muted);">
+                                        <span>PIXEL COUNT CUTOFF (10-1000 px):</span>
+                                        <span id="val-pixel-thresh" style="color: var(--accent-cyan); font-family: monospace;">150</span>
+                                    </div>
+                                    <input type="range" id="slider-pixel-thresh" min="10" max="1000" value="150" step="5" style="width: 100%; accent-color: var(--accent-cyan); cursor: pointer;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Password Readout & Live Stream -->
+                        <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 10px;">
+                            <div>
+                                <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted);">DECODED TERMINAL PASSWORD:</span>
+                                <div id="morse-terminal-password" style="background: #000; border: 1px solid var(--accent-amber); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 1.2rem; font-weight: bold; color: var(--accent-amber); text-align: center; margin-top: 4px; text-shadow: 0 0 8px var(--accent-amber-glow);">
+                                    [ UNLOCKED / WAITING ]
+                                </div>
+                            </div>
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted);">LIVE TELETYPE DECODER:</span>
+                                    <span id="morse-last-char-badge" style="font-size: 0.65rem; background: rgba(0,229,255,0.1); border: 1px solid var(--accent-blue); padding: 2px 6px; border-radius: 4px; color: var(--accent-blue); font-family: monospace;">SYMBOL: --</span>
+                                </div>
+                                <div id="morse-teletype-decoded" style="background: #000; border: 1px solid var(--accent-green); border-radius: 6px; padding: 8px 10px; font-family: monospace; font-size: 1rem; font-weight: bold; color: var(--accent-green); text-shadow: 0 0 6px var(--accent-green-glow); margin-top: 4px; min-height: 38px; max-height: 90px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">
+                                    [ TELETYPE READY ]
+                                </div>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted);">RAW MORSE STREAM (/morse_code):</span>
+                                <div id="morse-raw-stream" style="background: #000; border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 10px; font-family: monospace; font-size: 0.85rem; color: var(--accent-blue); margin-top: 4px; max-height: 80px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">
+                                    ---
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Service Interaction & Custom Message Encoding -->
+                    <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; background: rgba(0,0,0,0.2); display: flex; gap: 12px; align-items: center;">
+                        <input type="text" id="input-morse-message" placeholder="Enter message to encode (e.g. 'HEIST PASS')..." style="flex: 1; background: #000; border: 1px solid var(--border-color); border-radius: 4px; padding: 8px 12px; color: var(--text-main); font-family: monospace; font-size: 0.8rem;">
+                        <button id="btn-morse-set-message" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 16px; white-space: nowrap;">ENCODE & SET MESSAGE</button>
+                    </div>
+
+                    <!-- Response Console -->
+                    <div>
+                        <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted);">ENIGMA SERVICE & ACTION LOG:</span>
+                        <pre id="morse-console-log" style="background: #000; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.75rem; color: var(--accent-green); max-height: 90px; overflow-y: auto; margin-top: 4px; white-space: pre-wrap;">[Enigma Machine Console Ready]</pre>
+                    </div>
+                </div>
+            </section>
+
 
             <!-- RIGHT COLUMN: Telemetry & Controls -->
             <div class="controls-column">
@@ -348,7 +463,118 @@
                         <span class="collapse-icon" id="modules-collapse-icon">▼</span>
                     </div>
                     <div class="module-list" id="modules-drawer">
-                        <!-- Populated dynamically from ROS process status topic -->
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-tf_republisher"></span>
+                                <span class="module-name">TF Web Republisher</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-tf_republisher" data-module="tf_republisher">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-state_publisher"></span>
+                                <span class="module-name">Robot State Publisher</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-state_publisher" data-module="state_publisher">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-motion_coordinator"></span>
+                                <span class="module-name">Motion Coordinator</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-motion_coordinator" data-module="motion_coordinator">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-drive_node"></span>
+                                <span class="module-name">Drive Node (Manual/Joystick)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-drive_node" data-module="drive_node">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-vesc_driver"></span>
+                                <span class="module-name">VESC BLDC Wheel Driver</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-vesc_driver" data-module="vesc_driver">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-arm_stepper_driver"></span>
+                                <span class="module-name">Arm & Gripper Steppers (DM556Y)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-arm_stepper_driver" data-module="arm_stepper_driver">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-stream_cam_0"></span>
+                                <span class="module-name">Camera 0 Streamer (CSIPort0)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-stream_cam_0" data-module="stream_cam_0">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-stream_cam_1"></span>
+                                <span class="module-name">Camera 1 Streamer (CSIPort1)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-stream_cam_1" data-module="stream_cam_1">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-gps_bridge"></span>
+                                <span class="module-name">GPS Serial Bridge</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-gps_bridge" data-module="gps_bridge">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-nav_node"></span>
+                                <span class="module-name">Navigation Controller (NAVnode)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-nav_node" data-module="nav_node">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-imu_telemetry"></span>
+                                <span class="module-name">IMU Telemetry Node</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-imu_telemetry" data-module="imu_telemetry">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-imu_kalman_filter"></span>
+                                <span class="module-name">IMU Kalman Filter</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-imu_kalman_filter" data-module="imu_kalman_filter">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-imu_launch"></span>
+                                <span class="module-name">IMU System Launch (Sim/HW)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-imu_launch" data-module="imu_launch">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-rover_ekf"></span>
+                                <span class="module-name">Rover EKF Fusion (Wheel+IMU+GPS)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-rover_ekf" data-module="rover_ekf">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-morse_recorder"></span>
+                                <span class="module-name">Morse Code Recorder (UDP/Camera)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-morse_recorder" data-module="morse_recorder">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-enigma_node"></span>
+                                <span class="module-name">Enigma Machine Decoder/Encoder</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-enigma_node" data-module="enigma_node">START</button>
+                        </div>
                     </div>
                 </section>
 
