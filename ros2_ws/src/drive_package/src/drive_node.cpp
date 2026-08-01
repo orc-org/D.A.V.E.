@@ -83,11 +83,11 @@ private:
         RCLCPP_INFO(this->get_logger(), "\n\n\tController Inputs (For Debugging): \n\n Left Trigger: %.3f, Right Trigger: %.3f, LStick X Direction: %.3f\n", lt_raw, rt_raw, steering);
 
         // NORMALIZE trigger inputs (released=1, pressed=-1 → 0..1)
-        float lt_norm = (1.0f - lt_raw) * 0.5f;   // backward  (0..1)
-        float rt_norm = (1.0f - rt_raw) * 0.5f;   // forward   (0..1)
+        float lt_norm = (1.0f - lt_raw) * 0.5f;   // forward  (0..1)
+        float rt_norm = (1.0f - rt_raw) * 0.5f;   // backward   (0..1)
         
         // Combines it into Throttle to send to motor drivers (for variable speeds)
-        float throttle = rt_norm - lt_norm;            // -1..1
+        float throttle = lt_norm - rt_norm;            // -1..1
         
         // Makes a deadzone to hopefully stop all the fluctuating values Im getting
         float deadzone = 0.05f;           // 5% deadzone around 0
