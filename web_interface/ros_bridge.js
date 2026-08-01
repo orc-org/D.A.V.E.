@@ -11,6 +11,7 @@ let handTargetPub = null;
 let armActionClient = null;
 let armTargetPub = null;
 let modePub = null;
+let sensitivityPub = null;
 
 
 // ROS Subscribers
@@ -133,7 +134,7 @@ function setupROS() {
         name: "/control_mode",
         messageType: "std_msgs/msg/String"
     });
-    console.log("Mode publisher initialized");
+    //console.log("Mode publisher initialized");
     
     //Subscribes to my wheel power topics
     wheelFLSub = new ROSLIB.Topic({
@@ -180,7 +181,12 @@ function setupROS() {
         updateWheelDisplay("wheel-br-power", msg.data);
     });
 
-
+    //Sensitivity node publisher
+    sensitivityPub = new ROSLIB.Topic({
+        ros: ros,
+        name: "/sensitivity",
+        messageType: "std_msgs/msg/String"
+    });
 
     // Arm Position Control
     armTargetPub = new ROSLIB.Topic({
@@ -305,3 +311,20 @@ function updateWheelDisplay(id, power)
 
     document.getElementById(id).textContent = percentage + "%";
 }
+
+//Adjusts the sensitivity
+function publishSensitivity(sensitivity) {
+
+    if (!sensitivityPub) {
+        console.warn("Sensitivity publisher not initialized");
+        return;
+    }
+
+    sensitivityPub.publish(new ROSLIB.Message({
+        data: sensitivity
+    }));
+
+    //console.log("Selected sensitivity:", sensitivity);
+}
+
+window.publishSensitivity = publishSensitivity;
