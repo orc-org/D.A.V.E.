@@ -2,7 +2,7 @@ ROS BRIDGE ------------------
 Emergency stop - done
 Ros connection check - done
 Controller connection check - done
-Set drive mode
+Set drive mode - done
 Arm position - done
 Hand state - done
 Arm button push trigger
