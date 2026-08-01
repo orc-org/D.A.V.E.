@@ -158,10 +158,6 @@ function setupROS() {
 
 function publishArmPosition(value) {
     if (checkStop()) return;
-    if (!armTargetPub) {
-        console.warn("armTargetPub not initialized");
-        return;
-    }
 
     const percentage = Number(value);
     const maxHeight = 13.5;
@@ -174,21 +170,15 @@ function publishArmPosition(value) {
         z: z
     });
 
-    console.log("Publishing arm position (z): " + z);
-
     armTargetPub.publish(msg);
 }
 
 function publishHandPosition(value) {
-    console.log("Publishing hand position: " + value);
-
     if (checkStop()) return;
-
-    const clampedValue = Math.max(0, Math.min(1, Number(value)));
 
     if (handTargetPub) {
         handTargetPub.publish(new ROSLIB.Message({
-            data: clampedValue
+            data: value
         }));
     }
 
@@ -199,7 +189,7 @@ function publishHandPosition(value) {
     const handGoal = new ROSLIB.Goal({
         actionClient: handActionClient,
         goalMessage: {
-            position: clampedValue
+            position: value
         }
     });
 
