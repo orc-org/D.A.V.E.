@@ -141,48 +141,29 @@
         <!-- MAIN GRID -->
         <main class="dashboard-grid">
             
-            <!-- 3D ROBOT VIEW SECTION -->
-            <section class="viewport-section glass-panel" id="urdf-viewer-section" style="margin-bottom: 20px;">
-                <div class="panel-header">
-                    <h2>3D ROBOT VIEW</h2>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <select id="camera-view-mode" class="neon-select" style="padding: 4px 8px; font-size: 0.75rem; background: var(--bg-secondary); color: var(--accent-blue); border: 1px solid var(--border-color); border-radius: 4px; font-family: monospace; cursor: pointer; outline: none;">
-                            <option value="free">FREECAM</option>
-                            <option value="orbit">ORBIT LOCK</option>
-                            <option value="chase">CHASE CAM</option>
-                        </select>
-                        <span class="system-tag">3D_MODEL</span>
-                    </div>
+            <!-- DIAGNOSTICS LOGS CONSOLE -->
+            <div id="diagnostic-console" style="margin-bottom: 10px; width: 100%; height: 100px; max-height: 100px; overflow: hidden; background: rgba(0,0,0,0.85); border: 1px solid #ffcc00; font-family: monospace; font-size: 0.65rem; color: #ffcc00; z-index: 1000; display: flex; flex-direction: column; box-sizing: border-box; transition: height 0.2s; text-align: left; border-radius: 8px;">
+                <div id="diag-header" style="background: rgba(255, 204, 0, 0.15); padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; border-bottom: 1px solid #ffcc00; flex-shrink: 0;">
+                    <span>SYSTEM DIAGNOSTIC LOGS</span>
+                    <span id="diag-collapse-btn" style="font-weight: bold;">[ HIDE ]</span>
                 </div>
-                
-                <!-- 3D URDF Viewer container -->
-                <div class="camera-viewport" id="urdf-viewer-container" style="background: #000; position: relative; min-height: 450px; flex-grow: 1; display: flex; flex-direction: column;">
-                    <div id="urdf-viewer" style="width: 100%; height: 100%; flex-grow: 1; min-height: 400px;"></div>
-                    <!-- Diagnostic Console Overlay -->
-                    <div id="diagnostic-console" style="position: absolute; bottom: 10px; right: 10px; width: calc(100% - 20px); height: 120px; max-height: 120px; overflow: hidden; background: rgba(0,0,0,0.85); border: 1px solid #ffcc00; font-family: monospace; font-size: 0.65rem; color: #ffcc00; z-index: 1000; display: flex; flex-direction: column; box-sizing: border-box; transition: height 0.2s; text-align: left;">
-                        <!-- Console Header -->
-                        <div id="diag-header" style="background: rgba(255, 204, 0, 0.15); padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; border-bottom: 1px solid #ffcc00; flex-shrink: 0;">
-                            <span>DIAGNOSTICS LOGS</span>
-                            <span id="diag-collapse-btn" style="font-weight: bold;">[ HIDE ]</span>
-                        </div>
-                        <!-- Console Logs -->
-                        <div id="diag-logs" style="flex-grow: 1; overflow-y: auto; padding: 5px;">
-                            [Diagnostics console active]
-                        </div>
-                    </div>
+                <div id="diag-logs" style="flex-grow: 1; overflow-y: auto; padding: 5px;">
+                    [Diagnostics console active]
                 </div>
+            </div>
 
-                <!-- Hidden elements to satisfy JS references safely -->
-                <div style="display: none;">
-                    <span id="hud-latency"></span>
-                    <span id="hud-fps"></span>
-                    <span id="hud-mode"></span>
-                    <span id="hud-target-coords"></span>
-                    <span id="hud-pitch"></span>
-                    <span id="hud-roll"></span>
-                    <button id="btn-toggle-view"></button> <!-- keep button for back compatibility -->
-                </div>
-            </section>
+            <!-- Hidden elements for backward JS compatibility -->
+            <div style="display: none;">
+                <div id="urdf-viewer-container"><div id="urdf-viewer"></div></div>
+                <select id="camera-view-mode"><option value="free">FREECAM</option></select>
+                <span id="hud-latency"></span>
+                <span id="hud-fps"></span>
+                <span id="hud-mode"></span>
+                <span id="hud-target-coords"></span>
+                <span id="hud-pitch"></span>
+                <span id="hud-roll"></span>
+                <button id="btn-toggle-view"></button>
+            </div>
 
             <!-- LOCATION & GPS NAVIGATION SECTION -->
             <section class="viewport-section glass-panel" id="gps-navigation-section" style="margin-bottom: 20px;">
@@ -227,9 +208,11 @@
 
                         <!-- Map Interactive Control Bar -->
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="btn-calibrate-north" class="neon-btn-green" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 130px;">SET TRUE NORTH</button>
                             <button id="btn-set-home-origin" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 120px;">SET HOME ORIGIN</button>
                             <button id="btn-set-target-waypoint" class="neon-btn-amber" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 130px;">CLICK MAP TO TARGET</button>
                             <button id="btn-center-rover" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 110px;">CENTER ROVER</button>
+                            <button id="btn-clear-path" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 100px;">CLEAR TRAIL</button>
                             <button id="btn-clear-waypoint" class="neon-btn-red" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 110px;">CLEAR WAYPOINT</button>
                         </div>
                     </div>
@@ -276,6 +259,121 @@
                             </div>
                             <div id="nmea-stream-log" style="flex-grow: 1; background: #000; border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; padding: 8px; font-family: monospace; font-size: 0.65rem; color: var(--accent-green); overflow-y: auto; max-height: 140px; line-height: 1.4; word-break: break-all;">
                                 [NMEA 0183 Stream Waiting for Serial Input or Simulator...]
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- IMU & ATTITUDE SENSORS SECTION -->
+            <section class="viewport-section glass-panel" id="imu-navigation-section" style="margin-bottom: 20px;">
+                <div class="panel-header">
+                    <h2>IMU TELEMETRY & ATTITUDE SENSORS</h2>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color);">
+                            <span class="status-indicator disconnected" id="imu-status-dot"></span>
+                            <span id="imu-status-text" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: bold;">NO IMU DATA</span>
+                        </div>
+                        <span class="system-tag">BNO085_UKF</span>
+                    </div>
+                </div>
+                
+                <div class="imu-layout-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%;">
+                    
+                    <!-- Left: 3D Attitude Dials & Motion Metrics -->
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        
+                        <!-- Attitude Indicators: Roll, Pitch, Yaw -->
+                        <div style="background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid var(--border-color); padding: 15px;">
+                            <div style="font-size: 0.75rem; font-weight: bold; color: var(--accent-blue); letter-spacing: 1px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                                <span>ATTITUDE & HEADING (EULER)</span>
+                                <span style="font-size: 0.65rem; color: var(--text-muted);" id="imu-mode-badge">FILTERED (UKF 15D)</span>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; text-align: center;">
+                                <!-- Roll -->
+                                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;">
+                                    <span style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 4px;">ROLL (X)</span>
+                                    <span id="val-imu-roll" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-blue); font-family: monospace;">0.0°</span>
+                                    <div style="margin-top: 6px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; position: relative;">
+                                        <div id="bar-imu-roll" style="height: 100%; width: 50%; background: var(--accent-blue); transition: width 0.1s, margin-left 0.1s;"></div>
+                                    </div>
+                                </div>
+                                <!-- Pitch -->
+                                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;">
+                                    <span style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 4px;">PITCH (Y)</span>
+                                    <span id="val-imu-pitch" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-green); font-family: monospace;">0.0°</span>
+                                    <div style="margin-top: 6px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; position: relative;">
+                                        <div id="bar-imu-pitch" style="height: 100%; width: 50%; background: var(--accent-green); transition: width 0.1s, margin-left 0.1s;"></div>
+                                    </div>
+                                </div>
+                                <!-- Yaw / Heading -->
+                                <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px;">
+                                    <span style="font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 4px;">YAW / HEADING</span>
+                                    <span id="val-imu-yaw" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-amber); font-family: monospace;">0.0°</span>
+                                    <div style="margin-top: 6px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; position: relative;">
+                                        <div id="bar-imu-yaw" style="height: 100%; width: 0%; background: var(--accent-amber); transition: width 0.1s;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Motion Telemetry Cards: Accel, Gyro, Odom -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">LINEAR ACCELERATION (X,Y,Z)</span>
+                                <span class="card-value" id="val-imu-accel" style="font-size: 0.8rem; color: var(--accent-blue); word-break: break-all;">X: 0.00 | Y: 0.00 | Z: 9.81 m/s²</span>
+                            </div>
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">ANGULAR VELOCITY (X,Y,Z)</span>
+                                <span class="card-value" id="val-imu-gyro" style="font-size: 0.8rem; color: var(--accent-green); word-break: break-all;">X: 0.00 | Y: 0.00 | Z: 0.00 rad/s</span>
+                            </div>
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">ESTIMATED POSITION (UKF)</span>
+                                <span class="card-value" id="val-imu-odom-pos" style="font-size: 0.8rem;">X: 0.00m | Y: 0.00m | Z: 0.00m</span>
+                            </div>
+                            <div class="telemetry-card" style="padding: 10px;">
+                                <span class="card-label">ESTIMATED VELOCITY (UKF)</span>
+                                <span class="card-value" id="val-imu-odom-vel" style="font-size: 0.8rem;">Vx: 0.00 | Vy: 0.00 | Vz: 0.00 m/s</span>
+                            </div>
+                        </div>
+
+                        <!-- Raw IMU Stream Box -->
+                        <div class="glass-panel" style="padding: 10px; flex-grow: 1; display: flex; flex-direction: column; min-height: 120px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 0.75rem; font-weight: bold; color: var(--text-muted); letter-spacing: 1px;">FORMATTED TELEMETRY STRING (/imu/telemetry_str)</span>
+                            </div>
+                            <pre id="imu-stream-log" style="flex-grow: 1; background: #000; border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; padding: 8px; font-family: monospace; font-size: 0.65rem; color: var(--accent-blue); overflow-y: auto; max-height: 100px; margin: 0; line-height: 1.3; white-space: pre-wrap;">[Waiting for /imu/telemetry_str...]</pre>
+                        </div>
+
+                    </div>
+
+                    <!-- Right: IMU Command & Service Panel -->
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        
+                        <div style="background: rgba(0,0,0,0.4); border-radius: 8px; border: 1px solid var(--border-color); padding: 15px; display: flex; flex-direction: column; gap: 10px; height: 100%;">
+                            <div style="font-size: 0.75rem; font-weight: bold; color: var(--text-main); letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;">
+                                <span>IMU COMMANDS & SERVICE CONTROLS</span>
+                                <span class="system-tag">ROS2_SERVICES</span>
+                            </div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); line-height: 1.4;">
+                                Execute hardware calibration, filter resets, and parameter query services directly on the IMU telemetry and Kalman filter nodes.
+                            </div>
+
+                            <!-- Service Action Buttons Grid -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+                                <button id="btn-imu-calibrate" class="neon-btn-green" style="font-size: 0.75rem; padding: 10px 8px;">SET TRUE NORTH (0°)</button>
+                                <button id="btn-imu-toggle-pub" class="neon-btn-blue" style="font-size: 0.75rem; padding: 10px 8px;">TOGGLE STREAM</button>
+                                <button id="btn-imu-status" class="neon-btn-blue" style="font-size: 0.75rem; padding: 10px 8px;">GET SENSOR STATUS</button>
+                                <button id="btn-imu-reset-filter" class="neon-btn-red" style="font-size: 0.75rem; padding: 10px 8px;">RESET KALMAN FILTER</button>
+                                <button id="btn-imu-get-state" class="neon-btn-green" style="font-size: 0.75rem; padding: 10px 8px; grid-column: span 2;">QUERY FILTER STATE VECTOR</button>
+                            </div>
+
+                            <!-- Service Response Log Area -->
+                            <div style="margin-top: 10px; flex-grow: 1; display: flex; flex-direction: column;">
+                                <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted); margin-bottom: 4px;">SERVICE RESPONSE / COMMAND LOG:</span>
+                                <pre id="imu-service-response-log" style="flex-grow: 1; background: #000; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.7rem; color: var(--accent-green); overflow-y: auto; min-height: 140px; margin: 0; line-height: 1.4; white-space: pre-wrap;">[Ready for IMU service calls...]</pre>
                             </div>
                         </div>
 
@@ -387,6 +485,18 @@
                             <span class="card-label">GPS FIX / ALTITUDE</span>
                             <span class="card-value" id="val-gps-telemetry-fix">NO FIX (-- m)</span>
                         </div>
+                        <div class="telemetry-card">
+                            <span class="card-label">IMU ATTITUDE (R/P/Y)</span>
+                            <span class="card-value" id="val-imu-telemetry-euler">R: --, P: --, Y: --</span>
+                        </div>
+                        <div class="telemetry-card">
+                            <span class="card-label">IMU ACCEL / GYRO</span>
+                            <span class="card-value" id="val-imu-telemetry-motion">A: -- | G: --</span>
+                        </div>
+                        <div class="telemetry-card" style="grid-column: span 2; border: 1px solid rgba(57, 255, 20, 0.3); background: rgba(57, 255, 20, 0.03);">
+                            <span class="card-label" style="color: var(--accent-green);">EKF SENSOR FUSION (/ekf/odometry)</span>
+                            <span class="card-value" id="val-ekf-telemetry-fusion" style="color: var(--accent-green); font-size: 0.8rem;">X: 0.00m | Y: 0.00m | Speed: 0.00 m/s</span>
+                        </div>
                     </div>
                 </section>
 
@@ -495,15 +605,8 @@
                         </div>
                         <div class="module-row">
                             <div class="module-info">
-                                <span class="module-status-dot stopped" id="status-dot-stepper_driver"></span>
-                                <span class="module-name">Stepper Wheel Driver</span>
-                            </div>
-                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-stepper_driver" data-module="stepper_driver">START</button>
-                        </div>
-                        <div class="module-row">
-                            <div class="module-info">
                                 <span class="module-status-dot stopped" id="status-dot-arm_stepper_driver"></span>
-                                <span class="module-name">Arm Stepper Driver</span>
+                                <span class="module-name">Arm & Gripper Steppers (DM556Y)</span>
                             </div>
                             <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-arm_stepper_driver" data-module="arm_stepper_driver">START</button>
                         </div>
@@ -534,6 +637,34 @@
                                 <span class="module-name">Navigation Controller (NAVnode)</span>
                             </div>
                             <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-nav_node" data-module="nav_node">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-imu_telemetry"></span>
+                                <span class="module-name">IMU Telemetry Node</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-imu_telemetry" data-module="imu_telemetry">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-imu_kalman_filter"></span>
+                                <span class="module-name">IMU Kalman Filter</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-imu_kalman_filter" data-module="imu_kalman_filter">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-imu_launch"></span>
+                                <span class="module-name">IMU System Launch (Sim/HW)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-imu_launch" data-module="imu_launch">START</button>
+                        </div>
+                        <div class="module-row">
+                            <div class="module-info">
+                                <span class="module-status-dot stopped" id="status-dot-rover_ekf"></span>
+                                <span class="module-name">Rover EKF Fusion (Wheel+IMU+GPS)</span>
+                            </div>
+                            <button class="module-toggle-btn neon-btn-blue" id="btn-toggle-rover_ekf" data-module="rover_ekf">START</button>
                         </div>
                     </div>
                 </section>
@@ -611,8 +742,8 @@
                         
                         <!-- Gripper manual action buttons -->
                         <div class="gripper-action-bar">
-                            <button id="btn-gripper-open" class="neon-btn-amber">OPEN GRIPPER</button>
-                            <button id="btn-gripper-close" class="neon-btn-green">CLOSE GRIPPER</button>
+                            <button id="btn-gripper-open" class="neon-btn-amber">OPEN GRIPPER (Z)</button>
+                            <button id="btn-gripper-close" class="neon-btn-green">CLOSE GRIPPER (C)</button>
                         </div>
                         <div class="slider-wrapper" style="margin-top: 10px;">
                             <label for="slider-gripper">MANUAL GRIPPER STEPPER: <span id="lbl-gripper-val">0.00</span></label>
