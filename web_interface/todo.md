@@ -6,7 +6,7 @@ Set drive mode - done
 Arm position - done
 Hand state - done
 Arm button push trigger
-Wheel power monitor
+Wheel power monitor - done
 Toggle lights
 Camera servo position
 Set control sensitivity
