@@ -1,6 +1,7 @@
 const controller = (() => {
 
-    let mode = "drive"; //I dont think this will be needed after I add the button to swap, but chat put it here so Ill keep it for now.
+    let mode = "drive"; //I dont think this will be needed after I add the button to swap, but chat put it here so Ill keep it for now.]
+    let sensitivity = "fine";
     let last_message_time = Date.now(); //Needed so ui updates if controller gets unplugged (but the lights on the controller would also shut off)
     let previous_buttons = [];
 
@@ -53,6 +54,21 @@ const controller = (() => {
 
         }
 
+        // Toggle sensitivity with square button
+        if (square === 1 && previous_buttons[2] !== 1) {
+
+            if (sensitivity === "fine") {
+                setSensitivity("coarse");
+            } 
+            else if (sensitivity === "coarse") {
+                setSensitivity("ultra");
+            }
+            else {
+                setSensitivity("fine");
+            }
+
+        }
+
         previous_buttons = [...buttons];
 
     }
@@ -77,7 +93,19 @@ const controller = (() => {
         }
     }
 
+    function setSensitivity(newSensitivity) {
 
+        sensitivity = newSensitivity;
+
+        const sensitivityButton = document.getElementById(
+            "sensitivity-" + sensitivity
+        );
+
+        if (window.setSensitivityButton) {
+            window.setSensitivityButton(sensitivityButton);
+        }
+
+    }
     
     
 
