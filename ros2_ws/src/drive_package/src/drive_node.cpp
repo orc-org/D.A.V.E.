@@ -22,6 +22,10 @@ public:
             "/control_mode", 10,
             std::bind(&JoyDrive::modeCallback, this, std::placeholders::_1));
 
+        sensitivity_sub_ = this->create_subscription<std_msgs::msg::String>(
+            "/sensitivity", 10,
+            std::bind(&JoyDrive::sensitivityCallback, this, std::placeholders::_1));
+
 
         front_left_pub_  = this->create_publisher<std_msgs::msg::Float32>("/motor/front_left", 10); 
         front_right_pub_ = this->create_publisher<std_msgs::msg::Float32>("/motor/front_right", 10);
@@ -47,6 +51,28 @@ private:
         {
             stopMotors();
         }
+    }
+
+    void sensitivityCallback(const std_msgs::msg::String::SharedPtr msg)
+    {
+        if (msg->data == "ultra")
+        {
+            sensitivity_ = 0.25f;
+        }
+        else if (msg->data == "fine")
+        {
+            sensitivity_ = 0.5f;
+        }
+        else if (msg->data == "coarse")
+        {
+            sensitivity_ = 1.0f;
+        }
+
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Sensitivity changed to %s (%.2f)",
+            msg->data.c_str(),
+            sensitivity_);
     }
 
     //Probably delete later
@@ -116,7 +142,11 @@ private:
             left = -spin;
             right = spin;
         }
-
+        
+        //Takes the sensitivity mode into account
+        left *= sensitivity_;
+        right *= sensitivity_;
+        
         // Clamp makes sure that our power outputs to motors never go above 100%
         left  = std::clamp(left,  -1.0f, 1.0f);
         right = std::clamp(right, -1.0f, 1.0f);
@@ -157,6 +187,10 @@ private:
         float left = throttle - steering;
         float right = throttle + steering;
 
+        //Takes sensitivity setting into account
+        left *= sensitivity_;
+        right *= sensitivity_;
+
         left  = std::clamp(left,  -1.0f, 1.0f);
         right = std::clamp(right, -1.0f, 1.0f);
 
@@ -175,10 +209,12 @@ private:
             "cmd_vel -> Left Wheels: %.2f | Right Wheels: %.2f", left, right);
     }
     std::string current_mode_ = "drive";
+    float sensitivity_ = 0.5f;   // Default = fine
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr mode_sub_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sensitivity_sub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr front_left_pub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr front_right_pub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr rear_left_pub_;
