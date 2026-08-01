@@ -43,16 +43,16 @@ class DashboardHelperNode(Node):
                 "pattern": "vesc_can_driver_node",
                 "proc": None
             },
-            "stepper_driver": {
-                "name": "Stepper Wheel Driver",
-                "cmd": ["ros2", "run", "drive_package", "stepper_driver_node"],
-                "pattern": "stepper_driver_node",
-                "proc": None
-            },
             "arm_stepper_driver": {
-                "name": "Arm Stepper Driver",
+                "name": "Arm & Gripper Steppers (DM556Y)",
                 "cmd": ["ros2", "run", "arm_controller", "arm_stepper_driver"],
                 "pattern": "arm_stepper_driver",
+                "proc": None
+            },
+            "motion_coordinator": {
+                "name": "Arm Motion Coordinator",
+                "cmd": ["ros2", "run", "arm_controller", "motion_coordinator"],
+                "pattern": "motion_coordinator",
                 "proc": None
             },
             "stream_cam_0": {
@@ -77,6 +77,30 @@ class DashboardHelperNode(Node):
                 "name": "Navigation Controller (NAVnode)",
                 "cmd": ["ros2", "run", "navigation_system", "NAVnode"],
                 "pattern": "NAVnode",
+                "proc": None
+            },
+            "imu_telemetry": {
+                "name": "IMU Telemetry Node",
+                "cmd": ["ros2", "run", "imu", "telemetry"],
+                "pattern": "imu.*telemetry",
+                "proc": None
+            },
+            "imu_kalman_filter": {
+                "name": "IMU Kalman Filter",
+                "cmd": ["ros2", "run", "imu", "kalman_filter"],
+                "pattern": "imu.*kalman_filter",
+                "proc": None
+            },
+            "imu_launch": {
+                "name": "IMU System Launch (HW)",
+                "cmd": ["ros2", "launch", "imu", "imu.launch.py", "sim_mode:=false"],
+                "pattern": "imu.launch.py",
+                "proc": None
+            },
+            "rover_ekf": {
+                "name": "Rover EKF Sensor Fusion (Wheel+IMU+GPS)",
+                "cmd": ["ros2", "run", "rover_ekf", "ekf_node"],
+                "pattern": "rover_ekf.*ekf_node",
                 "proc": None
             }
         }
@@ -149,7 +173,7 @@ class DashboardHelperNode(Node):
                     cmd_str = " ".join(cmd)
                     full_cmd = [
                         "bash", "-c",
-                        f"source /opt/ros/humble/setup.bash 2>/dev/null; source /home/orc/D.A.V.E./ros2_ws/install/setup.bash 2>/dev/null; exec {cmd_str}"
+                        f"source /opt/ros/humble/setup.bash 2>/dev/null; source /home/orc/D.A.V.E./ros2_ws/install/setup.bash 2>/dev/null; export ROS_DOMAIN_ID=1; exec {cmd_str}"
                     ]
                     log_file = open(f"/tmp/dashboard_proc_{key}.log", "w")
                     proc = subprocess.Popen(

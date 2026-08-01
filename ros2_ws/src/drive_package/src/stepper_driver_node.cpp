@@ -9,7 +9,7 @@ public:
     StepperDriverNode() : Node("stepper_driver_node")
     {
         // parameter for max step frequency (Hz) at 100% velocity input
-        this->declare_parameter<double>("max_step_frequency", 2000.0);
+        this->declare_parameter<double>("max_step_frequency", 200000.0);
         max_step_frequency_ = this->get_parameter("max_step_frequency").as_double();
 
         // subscribe to the 4 independent wheel motor velocity command topics
