@@ -25,8 +25,32 @@ let gpsFixSub = null;
 let gpsNmeaSub = null;
 let gpsTargetPub = null;
 
-// 3d viewer state
-let showing3D = true;
+// IMU Subscribers & State
+let imuEulerSub = null;
+let imuFilteredEulerSub = null;
+let imuRawSub = null;
+let imuFilteredSub = null;
+let imuOdomSub = null;
+let imuStrSub = null;
+
+let imuEulerData = { roll: 0.0, pitch: 0.0, yaw: 0.0, lastUpdate: null };
+let imuFilteredEulerData = { roll: 0.0, pitch: 0.0, yaw: 0.0, lastUpdate: null };
+let imuMotionData = {
+    accel: { x: 0.0, y: 0.0, z: 9.81 },
+    gyro: { x: 0.0, y: 0.0, z: 0.0 }
+};
+let imuOdomData = {
+    pos: { x: 0.0, y: 0.0, z: 0.0 },
+    vel: { x: 0.0, y: 0.0, z: 0.0 }
+};
+let imuPublishingEnabled = true;
+
+// Rover Path Trajectory History
+let roverPathHistory = []; // Array of { lat, lon, x, y, timestamp }
+let leafletPathPolyline = null;
+
+// 3d viewer state (Disabled - 3D Robot View removed)
+let showing3D = false;
 let viewer3D = null;
 let tfClient = null;
 let urdfClient = null;
@@ -296,17 +320,22 @@ function setupROSInterfaces() {
     tfSub.subscribe((msg) => {
         for (let i = 0; i < msg.transforms.length; i++) {
             let t = msg.transforms[i];
-            if (t.child_frame_id === 'base_link') {
+            // Accept TF transforms from authoritative odom or map frames to avoid collisions
+            if (t.child_frame_id === 'base_link' && (t.header.frame_id === 'odom' || t.header.frame_id === 'map')) {
                 let x = t.transform.translation.x;
                 let y = t.transform.translation.y;
-                valBasePos.innerText = `X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`;
+                if (valBasePos) valBasePos.innerText = `X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`;
 
-                // Extract Heading (Yaw) from Quaternion
-                let qz = t.transform.rotation.z;
-                let qw = t.transform.rotation.w;
-                let yaw = 2.0 * Math.atan2(qz, qw);
+                // Extract Heading (Yaw) from 3D Quaternion
+                let qx = t.transform.rotation.x || 0.0;
+                let qy = t.transform.rotation.y || 0.0;
+                let qz = t.transform.rotation.z || 0.0;
+                let qw = t.transform.rotation.w || 1.0;
+                let siny_cosp = 2.0 * (qw * qz + qx * qy);
+                let cosy_cosp = 1.0 - 2.0 * (qy * qy + qz * qz);
+                let yaw = Math.atan2(siny_cosp, cosy_cosp);
                 let deg = yaw * (180.0 / Math.PI);
-                valBaseYaw.innerText = `${yaw.toFixed(2)} rad (${deg.toFixed(1)}°)`;
+                if (valBaseYaw) valBaseYaw.innerText = `${yaw.toFixed(2)} rad (${deg.toFixed(1)}°)`;
             }
         }
     });
@@ -392,10 +421,14 @@ function setupROSInterfaces() {
 
     setupGPSROSInterfaces();
 <<<<<<< HEAD
+<<<<<<< HEAD
     setupIMUROSInterfaces();
     setupMorseSubscribers();
 =======
 >>>>>>> 9bfcf53 (gps slop)
+=======
+    setupIMUROSInterfaces();
+>>>>>>> 10ca50e (ai slop dashboard part something)
 
     if (showing3D && !viewer3D) {
         init3DViewer();
@@ -447,10 +480,14 @@ function cleanupROSInterfaces() {
 
     cleanupGPSROSInterfaces();
 <<<<<<< HEAD
+<<<<<<< HEAD
     cleanupIMUROSInterfaces();
     cleanupMorseSubscribers();
 =======
 >>>>>>> 9bfcf53 (gps slop)
+=======
+    cleanupIMUROSInterfaces();
+>>>>>>> 10ca50e (ai slop dashboard part something)
 
     resetModuleStatusUI();
     robotStatePublisherRunning = false;
@@ -785,15 +822,15 @@ function startControlLoopTimer() {
             }
         }
         
-        // UI Button Gripper control (runs in both modes, whether gamepad is connected or not)
-        if (gripperOpenBtnActive) {
+        // UI Button & Keyboard (Z / C) Gripper control (runs in both modes, whether gamepad is connected or not)
+        if (gripperOpenBtnActive || keysPressed['z']) {
             const oldVal = currentGripperTarget;
             currentGripperTarget = Math.max(0.0, currentGripperTarget - 0.05);
             if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
                 publishGripperTarget(currentGripperTarget);
             }
         }
-        if (gripperCloseBtnActive) {
+        if (gripperCloseBtnActive || keysPressed['c']) {
             const oldVal = currentGripperTarget;
             currentGripperTarget = Math.min(1.0, currentGripperTarget + 0.05);
             if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
@@ -1508,6 +1545,7 @@ class LocalTFClient {
 
 // 3D Viewer initialization and destruction functions
 function init3DViewer() {
+    if (!showing3D) return;
     if (!connected || !ros) {
         console.warn('init3DViewer: Not connected to ROS.');
         return;
@@ -1976,12 +2014,18 @@ function setupGPSROSInterfaces() {
             }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
             if (gpsCurrentFix.status >= 0) {
                 recordRoverPathPoint(msg.latitude, msg.longitude, null, null);
             }
 
+<<<<<<< HEAD
 =======
 >>>>>>> 9bfcf53 (gps slop)
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
             updateGPSUI();
         }
     });
@@ -2121,6 +2165,9 @@ function appendNmeaLog(line) {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
 function recordRoverPathPoint(lat, lon, x, y) {
     if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) return;
     const now = Date.now();
@@ -2136,9 +2183,12 @@ function recordRoverPathPoint(lat, lon, x, y) {
 }
 
 // 4. Tactical Radar Canvas Renderer (Clean static grid with trajectory path line)
+<<<<<<< HEAD
 =======
 // 4. Tactical Radar Canvas Renderer (Clean static grid without sweep animation)
 >>>>>>> 9bfcf53 (gps slop)
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
 function drawTacticalRadar() {
     const canvas = document.getElementById('gps-radar-canvas');
     if (!canvas) return;
@@ -2193,6 +2243,9 @@ function drawTacticalRadar() {
     ctx.fillText('W', cx - maxRadius - 12, cy);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
     // Draw Rover Trajectory Path Line (if history exists)
     if (roverPathHistory.length > 1 && gpsCurrentFix.latitude !== null && gpsCurrentFix.longitude !== null) {
         ctx.save();
@@ -2241,8 +2294,11 @@ function drawTacticalRadar() {
         ctx.restore();
     }
 
+<<<<<<< HEAD
 =======
 >>>>>>> 9bfcf53 (gps slop)
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
     // Draw Home Origin (if set and fix available)
     if (gpsCurrentFix.latitude !== null && gpsHomeOrigin.isSet && gpsHomeOrigin.latitude !== null) {
         const homeDist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsHomeOrigin.latitude, gpsHomeOrigin.longitude);
@@ -2294,6 +2350,9 @@ function drawTacticalRadar() {
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
     // Rover Icon (Center of Radar) with Heading Pointer (Priority: Raw /imu/euler -> Filtered /imu/filtered_euler -> TF Base Yaw)
     let headingRad = 0;
     const isImuRaw = imuEulerData.lastUpdate !== null && (Date.now() - imuEulerData.lastUpdate < 5000);
@@ -2304,6 +2363,7 @@ function drawTacticalRadar() {
     } else if (isImuFiltered) {
         headingRad = -(imuFilteredEulerData.yaw * Math.PI / 180.0);
     } else if (typeof valBaseYaw !== 'undefined' && valBaseYaw) {
+<<<<<<< HEAD
         const yawText = valBaseYaw.innerText || '0';
         const match = yawText.match(/(-?\d+\.?\d*)\s*rad/);
         if (match) {
@@ -2318,16 +2378,26 @@ function drawTacticalRadar() {
             const yaw = parseFloat(match[1]);
             headingRad = (yaw - Math.PI / 2);
 >>>>>>> 9bfcf53 (gps slop)
+=======
+        const yawText = valBaseYaw.innerText || '0';
+        const match = yawText.match(/(-?\d+\.?\d*)\s*rad/);
+        if (match) {
+            headingRad = -parseFloat(match[1]);
+>>>>>>> 10ca50e (ai slop dashboard part something)
         }
     }
 
     ctx.save();
     ctx.translate(cx, cy);
 <<<<<<< HEAD
+<<<<<<< HEAD
     ctx.rotate(headingRad);
 =======
     ctx.rotate(headingRad + Math.PI / 2);
 >>>>>>> 9bfcf53 (gps slop)
+=======
+    ctx.rotate(headingRad);
+>>>>>>> 10ca50e (ai slop dashboard part something)
     ctx.fillStyle = '#39ff14';
     ctx.beginPath();
     ctx.moveTo(0, -12);
@@ -2540,6 +2610,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
     const btnClearPath = document.getElementById('btn-clear-path');
     if (btnClearPath) {
         btnClearPath.addEventListener('click', () => {
@@ -2552,8 +2625,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+<<<<<<< HEAD
 =======
 >>>>>>> 9bfcf53 (gps slop)
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
     if (btnAutoscroll) {
         btnAutoscroll.addEventListener('click', () => {
             nmeaAutoScroll = !nmeaAutoScroll;
@@ -2591,6 +2667,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
     // IMU Command & Service Button Event Listeners
     const btnImuCalibrate = document.getElementById('btn-imu-calibrate');
     const btnImuTogglePub = document.getElementById('btn-imu-toggle-pub');
@@ -2609,6 +2688,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drawTacticalRadar();
     updateGPSUI();
     updateIMUUI();
+<<<<<<< HEAD
 });
 
 // ====================================================
@@ -3299,7 +3379,348 @@ document.addEventListener('DOMContentLoaded', () => {
     drawTacticalRadar();
     updateGPSUI();
 >>>>>>> 9bfcf53 (gps slop)
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
 });
+
+// ====================================================
+// 10. IMU & ATTITUDE TELEMETRY & COMMAND SYSTEM
+// ====================================================
+
+function setupIMUROSInterfaces() {
+    if (!ros) return;
+
+    // 1. /imu/euler (Raw Euler Roll, Pitch, Yaw)
+    imuEulerSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/euler',
+        messageType: 'geometry_msgs/msg/Vector3'
+    });
+    imuEulerSub.subscribe((msg) => {
+        if (msg) {
+            imuEulerData.roll = msg.x || 0.0;
+            imuEulerData.pitch = msg.y || 0.0;
+            imuEulerData.yaw = msg.z || 0.0;
+            imuEulerData.lastUpdate = Date.now();
+            updateIMUUI();
+        }
+    });
+
+    // 2. /imu/filtered_euler (UKF Filtered Euler Roll, Pitch, Yaw)
+    imuFilteredEulerSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/filtered_euler',
+        messageType: 'geometry_msgs/msg/Vector3'
+    });
+    imuFilteredEulerSub.subscribe((msg) => {
+        if (msg) {
+            imuFilteredEulerData.roll = msg.x || 0.0;
+            imuFilteredEulerData.pitch = msg.y || 0.0;
+            imuFilteredEulerData.yaw = msg.z || 0.0;
+            imuFilteredEulerData.lastUpdate = Date.now();
+            updateIMUUI();
+        }
+    });
+
+    // 3. /imu/data_raw (Raw Accelerometer and Gyroscope Telemetry)
+    imuRawSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/data_raw',
+        messageType: 'sensor_msgs/msg/Imu'
+    });
+    imuRawSub.subscribe((msg) => {
+        if (msg) {
+            if (msg.linear_acceleration) {
+                imuMotionData.accel = {
+                    x: msg.linear_acceleration.x || 0.0,
+                    y: msg.linear_acceleration.y || 0.0,
+                    z: msg.linear_acceleration.z || 0.0
+                };
+            }
+            if (msg.angular_velocity) {
+                imuMotionData.gyro = {
+                    x: msg.angular_velocity.x || 0.0,
+                    y: msg.angular_velocity.y || 0.0,
+                    z: msg.angular_velocity.z || 0.0
+                };
+            }
+            updateIMUUI();
+        }
+    });
+
+    // 4. /imu/odometry (UKF 15D Filtered Odometry Pose and Twist)
+    imuOdomSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/odometry',
+        messageType: 'nav_msgs/msg/Odometry'
+    });
+    imuOdomSub.subscribe((msg) => {
+        if (msg && msg.pose && msg.pose.pose && msg.twist && msg.twist.twist) {
+            imuOdomData.pos = {
+                x: msg.pose.pose.position.x || 0.0,
+                y: msg.pose.pose.position.y || 0.0,
+                z: msg.pose.pose.position.z || 0.0
+            };
+            imuOdomData.vel = {
+                x: msg.twist.twist.linear.x || 0.0,
+                y: msg.twist.twist.linear.y || 0.0,
+                z: msg.twist.twist.linear.z || 0.0
+            };
+            updateIMUUI();
+        }
+    });
+
+    // 5. /ekf/odometry (Fused EKF Wheel+IMU+GPS Odometry Pose and Twist)
+    ekfOdomSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/ekf/odometry',
+        messageType: 'nav_msgs/msg/Odometry'
+    });
+    ekfOdomSub.subscribe((msg) => {
+        if (msg && msg.pose && msg.pose.pose && msg.twist && msg.twist.twist) {
+            imuOdomData.pos = {
+                x: msg.pose.pose.position.x || 0.0,
+                y: msg.pose.pose.position.y || 0.0,
+                z: msg.pose.pose.position.z || 0.0
+            };
+            imuOdomData.vel = {
+                x: msg.twist.twist.linear.x || 0.0,
+                y: msg.twist.twist.linear.y || 0.0,
+                z: msg.twist.twist.linear.z || 0.0
+            };
+            const ekfValEl = document.getElementById('val-ekf-telemetry-fusion');
+            if (ekfValEl) {
+                const x = imuOdomData.pos.x;
+                const y = imuOdomData.pos.y;
+                const vx = imuOdomData.vel.x;
+                ekfValEl.innerText = `X: ${x.toFixed(2)}m | Y: ${y.toFixed(2)}m | Speed: ${vx.toFixed(2)} m/s`;
+            }
+            updateIMUUI();
+        }
+    });
+
+    // 5. /imu/telemetry_str (Formatted Multi-line Telemetry String)
+    imuStrSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/telemetry_str',
+        messageType: 'std_msgs/msg/String'
+    });
+    imuStrSub.subscribe((msg) => {
+        if (msg && msg.data) {
+            const streamLog = document.getElementById('imu-stream-log');
+            if (streamLog) {
+                streamLog.innerText = msg.data;
+            }
+        }
+    });
+}
+
+function cleanupIMUROSInterfaces() {
+    if (imuEulerSub) { imuEulerSub.unsubscribe(); imuEulerSub = null; }
+    if (imuFilteredEulerSub) { imuFilteredEulerSub.unsubscribe(); imuFilteredEulerSub = null; }
+    if (imuRawSub) { imuRawSub.unsubscribe(); imuRawSub = null; }
+    if (imuFilteredSub) { imuFilteredSub.unsubscribe(); imuFilteredSub = null; }
+    if (imuOdomSub) { imuOdomSub.unsubscribe(); imuOdomSub = null; }
+    if (imuStrSub) { imuStrSub.unsubscribe(); imuStrSub = null; }
+}
+
+function logIMUServiceResponse(actionName, success, message) {
+    const logBox = document.getElementById('imu-service-response-log');
+    if (!logBox) return;
+    const timeStr = new Date().toLocaleTimeString();
+    const statusStr = success ? "SUCCESS" : "FAILED";
+    const newEntry = `[${timeStr}] [${actionName}] -> ${statusStr}: ${message}\n`;
+    logBox.innerText = newEntry + logBox.innerText;
+}
+
+function callIMUCalibrate() {
+    if (!ros) {
+        logIMUServiceResponse("Calibrate", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_telemetry/calibrate',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Calibrate", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Calibrate", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUTogglePublishing() {
+    if (!ros) {
+        logIMUServiceResponse("Toggle Publishing", false, "ROS Bridge not connected.");
+        return;
+    }
+    imuPublishingEnabled = !imuPublishingEnabled;
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_telemetry/enable_publishing',
+        serviceType: 'std_srvs/srv/SetBool'
+    });
+    const request = new ROSLIB.ServiceRequest({ data: imuPublishingEnabled });
+    service.callService(request, (result) => {
+        if (result) {
+            logIMUServiceResponse("Toggle Publishing", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Toggle Publishing", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUGetStatus() {
+    if (!ros) {
+        logIMUServiceResponse("Get Status", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_telemetry/get_status',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Get Status", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Get Status", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUResetFilter() {
+    if (!ros) {
+        logIMUServiceResponse("Reset Filter", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_kalman_filter/reset_filter',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Reset Filter", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Reset Filter", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUGetState() {
+    if (!ros) {
+        logIMUServiceResponse("Get Filter State", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_kalman_filter/get_state',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Get Filter State", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Get Filter State", false, `Service Error: ${error}`);
+    });
+}
+
+function updateIMUUI() {
+    const isRawAvailable = imuEulerData.lastUpdate !== null && (Date.now() - imuEulerData.lastUpdate < 3000);
+    const isFilteredAvailable = imuFilteredEulerData.lastUpdate !== null && (Date.now() - imuFilteredEulerData.lastUpdate < 3000);
+    const hasData = isRawAvailable || isFilteredAvailable;
+
+    const imuDot = document.getElementById('imu-status-dot');
+    const imuStatusText = document.getElementById('imu-status-text');
+    if (imuDot) {
+        imuDot.className = hasData ? "status-indicator connected" : "status-indicator disconnected";
+    }
+    if (imuStatusText) {
+        imuStatusText.innerText = hasData ? (isRawAvailable ? "IMU ONLINE (RAW)" : "IMU ONLINE (UKF)") : "NO IMU DATA";
+        imuStatusText.style.color = hasData ? "var(--accent-green)" : "var(--text-muted)";
+    }
+
+    const badge = document.getElementById('imu-mode-badge');
+    if (badge) {
+        badge.innerText = isRawAvailable ? "RAW TELEMETRY (/imu/euler)" : (isFilteredAvailable ? "FILTERED (UKF 15D)" : "OFFLINE");
+    }
+
+    // Prioritize raw BNO085 hardware orientation (/imu/euler) over dead-reckoned kalman filter
+    const euler = isRawAvailable ? imuEulerData : imuFilteredEulerData;
+
+    // Update Roll, Pitch, Yaw values
+    const rollEl = document.getElementById('val-imu-roll');
+    const pitchEl = document.getElementById('val-imu-pitch');
+    const yawEl = document.getElementById('val-imu-yaw');
+
+    if (rollEl) rollEl.innerText = `${euler.roll.toFixed(1)}°`;
+    if (pitchEl) pitchEl.innerText = `${euler.pitch.toFixed(1)}°`;
+    if (yawEl) yawEl.innerText = `${euler.yaw.toFixed(1)}°`;
+
+    const valBaseYawEl = document.getElementById('val-base-yaw');
+    if (valBaseYawEl && euler) {
+        const yawRad = (euler.yaw * Math.PI) / 180.0;
+        valBaseYawEl.innerText = `${yawRad.toFixed(2)} rad (${euler.yaw.toFixed(1)}°)`;
+    }
+
+    // Update bar indicators
+    const barRoll = document.getElementById('bar-imu-roll');
+    const barPitch = document.getElementById('bar-imu-pitch');
+    const barYaw = document.getElementById('bar-imu-yaw');
+
+    if (barRoll) {
+        const rollPct = Math.min(100, Math.max(0, ((euler.roll + 180) / 360) * 100));
+        barRoll.style.width = `${rollPct}%`;
+    }
+    if (barPitch) {
+        const pitchPct = Math.min(100, Math.max(0, ((euler.pitch + 180) / 360) * 100));
+        barPitch.style.width = `${pitchPct}%`;
+    }
+    if (barYaw) {
+        const yawNormalized = ((euler.yaw % 360) + 360) % 360;
+        barYaw.style.width = `${(yawNormalized / 360) * 100}%`;
+    }
+
+    // Motion data (Accel & Gyro)
+    const accelEl = document.getElementById('val-imu-accel');
+    const gyroEl = document.getElementById('val-imu-gyro');
+    if (accelEl) {
+        accelEl.innerText = `X: ${imuMotionData.accel.x.toFixed(2)} | Y: ${imuMotionData.accel.y.toFixed(2)} | Z: ${imuMotionData.accel.z.toFixed(2)} m/s²`;
+    }
+    if (gyroEl) {
+        gyroEl.innerText = `X: ${imuMotionData.gyro.x.toFixed(2)} | Y: ${imuMotionData.gyro.y.toFixed(2)} | Z: ${imuMotionData.gyro.z.toFixed(2)} rad/s`;
+    }
+
+    // Odometry
+    const odomPosEl = document.getElementById('val-imu-odom-pos');
+    const odomVelEl = document.getElementById('val-imu-odom-vel');
+    if (odomPosEl) {
+        odomPosEl.innerText = `X: ${imuOdomData.pos.x.toFixed(2)}m | Y: ${imuOdomData.pos.y.toFixed(2)}m | Z: ${imuOdomData.pos.z.toFixed(2)}m`;
+    }
+    if (odomVelEl) {
+        odomVelEl.innerText = `Vx: ${imuOdomData.vel.x.toFixed(2)} | Vy: ${imuOdomData.vel.y.toFixed(2)} | Vz: ${imuOdomData.vel.z.toFixed(2)} m/s`;
+    }
+
+    // System Telemetry cards
+    const sysEuler = document.getElementById('val-imu-telemetry-euler');
+    const sysMotion = document.getElementById('val-imu-telemetry-motion');
+    if (sysEuler) {
+        sysEuler.innerText = hasData ? `R: ${euler.roll.toFixed(1)}° | P: ${euler.pitch.toFixed(1)}° | Y: ${euler.yaw.toFixed(1)}°` : "R: --, P: --, Y: --";
+    }
+    if (sysMotion) {
+        sysMotion.innerText = hasData ? `A: ${imuMotionData.accel.z.toFixed(1)} m/s² | G: ${imuMotionData.gyro.z.toFixed(2)} rad/s` : "A: -- | G: --";
+    }
+
+    // Redraw tactical radar if open so heading arrow updates
+    if (gpsMapMode === 'radar') {
+        drawTacticalRadar();
+    }
+}
 
 
 

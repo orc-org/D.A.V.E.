@@ -43,16 +43,16 @@ class DashboardHelperNode(Node):
                 "pattern": "vesc_can_driver_node",
                 "proc": None
             },
-            "stepper_driver": {
-                "name": "Stepper Wheel Driver",
-                "cmd": ["ros2", "run", "drive_package", "stepper_driver_node"],
-                "pattern": "stepper_driver_node",
-                "proc": None
-            },
             "arm_stepper_driver": {
-                "name": "Arm Stepper Driver",
+                "name": "Arm & Gripper Steppers (DM556Y)",
                 "cmd": ["ros2", "run", "arm_controller", "arm_stepper_driver"],
                 "pattern": "arm_stepper_driver",
+                "proc": None
+            },
+            "motion_coordinator": {
+                "name": "Arm Motion Coordinator",
+                "cmd": ["ros2", "run", "arm_controller", "motion_coordinator"],
+                "pattern": "motion_coordinator",
                 "proc": None
             },
             "stream_cam_0": {
@@ -79,6 +79,9 @@ class DashboardHelperNode(Node):
                 "pattern": "NAVnode",
                 "proc": None
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
             },
             "imu_telemetry": {
                 "name": "IMU Telemetry Node",
@@ -103,6 +106,7 @@ class DashboardHelperNode(Node):
                 "cmd": ["ros2", "run", "rover_ekf", "ekf_node"],
                 "pattern": "rover_ekf.*ekf_node",
                 "proc": None
+<<<<<<< HEAD
             },
             "morse_recorder": {
                 "name": "Morse Code Recorder (UDP/Camera)",
@@ -117,6 +121,8 @@ class DashboardHelperNode(Node):
                 "proc": None
 =======
 >>>>>>> 9bfcf53 (gps slop)
+=======
+>>>>>>> 10ca50e (ai slop dashboard part something)
             }
         }
 
@@ -188,7 +194,7 @@ class DashboardHelperNode(Node):
                     cmd_str = " ".join(cmd)
                     full_cmd = [
                         "bash", "-c",
-                        f"source /opt/ros/humble/setup.bash 2>/dev/null; source /home/orc/D.A.V.E./ros2_ws/install/setup.bash 2>/dev/null; exec {cmd_str}"
+                        f"source /opt/ros/humble/setup.bash 2>/dev/null; source /home/orc/D.A.V.E./ros2_ws/install/setup.bash 2>/dev/null; export ROS_DOMAIN_ID=1; exec {cmd_str}"
                     ]
                     log_file = open(f"/tmp/dashboard_proc_{key}.log", "w")
                     proc = subprocess.Popen(
