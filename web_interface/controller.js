@@ -1,15 +1,16 @@
 const controller = (() => {
 
-    let mode = "drive"; //I dont think this will be needed after I add the button to swap, but chat put it here so Ill keep it for now.
+    let mode = "drive"; //I dont think this will be needed after I add the button to swap, but chat put it here so Ill keep it for now.]
+    let sensitivity = "fine";
     let last_message_time = Date.now(); //Needed so ui updates if controller gets unplugged (but the lights on the controller would also shut off)
+    let previous_buttons = [];
 
     function update(joyMsg) {
         last_message_time = Date.now();
-        //just commented this out for now, but it declares the controller buttons
-        /*
+        
         const axes = joyMsg.axes;
         const buttons = joyMsg.buttons;
-
+        
         // ===========================
         // Controller mappings
         // ===========================
@@ -22,8 +23,8 @@ const controller = (() => {
 
         const cross = buttons[0];
         const circle = buttons[1];
-        const triangle = buttons[2];
-        const square = buttons[3];
+        const square = buttons[2]; //I think I have square and triangle swapped on the documentation. Oops
+        const triangle = buttons[3];
         const select = buttons[4];
         const ps_button = buttons[5]; //Dont hold this button
         const start = buttons[6];
@@ -38,71 +39,94 @@ const controller = (() => {
         const touchpad = buttons[15]; //Dont touch this button
         const mic = buttons[16];
 
-        */
-       
-        //Just for now to make sure the ui is reading the controller
-        console.log(joyMsg);
+        //Uncomment if need to see if html reads controller
+        //console.log(joyMsg);
+        //console.log("BUTTONS:", buttons);
 
-        // ===========================
-        // Update wheel display
-        // ===========================
+        // Calls the setMode function by pressign triangle
+        if (triangle === 1 && previous_buttons[3] !== 1) {
 
-        //In progress
+            if (mode === "drive") {
+                setMode("arm");
+            } else {
+                setMode("drive");
+            }
 
-        // ===========================
-        // Toggle drive/arm mode
-        // ===========================
+        }
 
-        // In Progress, might make its own function
+        // Toggle sensitivity with square button
+        if (square === 1 && previous_buttons[2] !== 1) {
+
+            if (sensitivity === "fine") {
+                setSensitivity("coarse");
+            } 
+            else if (sensitivity === "coarse") {
+                setSensitivity("ultra");
+            }
+            else {
+                setSensitivity("fine");
+            }
+
+        }
+
+        previous_buttons = [...buttons];
 
     }
 
     //Need to look over this section still, but should toggle the mode with button press
     function setMode(newMode) {
-
         mode = newMode;
-
-        const text = document.querySelector("#arm-toggle .data-input");
-        text.textContent = mode;
-
         const driveButton = document.getElementById("set-mode-drive");
         const armButton = document.getElementById("set-mode-arm");
 
-        driveButton.classList.remove("active-toggle");
-        armButton.classList.remove("active-toggle");
+        //should call the window function in script.js
+        if (window.setModeButton) {
 
-        if (mode === "drive") {
-            driveButton.classList.add("active-toggle");
+            if (mode === "drive") {
+                window.setModeButton(driveButton);
+            } 
+            else {
+                window.setModeButton(armButton);
+            }
         } else {
-            armButton.classList.add("active-toggle");
+            console.log("setModeButton does not exist"); //was used for debuging
         }
     }
 
+    function setSensitivity(newSensitivity) {
 
-    //This part makes it so the ui knows the controller is disconnected (Joy node just stops publishing if controller is unplugged, so it says connected still without this)
+        sensitivity = newSensitivity;
+
+        const sensitivityButton = document.getElementById(
+            "sensitivity-" + sensitivity
+        );
+
+        if (window.setSensitivityButton) {
+            window.setSensitivityButton(sensitivityButton);
+        }
+
+    }
+    
+    
+
+    //This part makes it so the ui knows the controller is disconnected (Joy node just stops publishing if controller is unplugged, so it says "connected" still without this)
     setInterval(() => {
-
         if (Date.now() - last_message_time > 1000) {
             disconnected();
         }
-
     }, 500);
 
     //Changes ui to show if controller is connected/disconnected
     function connected() {
-
         document.getElementById("controller-status-text").textContent =
             "Controller Connected";
-
         document.getElementById("controller-status-indicator")
             .style.backgroundColor = "var(--accent-active)";
     }
 
     function disconnected() {
-
         document.getElementById("controller-status-text").textContent =
             "No Controller Found";
-
         document.getElementById("controller-status-indicator")
             .style.backgroundColor = "var(--accent-inactive)";
     }

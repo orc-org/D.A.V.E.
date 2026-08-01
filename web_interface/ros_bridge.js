@@ -10,10 +10,16 @@ let handActionClient = null;
 let handTargetPub = null;
 let armActionClient = null;
 let armTargetPub = null;
+let modePub = null;
+let sensitivityPub = null;
 
 
 // ROS Subscribers
 let armGlobalPosSub = null;
+let wheelFLSub = null;
+let wheelFRSub = null;
+let wheelRLSub = null;
+let wheelRRSub = null;
 let currentArmX = 0.0;
 let currentArmY = 0.0;
 
@@ -108,6 +114,80 @@ function setupROS() {
         valueDisplay.textContent = `${Math.round(percentage)}%`;
     })
 
+    // Joy Subscriber (So we can use controller)
+    const joySubscriber = new ROSLIB.Topic({
+        ros: ros,
+        name: "/joy",
+        messageType: "sensor_msgs/msg/Joy"
+    });
+
+    joySubscriber.subscribe(function(msg) {
+        controller.connected();
+        controller.update(msg);
+    });
+
+    //Swap Drive and Arm Mode
+    
+    // Drive/Arm mode publisher
+    modePub = new ROSLIB.Topic({
+        ros: ros,
+        name: "/control_mode",
+        messageType: "std_msgs/msg/String"
+    });
+    //console.log("Mode publisher initialized");
+    
+    //Subscribes to my wheel power topics
+    wheelFLSub = new ROSLIB.Topic({
+        ros: ros,
+        name: "/motor/front_left",
+        messageType: "std_msgs/msg/Float32"
+    });
+
+    wheelFRSub = new ROSLIB.Topic({
+        ros: ros,
+        name: "/motor/front_right",
+        messageType: "std_msgs/msg/Float32"
+    });
+
+    wheelRLSub = new ROSLIB.Topic({
+        ros: ros,
+        name: "/motor/rear_left",
+        messageType: "std_msgs/msg/Float32"
+    });
+
+    wheelRRSub = new ROSLIB.Topic({
+        ros: ros,
+        name: "/motor/rear_right",
+        messageType: "std_msgs/msg/Float32"
+    });
+
+
+
+
+    wheelFLSub.subscribe((msg)=>{
+        //console.log("Front left:", msg.data);
+        updateWheelDisplay("wheel-fl-power", msg.data);
+    });
+
+    wheelFRSub.subscribe((msg)=>{
+        updateWheelDisplay("wheel-fr-power", msg.data);
+    });
+
+    wheelRLSub.subscribe((msg)=>{
+        updateWheelDisplay("wheel-bl-power", msg.data);
+    });
+
+    wheelRRSub.subscribe((msg)=>{
+        updateWheelDisplay("wheel-br-power", msg.data);
+    });
+
+    //Sensitivity node publisher
+    sensitivityPub = new ROSLIB.Topic({
+        ros: ros,
+        name: "/sensitivity",
+        messageType: "std_msgs/msg/String"
+    });
+
     // Arm Position Control
     armTargetPub = new ROSLIB.Topic({
         ros: ros,
@@ -195,3 +275,46 @@ function publishHandPosition(value) {
 
     handGoal.send();
 }
+
+//Used to change drive and arm mode
+function publishMode(mode) {
+
+    if (!modePub) {
+        console.warn("Mode selector not initialized");
+        return;
+    }
+
+    const msg = new ROSLIB.Message({
+        data: mode
+    });
+
+    console.log("Selected mode:", mode);
+
+    modePub.publish(msg);
+}
+window.publishMode = publishMode;
+
+//Used for the wheel power
+function updateWheelDisplay(id, power)
+{
+    const percentage = Math.round(power * 100);
+
+    document.getElementById(id).textContent = percentage + "%";
+}
+
+//Adjusts the sensitivity
+function publishSensitivity(sensitivity) {
+
+    if (!sensitivityPub) {
+        console.warn("Sensitivity publisher not initialized");
+        return;
+    }
+
+    sensitivityPub.publish(new ROSLIB.Message({
+        data: sensitivity
+    }));
+
+    //console.log("Selected sensitivity:", sensitivity);
+}
+
+window.publishSensitivity = publishSensitivity;
