@@ -9,7 +9,7 @@ Arm button push trigger
 Wheel power monitor - done
 Toggle lights
 Camera servo position
-Set control sensitivity
+Set control sensitivity - Done
 Bearing monitor
 Latitude/Longitude monitor
 Terminal input
