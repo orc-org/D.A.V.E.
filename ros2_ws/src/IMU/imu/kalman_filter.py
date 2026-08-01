@@ -23,11 +23,9 @@ except ImportError:
     ADAFRUIT_AVAILABLE = False
 
 
-def euler_deg_to_quaternion(roll_deg: float, pitch_deg: float, yaw_deg: float):
-    """convert euler angles in degrees (roll, pitch, yaw) to quaternion (x, y, z, w)."""
-    r = np.radians(roll_deg)
-    p = np.radians(pitch_deg)
-    y = np.radians(yaw_deg)
+def euler_rad_to_quaternion(roll_rad: float, pitch_rad: float, yaw_rad: float):
+    """convert euler angles in radians (roll, pitch, yaw) to quaternion (x, y, z, w)."""
+    r, p, y = roll_rad, pitch_rad, yaw_rad
 
     cy = np.cos(y * 0.5)
     sy = np.sin(y * 0.5)
@@ -128,7 +126,7 @@ class KalmanFilterNode(Node):
         new_state[0:3] += velocity_damped * dt + 0.5 * accel_motion * (dt ** 2)
         # velocity updated by motion_accel * dt
         new_state[3:6] = velocity_damped + accel_motion * dt
-        # orientation (roll, pitch, yaw) updated by gyro * dt
+        # orientation (roll, pitch, yaw in radians) updated by gyro * dt
         new_state[9:12] += state[12:15] * dt
 
         return new_state
@@ -218,10 +216,11 @@ class KalmanFilterNode(Node):
         pos = self.current_mean[0:3]
         vel = self.current_mean[3:6]
         accel = self.current_mean[6:9]
-        euler_deg = self.current_mean[9:12]
+        euler_rad = self.current_mean[9:12]
         gyro = self.current_mean[12:15]
 
-        qx, qy, qz, qw = euler_deg_to_quaternion(euler_deg[0], euler_deg[1], euler_deg[2])
+        euler_deg = np.degrees(euler_rad)
+        qx, qy, qz, qw = euler_rad_to_quaternion(euler_rad[0], euler_rad[1], euler_rad[2])
 
         # 1. publish filtered imu
         filtered_imu = Imu()
@@ -285,7 +284,7 @@ class KalmanFilterNode(Node):
 
         self.pub_odom.publish(odom)
 
-        # 3. publish filtered euler angles
+        # 3. publish filtered euler angles (in degrees)
         euler_vec = Vector3()
         euler_vec.x = float(euler_deg[0])
         euler_vec.y = float(euler_deg[1])
@@ -306,14 +305,14 @@ class KalmanFilterNode(Node):
         pos = self.current_mean[0:3]
         vel = self.current_mean[3:6]
         accel = self.current_mean[6:9]
-        euler = self.current_mean[9:12]
+        euler_deg = np.degrees(self.current_mean[9:12])
         gyro = self.current_mean[12:15]
 
         state_summary = (
             f"Position (x,y,z): [{pos[0]:.3f}, {pos[1]:.3f}, {pos[2]:.3f}]\n"
             f"Velocity (vx,vy,vz): [{vel[0]:.3f}, {vel[1]:.3f}, {vel[2]:.3f}]\n"
             f"Accel (ax,ay,az): [{accel[0]:.3f}, {accel[1]:.3f}, {accel[2]:.3f}]\n"
-            f"Euler (deg): [R:{euler[0]:.2f}°, P:{euler[1]:.2f}°, Y:{euler[2]:.2f}°]\n"
+            f"Euler (deg): [R:{euler_deg[0]:.2f}°, P:{euler_deg[1]:.2f}°, Y:{euler_deg[2]:.2f}°]\n"
             f"Gyro (gx,gy,gz): [{gyro[0]:.3f}, {gyro[1]:.3f}, {gyro[2]:.3f}]"
         )
         response.success = True
