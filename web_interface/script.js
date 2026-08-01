@@ -15,15 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
         button.classList.add('active-toggle');
     }
 
-
     window.setSensitivityButton = function(button){
-        updateSensitivity(button);
-    };
 
+        updateSensitivity(button);
+
+        if (window.publishSensitivity) {
+            window.publishSensitivity(button.textContent);
+        }
+    };
 
     buttons.forEach(button => {
         button.addEventListener('click', () => {
-            updateSensitivity(button);
+            window.setSensitivityButton(button);
         });
     });
     
