@@ -16,8 +16,8 @@ except ImportError:
     print("Error: Jetson.GPIO library is not installed.")
     sys.exit(1)
 
-PUL_PIN = 15  # Pin 15 (Hardware PWM)
-DIR_PIN = 18  # Pin 12 (Direction - Verified Free)
+PUL_PIN = 15  # Pin 33 (Hardware PWM)
+DIR_PIN = 13  # Pin 18 (Direction)
 
 def setup():
     GPIO.setmode(GPIO.BOARD)
@@ -30,14 +30,11 @@ def test_pulse_frequency(target_freq_hz=20000, duration_sec=3.0, forward=True):
     so the stepper motor accelerates smoothly without stalling.
     """
     print(f"\n-> Setting Direction: {'FORWARD (HIGH)' if forward else 'REVERSE (LOW)'}")
-    GPIO.setup(DIR_PIN, GPIO.OUT)
     GPIO.output(DIR_PIN, GPIO.HIGH if forward else GPIO.LOW)
     time.sleep(0.01)
 
     print(f"-> Starting PWM Frequency Ramping up to {target_freq_hz/1000:.1f} kHz...")
     
-    # Ensure pin is set up as OUTPUT before creating PWM
-    GPIO.setup(PUL_PIN, GPIO.OUT, initial=GPIO.LOW)
     pwm = GPIO.PWM(PUL_PIN, 1000)
     pwm.start(50)  # 50% duty cycle square wave
     
