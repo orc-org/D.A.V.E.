@@ -20,12 +20,13 @@ public:
     {
         // declare and retrieve VESC driver parameters
         this->declare_parameter<std::string>("can_interface", "can0");
-        this->declare_parameter<std::string>("control_mode", "duty"); // "duty", "erpm", "current"
-        this->declare_parameter<double>("max_erpm", 15000.0);
-        this->declare_parameter<double>("max_current", 30.0); // max current in amps
-        this->declare_parameter<double>("max_duty", 0.35); // max duty cycle limit (0.0 to 1.0)
-        this->declare_parameter<double>("ramp_rate", 2.0); // max velocity change per second (e.g. 2.0 = 0.5s for 0->1.0)
-        this->declare_parameter<double>("publish_rate", 20.0); // CAN transmit loop frequency in Hz
+        this->declare_parameter<std::string>("control_mode", "erpm"); // "duty", "erpm", "current"
+        this->declare_parameter<double>("max_erpm", 7000.0);
+        this->declare_parameter<double>("min_erpm", 100.0); // minimum ERPM threshold for smooth startup
+        this->declare_parameter<double>("max_current", 14.0); // max current in amps
+        this->declare_parameter<double>("max_duty", 0.95); // max duty cycle limit (0.0 to 1.0)
+        this->declare_parameter<double>("ramp_rate", 1.0); // max velocity change per second
+        this->declare_parameter<double>("publish_rate", 50.0); // CAN transmit loop frequency in Hz
         
         // CAN IDs for the 4 wheels
         this->declare_parameter<int>("fl_can_id", 53);
@@ -33,13 +34,25 @@ public:
         this->declare_parameter<int>("rl_can_id", 48);
         this->declare_parameter<int>("rr_can_id", 7);
 
+        // Physical wheel & motor parameters for speed (m/s) -> ERPM calculation
+        this->declare_parameter<double>("wheel_radius", 0.10);  // meters (0.10m = 10cm radius)
+        this->declare_parameter<int>("pole_pairs", 2);          // BLDC motor pole pairs (e.g. 7 for 14-pole motor)
+        this->declare_parameter<double>("gear_ratio", 50.0);     // Gearbox reduction ratio (1.0 = direct drive)
+        this->declare_parameter<bool>("use_metric_speed", true); // true = velocity in m/s, false = normalized -1..1
+
         can_interface_ = this->get_parameter("can_interface").as_string();
         control_mode_ = this->get_parameter("control_mode").as_string();
         max_erpm_ = this->get_parameter("max_erpm").as_double();
+        min_erpm_ = this->get_parameter("min_erpm").as_double();
         max_current_ = this->get_parameter("max_current").as_double();
         max_duty_ = this->get_parameter("max_duty").as_double();
         ramp_rate_ = this->get_parameter("ramp_rate").as_double();
         publish_rate_ = this->get_parameter("publish_rate").as_double();
+
+        wheel_radius_ = this->get_parameter("wheel_radius").as_double();
+        pole_pairs_ = this->get_parameter("pole_pairs").as_int();
+        gear_ratio_ = this->get_parameter("gear_ratio").as_double();
+        use_metric_speed_ = this->get_parameter("use_metric_speed").as_bool();
 
         fl_can_id_ = this->get_parameter("fl_can_id").as_int();
         fr_can_id_ = this->get_parameter("fr_can_id").as_int();
@@ -217,8 +230,38 @@ private:
 
         if (control_mode_ == "erpm")
         {
-            comm_id = 3; // CAN_PACKET_SET_RPM
-            send_val = static_cast<int32_t>(velocity * max_erpm_);
+            int32_t target_erpm = 0;
+            if (use_metric_speed_)
+            {
+                // ERPM = velocity_m_s * (60 / (2 * pi * wheel_radius)) * pole_pairs * gear_ratio
+                double erpm_per_m_s = (60.0 / (2.0 * M_PI * wheel_radius_)) * static_cast<double>(pole_pairs_) * gear_ratio_;
+                target_erpm = static_cast<int32_t>(velocity * erpm_per_m_s);
+            }
+            else
+            {
+                target_erpm = static_cast<int32_t>(velocity * max_erpm_);
+            }
+
+            // When idle/stopped, send SET_CURRENT = 0 to relax motor and avoid 0-RPM PID jitter
+            if (std::abs(velocity) < 0.01f || std::abs(target_erpm) < 10)
+            {
+                comm_id = 1; // CAN_PACKET_SET_CURRENT
+                send_val = 0;
+            }
+            else
+            {
+                comm_id = 3; // CAN_PACKET_SET_RPM
+                // Enforce minimum ERPM threshold for stable commutation on startup
+                if (std::abs(target_erpm) < min_erpm_)
+                {
+                    send_val = (target_erpm >= 0) ? static_cast<int32_t>(min_erpm_) 
+                                                  : -static_cast<int32_t>(min_erpm_);
+                }
+                else
+                {
+                    send_val = target_erpm;
+                }
+            }
         }
         else if (control_mode_ == "current")
         {
@@ -243,10 +286,16 @@ private:
     std::string can_interface_;
     std::string control_mode_;
     double max_erpm_;
+    double min_erpm_;
     double max_current_;
     double max_duty_;
     double ramp_rate_;
     double publish_rate_;
+
+    double wheel_radius_;
+    int pole_pairs_;
+    double gear_ratio_;
+    bool use_metric_speed_;
 
     int fl_can_id_;
     int fr_can_id_;
