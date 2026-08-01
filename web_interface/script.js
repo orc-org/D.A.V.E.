@@ -4,13 +4,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataInput = sensitivityDiv.querySelector('.data-input');
     const buttons = sensitivityDiv.querySelectorAll('.toggle-three');
 
+    function updateSensitivity(button){
+
+        dataInput.textContent = button.textContent;
+
+        buttons.forEach(btn => {
+            btn.classList.remove('active-toggle');
+        });
+
+        button.classList.add('active-toggle');
+    }
+
+
+    window.setSensitivityButton = function(button){
+        updateSensitivity(button);
+    };
+
+
     buttons.forEach(button => {
         button.addEventListener('click', () => {
-            dataInput.textContent = button.textContent;
-            buttons.forEach(btn => btn.classList.remove('active-toggle'));
-            button.classList.add('active-toggle');
+            updateSensitivity(button);
         });
     });
+    
 });
 
 // Set Drive Mode
@@ -34,11 +50,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    //Should make a function that both this js and controller.js can access
+    //Should make a function that both this js and controller.js can access which sends mode to ros
     window.setModeButton = function(button){
 
         dataInput.textContent = button.textContent;
         updateStates(button);
+
+        // Send mode change to ROS
+        if (window.publishMode) {
+            window.publishMode(button.textContent);
+        }
     };
 
     //Mouse Click changes button
