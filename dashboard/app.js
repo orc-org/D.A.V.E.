@@ -21,9 +21,36 @@ let frMotorSub = null;
 let rlMotorSub = null;
 let rrMotorSub = null;
 let cmdVelSub = null;
+let gpsFixSub = null;
+let gpsNmeaSub = null;
+let gpsTargetPub = null;
 
-// 3d viewer state
-let showing3D = true;
+// IMU Subscribers & State
+let imuEulerSub = null;
+let imuFilteredEulerSub = null;
+let imuRawSub = null;
+let imuFilteredSub = null;
+let imuOdomSub = null;
+let imuStrSub = null;
+
+let imuEulerData = { roll: 0.0, pitch: 0.0, yaw: 0.0, lastUpdate: null };
+let imuFilteredEulerData = { roll: 0.0, pitch: 0.0, yaw: 0.0, lastUpdate: null };
+let imuMotionData = {
+    accel: { x: 0.0, y: 0.0, z: 9.81 },
+    gyro: { x: 0.0, y: 0.0, z: 0.0 }
+};
+let imuOdomData = {
+    pos: { x: 0.0, y: 0.0, z: 0.0 },
+    vel: { x: 0.0, y: 0.0, z: 0.0 }
+};
+let imuPublishingEnabled = true;
+
+// Rover Path Trajectory History
+let roverPathHistory = []; // Array of { lat, lon, x, y, timestamp }
+let leafletPathPolyline = null;
+
+// 3d viewer state (Disabled - 3D Robot View removed)
+let showing3D = false;
 let viewer3D = null;
 let tfClient = null;
 let urdfClient = null;
@@ -220,7 +247,7 @@ function setupROSInterfaces() {
     gripperActionClient = new ROSLIB.ActionClient({
         ros: ros,
         serverName: '/gripper_command',
-        actionName: 'arm_interfaces/action/GripperCommand'
+        actionName: 'arm_interfaces/GripperCommand'
     });
 
     // Subscribers
@@ -293,17 +320,22 @@ function setupROSInterfaces() {
     tfSub.subscribe((msg) => {
         for (let i = 0; i < msg.transforms.length; i++) {
             let t = msg.transforms[i];
-            if (t.child_frame_id === 'base_link') {
+            // Accept TF transforms from authoritative odom or map frames to avoid collisions
+            if (t.child_frame_id === 'base_link' && (t.header.frame_id === 'odom' || t.header.frame_id === 'map')) {
                 let x = t.transform.translation.x;
                 let y = t.transform.translation.y;
-                valBasePos.innerText = `X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`;
+                if (valBasePos) valBasePos.innerText = `X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`;
 
-                // Extract Heading (Yaw) from Quaternion
-                let qz = t.transform.rotation.z;
-                let qw = t.transform.rotation.w;
-                let yaw = 2.0 * Math.atan2(qz, qw);
+                // Extract Heading (Yaw) from 3D Quaternion
+                let qx = t.transform.rotation.x || 0.0;
+                let qy = t.transform.rotation.y || 0.0;
+                let qz = t.transform.rotation.z || 0.0;
+                let qw = t.transform.rotation.w || 1.0;
+                let siny_cosp = 2.0 * (qw * qz + qx * qy);
+                let cosy_cosp = 1.0 - 2.0 * (qy * qy + qz * qz);
+                let yaw = Math.atan2(siny_cosp, cosy_cosp);
                 let deg = yaw * (180.0 / Math.PI);
-                valBaseYaw.innerText = `${yaw.toFixed(2)} rad (${deg.toFixed(1)}°)`;
+                if (valBaseYaw) valBaseYaw.innerText = `${yaw.toFixed(2)} rad (${deg.toFixed(1)}°)`;
             }
         }
     });
@@ -776,15 +808,15 @@ function startControlLoopTimer() {
             }
         }
         
-        // UI Button Gripper control (runs in both modes, whether gamepad is connected or not)
-        if (gripperOpenBtnActive) {
+        // UI Button & Keyboard (Z / C) Gripper control (runs in both modes, whether gamepad is connected or not)
+        if (gripperOpenBtnActive || keysPressed['z']) {
             const oldVal = currentGripperTarget;
             currentGripperTarget = Math.max(0.0, currentGripperTarget - 0.05);
             if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
                 publishGripperTarget(currentGripperTarget);
             }
         }
-        if (gripperCloseBtnActive) {
+        if (gripperCloseBtnActive || keysPressed['c']) {
             const oldVal = currentGripperTarget;
             currentGripperTarget = Math.min(1.0, currentGripperTarget + 0.05);
             if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
@@ -1499,6 +1531,7 @@ class LocalTFClient {
 
 // 3D Viewer initialization and destruction functions
 function init3DViewer() {
+    if (!showing3D) return;
     if (!connected || !ros) {
         console.warn('init3DViewer: Not connected to ROS.');
         return;
@@ -1614,7 +1647,7 @@ function loadURDFClient() {
         ros: ros,
         tfClient: tfClient,
         rootObject: viewer3D.scene,
-        param: '/robot_state_publisher:robot_description'
+        param: 'robot_description'
     });
 }
 
@@ -1660,8 +1693,8 @@ function updateModuleStatusUI(status) {
     const drawer = document.getElementById('modules-drawer');
     if (!drawer) return;
 
-    // Build module list dynamically from received status if not initialized
-    if (!modulesInitialized) {
+    const currentKeys = Object.keys(status).join(',');
+    if (!modulesInitialized || drawer.getAttribute('data-keys') !== currentKeys) {
         drawer.innerHTML = '';
         for (const key in status) {
             const info = status[key];
@@ -1676,6 +1709,7 @@ function updateModuleStatusUI(status) {
             `;
             drawer.appendChild(row);
         }
+        drawer.setAttribute('data-keys', currentKeys);
         modulesInitialized = true;
     }
 

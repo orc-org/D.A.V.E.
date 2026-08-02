@@ -17,6 +17,7 @@ try:
         BNO_REPORT_ACCELEROMETER,
         BNO_REPORT_GYROSCOPE,
         BNO_REPORT_ROTATION_VECTOR,
+        BNO_REPORT_MAGNETOMETER,
     )
     from adafruit_bno08x.i2c import BNO08X_I2C
     ADAFRUIT_AVAILABLE = True
@@ -78,6 +79,13 @@ class TelemetryNode(Node):
         self.bno = None
         self.i2c = None
 
+        # cache last valid readings to avoid zero-quaternion frames on unready I2C packets
+        self.last_valid_accel = (0.0, 0.0, 9.81)
+        self.last_valid_gyro = (0.0, 0.0, 0.0)
+        self.last_valid_quat = (0.0, 0.0, 0.0, 1.0)
+        self.yaw_offset_deg = 0.0
+        self.last_raw_yaw = 0.0
+
         # publishers
         self.pub_imu = self.create_publisher(Imu, self.topic_raw_imu, 10)
         self.pub_euler = self.create_publisher(Vector3, self.topic_euler, 10)
@@ -119,6 +127,8 @@ class TelemetryNode(Node):
             self.bno.enable_feature(BNO_REPORT_ACCELEROMETER)
             self.bno.enable_feature(BNO_REPORT_GYROSCOPE)
             self.bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
+            self.bno.enable_feature(BNO_REPORT_MAGNETOMETER)
+            time.sleep(0.2)  # Give BNO085 hardware time to initialize reports
             self.sim_mode = False
             self.get_logger().info(
                 f"Successfully connected to BNO085 on Bus {self.i2c_bus_num} (Address: {hex(self.i2c_address)})."
@@ -136,13 +146,33 @@ class TelemetryNode(Node):
         """read sensor data from bno085 or generate simulated data if in sim mode."""
         if not self.sim_mode and self.bno is not None:
             try:
-                accel_x, accel_y, accel_z = self.bno.acceleration
-                gyro_x, gyro_y, gyro_z = self.bno.gyro
-                quat_i, quat_j, quat_k, quat_real = self.bno.quaternion
+                accel = self.bno.acceleration
+                gyro = self.bno.gyro
+                quat = self.bno.quaternion
+
+                if accel is not None and None not in accel:
+                    self.last_valid_accel = accel
+                if gyro is not None and None not in gyro:
+                    self.last_valid_gyro = gyro
+                
+                # validate quaternion: must not be None and must have non-zero magnitude
+                if quat is not None and None not in quat:
+                    qi, qj, qk, qr = quat
+                    mag_sq = qi*qi + qj*qj + qk*qk + qr*qr
+                    if mag_sq > 1e-6:
+                        self.last_valid_quat = (qi, qj, qk, qr)
+
+                accel_x, accel_y, accel_z = self.last_valid_accel
+                gyro_x, gyro_y, gyro_z = self.last_valid_gyro
+                quat_i, quat_j, quat_k, quat_real = self.last_valid_quat
+
                 return accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, quat_i, quat_j, quat_k, quat_real
             except Exception as e:
-                self.get_logger().error(f"Error reading BNO085 sensor: {e}. Switching to sim mode.")
-                self.sim_mode = True
+                self.get_logger().warn(f"Transient error reading BNO085 sensor: {e}. Returning last valid frame.")
+                accel_x, accel_y, accel_z = self.last_valid_accel
+                gyro_x, gyro_y, gyro_z = self.last_valid_gyro
+                quat_i, quat_j, quat_k, quat_real = self.last_valid_quat
+                return accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, quat_i, quat_j, quat_k, quat_real
 
         # simulated fallback data (gravity on z, zero gyro, identity quat)
         t = self.get_clock().now().nanoseconds * 1e-9
@@ -162,7 +192,11 @@ class TelemetryNode(Node):
             return
 
         accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, quat_i, quat_j, quat_k, quat_real = self.read_sensor_data()
-        roll, pitch, yaw = quaternion_to_euler_deg(quat_i, quat_j, quat_k, quat_real)
+        roll, pitch, raw_yaw = quaternion_to_euler_deg(quat_i, quat_j, quat_k, quat_real)
+        self.last_raw_yaw = raw_yaw
+
+        # Apply True North Tare Offset
+        yaw = ((raw_yaw - self.yaw_offset_deg + 180.0) % 360.0) - 180.0
 
         now = self.get_clock().now().to_msg()
 
@@ -223,7 +257,7 @@ class TelemetryNode(Node):
             f"  Orientation (Euler Degrees):\n"
             f"    Roll : {roll:7.2f}°\n"
             f"    Pitch: {pitch:7.2f}°\n"
-            f"    Yaw  : {yaw:7.2f}°\n"
+            f"    Yaw  : {yaw:7.2f}° (Tare: {self.yaw_offset_deg:+.2f}°)\n"
         )
         str_msg = String()
         str_msg.data = telemetry_output
@@ -231,12 +265,13 @@ class TelemetryNode(Node):
 
     # service handlers
     def handle_calibrate(self, request, response):
-        """service callback to re-initialize hardware sensor."""
-        self.get_logger().info("Calibrate / reset hardware connection requested via service...")
-        self.sim_mode = self.get_parameter('sim_mode').value
-        self._init_hardware()
-        response.success = not self.sim_mode
-        response.message = "Hardware re-initialized successfully." if response.success else "Failed to initialize hardware; running in simulation mode."
+        """service callback to calibrate/tare current heading as True North (0.0 deg)."""
+        self.yaw_offset_deg = self.last_raw_yaw
+        self.get_logger().info(
+            f"True North Calibrated via service. Raw Yaw: {self.last_raw_yaw:.2f}°, Tare Offset: {self.yaw_offset_deg:.2f}°."
+        )
+        response.success = True
+        response.message = f"True North Calibrated! Current heading set to 0.0° North (Tare offset: {self.yaw_offset_deg:.2f}°)."
         return response
 
     def handle_enable_publishing(self, request, response):

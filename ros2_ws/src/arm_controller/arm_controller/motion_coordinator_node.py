@@ -77,7 +77,7 @@ class MotionCoordinatorNode(Node):
         self.rr_motor_sub = self.create_subscription(Float32, '/motor/rear_right', self.rr_motor_cb, 10)
         self.gripper_state_sub = self.create_subscription(Float32, '/gripper_state', self.gripper_state_cb, 10)
 
-        self.auto_mode = True
+        self.auto_mode = False
         self.auto_mode_sub = self.create_subscription(Bool, '/auto_mode', self.auto_mode_cb, 10)
 
         self.arm_manual_vel = 0.0

@@ -21,7 +21,7 @@ class DashboardHelperNode(Node):
             },
             "state_publisher": {
                 "name": "Robot State Publisher",
-                "cmd": ["ros2", "launch", "rover_description", "view_robot.launch.py"],
+                "cmd": ["ros2", "launch", "rover_description", "view_robot.launch.py", "use_rviz:=false"],
                 "pattern": "view_robot.launch.py",
                 "proc": None
             },
@@ -34,25 +34,25 @@ class DashboardHelperNode(Node):
             "drive_node": {
                 "name": "Drive Node (Manual/Joystick)",
                 "cmd": ["ros2", "run", "drive_package", "drive_node"],
-                "pattern": "drive_node",
+                "pattern": "drive_package/drive_node",
                 "proc": None
             },
             "vesc_driver": {
                 "name": "VESC BLDC Wheel Driver",
-                "cmd": ["ros2", "run", "drive_package", "vesc_driver_node"],
-                "pattern": "vesc_driver_node",
-                "proc": None
-            },
-            "stepper_driver": {
-                "name": "Stepper Wheel Driver",
-                "cmd": ["ros2", "run", "drive_package", "stepper_driver_node"],
-                "pattern": "stepper_driver_node",
+                "cmd": ["ros2", "run", "drive_package", "vesc_can_driver_node", "--ros-args", "-p", "fl_can_id:=53", "-p", "fr_can_id:=44", "-p", "rl_can_id:=48", "-p", "rr_can_id:=7"],
+                "pattern": "vesc_can_driver_node",
                 "proc": None
             },
             "arm_stepper_driver": {
-                "name": "Arm Stepper Driver",
+                "name": "Arm & Gripper Steppers (DM556Y)",
                 "cmd": ["ros2", "run", "arm_controller", "arm_stepper_driver"],
                 "pattern": "arm_stepper_driver",
+                "proc": None
+            },
+            "motion_coordinator": {
+                "name": "Arm Motion Coordinator",
+                "cmd": ["ros2", "run", "arm_controller", "motion_coordinator"],
+                "pattern": "motion_coordinator",
                 "proc": None
             },
             "stream_cam_0": {
@@ -182,11 +182,16 @@ class DashboardHelperNode(Node):
             else:
                 try:
                     self.get_logger().info(f"Starting process: {proc_info['name']} via command: {cmd}")
-                    # Start in a new process group so it doesn't receive our SIGINT
+                    cmd_str = " ".join(cmd)
+                    full_cmd = [
+                        "bash", "-c",
+                        f"source /opt/ros/humble/setup.bash 2>/dev/null; source /home/orc/D.A.V.E./ros2_ws/install/setup.bash 2>/dev/null; export ROS_DOMAIN_ID=1; exec {cmd_str}"
+                    ]
+                    log_file = open(f"/tmp/dashboard_proc_{key}.log", "w")
                     proc = subprocess.Popen(
-                        cmd,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
+                        full_cmd,
+                        stdout=log_file,
+                        stderr=log_file,
                         preexec_fn=os.setsid
                     )
                     proc_info["proc"] = proc
@@ -222,16 +227,22 @@ class DashboardHelperNode(Node):
         return response
 
     def publish_status(self):
-        status_dict = {}
-        for key, info in self.processes.items():
-            status_dict[key] = {
-                "name": info["name"],
-                "running": self.is_running(info["pattern"])
-            }
-        
-        msg = String()
-        msg.data = json.dumps(status_dict)
-        self.status_pub.publish(msg)
+        if not rclpy.ok():
+            return
+        try:
+            status_dict = {}
+            for key, info in self.processes.items():
+                status_dict[key] = {
+                    "name": info["name"],
+                    "running": self.is_running(info["pattern"])
+                }
+            
+            msg = String()
+            msg.data = json.dumps(status_dict)
+            if rclpy.ok():
+                self.status_pub.publish(msg)
+        except Exception as e:
+            pass
 
     def destroy_node(self):
         # Clean up any child processes on exit
@@ -248,11 +259,15 @@ def main(args=None):
     node = DashboardHelperNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, BaseException):
         pass
     finally:
-        node.destroy_node()
-        rclpy.shutdown()
+        try:
+            node.destroy_node()
+        except Exception:
+            pass
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
