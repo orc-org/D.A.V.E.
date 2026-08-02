@@ -39,7 +39,7 @@ target_include_directories(NAVnode PUBLIC
   $<INSTALL_INTERFACE:include/navigation_system>
 )
 
- 
+
 # install targets
 install(TARGETS
   NAVnode
