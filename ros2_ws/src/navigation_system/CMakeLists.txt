@@ -45,8 +45,6 @@ add_executable(GPSnode src/GPSnode.cpp)
 ament_target_dependencies(GPSnode rclcpp navigation_interfaces)
 >>>>>>> fa8e302 (commit everything)
 
-add_executable(NAVnode src/NAVnode.cpp)
-ament_target_dependencies(NAVnode rclcpp navigation_interfaces)
 
 # install targets
 install(TARGETS
