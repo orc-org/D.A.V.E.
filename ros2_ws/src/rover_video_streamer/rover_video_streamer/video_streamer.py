@@ -50,7 +50,7 @@ class VideoStreamer:
         try:
             # write 0x00 to register 0x02 to initialize the ak7375 vcm chip
             res = subprocess.run(
-                ["i2cset", "-y", str(bus), f"0x{self.i2c_address:02x}", "0x02", "0x00"], 
+                ["i2cset", "-y", "-f", str(bus), f"0x{self.i2c_address:02x}", "0x02", "0x00"], 
                 capture_output=True, check=True
             )
             return True
@@ -58,16 +58,21 @@ class VideoStreamer:
             return False
 
     def init_focus_motor(self):
-        """Initializes focus VCM on its designated bus with retry delay to allow chip boot-up."""
-        # retry up to 5 times with a 50ms delay between attempts to allow VCM chip to boot after camera power-on
-        for attempt in range(1, 6):
-            if self._try_init_bus(self.i2c_bus):
-                print(f"[Autofocus] Focus VCM initialized successfully on I2C bus {self.i2c_bus} at address 0x{self.i2c_address:02x} (attempt {attempt}).")
-                self.has_focus_motor = True
-                return
-            time.sleep(0.05)
+        """Initializes focus VCM on its designated bus with retry and dynamic bus scanning."""
+        candidate_buses = [self.i2c_bus, 9, 10, 2, 1]
+        # remove duplicates while preserving order
+        candidate_buses = list(dict.fromkeys(candidate_buses))
 
-        print(f"[Autofocus] WARNING: Could not communicate with focus VCM on designated I2C bus {self.i2c_bus}.")
+        for bus in candidate_buses:
+            for attempt in range(1, 4):
+                if self._try_init_bus(bus):
+                    self.i2c_bus = bus
+                    print(f"[Autofocus] Focus VCM initialized successfully on I2C bus {self.i2c_bus} at address 0x{self.i2c_address:02x}.")
+                    self.has_focus_motor = True
+                    return
+                time.sleep(0.03)
+
+        print(f"[Autofocus] WARNING: Could not communicate with focus VCM on designated I2C buses {candidate_buses}.")
         print("[Autofocus] Direct I2C focus commands will be disabled.")
         self.has_focus_motor = False
 
@@ -85,8 +90,8 @@ class VideoStreamer:
             low_byte = val & 0xFF
             
             # write high byte to register 0x00 and low byte to register 0x01
-            subprocess.run(["i2cset", "-y", str(self.i2c_bus), f"0x{self.i2c_address:02x}", "0x00", f"0x{high_byte:02x}"], check=True, capture_output=True)
-            subprocess.run(["i2cset", "-y", str(self.i2c_bus), f"0x{self.i2c_address:02x}", "0x01", f"0x{low_byte:02x}"], check=True, capture_output=True)
+            subprocess.run(["i2cset", "-y", "-f", str(self.i2c_bus), f"0x{self.i2c_address:02x}", "0x00", f"0x{high_byte:02x}"], check=True, capture_output=True)
+            subprocess.run(["i2cset", "-y", "-f", str(self.i2c_bus), f"0x{self.i2c_address:02x}", "0x01", f"0x{low_byte:02x}"], check=True, capture_output=True)
         except Exception as e:
             print(f"[Autofocus] Error setting focus to {value}: {e}")
 
