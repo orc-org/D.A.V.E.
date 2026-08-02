@@ -20,10 +20,11 @@
             <useBuiltinTransports>true</useBuiltinTransports>
             <builtin>
                 <initialPeersList>
-                    <!-- Localhost for Jetson internal communication -->
+                    <!-- Localhost for Jetson internal communication and local testing -->
                     <locator><udpv4><address>127.0.0.1</address></udpv4></locator>
-                    <!-- Subnet broadcast for wireless antenna discovery, remove this if it breaks stuff idk -->
-                    <locator><udpv4><address>255.255.255.255</address></udpv4></locator>
+                    <!-- Unicast for reliable long-range antenna communication -->
+                    <locator><udpv4><address>192.168.1.87</address></udpv4></locator>
+                    <locator><udpv4><address>192.168.1.88</address></udpv4></locator>
                 </initialPeersList>
             </builtin>
         </rtps>

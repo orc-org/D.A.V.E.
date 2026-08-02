@@ -49,12 +49,7 @@ class DashboardHelperNode(Node):
                 "pattern": "arm_stepper_driver",
                 "proc": None
             },
-            "motion_coordinator": {
-                "name": "Arm Motion Coordinator",
-                "cmd": ["ros2", "run", "arm_controller", "motion_coordinator"],
-                "pattern": "motion_coordinator",
-                "proc": None
-            },
+
             "stream_cam_0": {
                 "name": "Camera 0 Streamer (CSIPort0)",
                 "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "csi", "--device", "0", "--host", "192.168.1.87", "--port", "5000"],
@@ -65,6 +60,12 @@ class DashboardHelperNode(Node):
                 "name": "Camera 1 Streamer (CSIPort1)",
                 "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "csi", "--device", "1", "--host", "192.168.1.87", "--port", "5002"],
                 "pattern": "video_streamer.py.*--device 1",
+                "proc": None
+            },
+            "stream_cam_2": {
+                "name": "Camera 2 Streamer (USB Video2)",
+                "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "v4l2", "--device", "/dev/video2", "--host", "192.168.1.87", "--port", "5004"],
+                "pattern": "video_streamer.py.*--device /dev/video2",
                 "proc": None
             },
             "gps_bridge": {
@@ -101,6 +102,18 @@ class DashboardHelperNode(Node):
                 "name": "Rover EKF Sensor Fusion (Wheel+IMU+GPS)",
                 "cmd": ["ros2", "run", "rover_ekf", "ekf_node"],
                 "pattern": "rover_ekf.*ekf_node",
+                "proc": None
+            },
+            "morse_recorder": {
+                "name": "Morse Code Recorder (UDP/Camera)",
+                "cmd": ["ros2", "run", "enigma_machine", "morse_recorder.py"],
+                "pattern": "morse_recorder.py",
+                "proc": None
+            },
+            "enigma_node": {
+                "name": "Enigma Machine Decoder/Encoder",
+                "cmd": ["ros2", "run", "enigma_machine", "enigma_node"],
+                "pattern": "enigma_node",
                 "proc": None
             }
         }

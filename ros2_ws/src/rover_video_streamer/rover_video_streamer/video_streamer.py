@@ -22,7 +22,7 @@ except ImportError:
 class VideoStreamer:
     """Manages the GStreamer pipeline and pushes OpenCV frames to it."""
     
-    def __init__(self, host, port, fps, width, height, bitrate, use_mjpeg, sensor_id=0):
+    def __init__(self, host, port, fps, width, height, bitrate, use_mjpeg, sensor_id=0, secondary_port=5001):
         self.host = host
         self.port = port
         self.fps = fps
@@ -30,6 +30,7 @@ class VideoStreamer:
         self.height = height
         self.bitrate = bitrate
         self.use_mjpeg = use_mjpeg
+        self.secondary_port = secondary_port
         self.writer = None
         
         # autofocus state variables
@@ -159,12 +160,18 @@ class VideoStreamer:
         self.autofocus_in_progress = False
 
     def init_gst_writer(self):
+        if self.secondary_port and self.secondary_port > 0:
+            clients = f"{self.host}:{self.port},127.0.0.1:{self.secondary_port}"
+            sink = f"multiudpsink clients=\"{clients}\" sync=false async=false buffer-size=2097152"
+        else:
+            sink = f"udpsink host={self.host} port={self.port} sync=false async=false buffer-size=2097152"
+
         if self.use_mjpeg:
             # mjpeg pipeline
             gst_pipeline = (
                 f"appsrc ! video/x-raw, format=BGR ! queue ! videoconvert ! "
                 f"jpegenc quality=80 ! rtpjpegpay ! "
-                f"udpsink host={self.host} port={self.port} sync=false async=false buffer-size=2097152"
+                f"{sink}"
             )
         else:
             # h.264 software encoding with low latency tuning
@@ -172,7 +179,7 @@ class VideoStreamer:
                 f"appsrc ! video/x-raw, format=BGR ! queue ! videoconvert ! video/x-raw, format=I420 ! "
                 f"x264enc tune=zerolatency bitrate={self.bitrate} speed-preset=ultrafast key-int-max={int(self.fps)} threads=4 ! "
                 f"rtph264pay config-interval=1 aggregate-mode=zero-latency ! "
-                f"udpsink host={self.host} port={self.port} sync=false async=false buffer-size=2097152"
+                f"{sink}"
             )
         
         print(f"Initializing GStreamer VideoWriter pipeline:\n{gst_pipeline}")
@@ -409,6 +416,7 @@ def main(args=None):
     parser.add_argument('--standalone', action='store_true', help='Force standalone camera mode even if ROS 2 is sourced')
     parser.add_argument('--autofocus-on-start', action='store_true', help='Trigger one-shot autofocus automatically at startup')
     parser.add_argument('--trigger-port', type=int, default=5005, help='UDP port to listen for remote focus triggers')
+    parser.add_argument('--secondary-port', type=int, default=5001, help='Secondary UDP port (127.0.0.1) for local nodes like morse_recorder (set to 0 to disable)')
 
     # resolve arguments
     parsed_args = parser.parse_args(args=args if args is not None else sys.argv[1:])
@@ -423,6 +431,9 @@ def main(args=None):
         except ValueError:
             sensor_id = 0
 
+    # automatically offset ports based on sensor_id to prevent port collisions when running multiple cameras
+    secondary_port = parsed_args.secondary_port + (sensor_id * 2) if parsed_args.secondary_port > 0 else 0
+
     # instantiate the core gstreamer video writer
     streamer = VideoStreamer(
         host=parsed_args.host,
@@ -432,7 +443,8 @@ def main(args=None):
         height=int(parsed_args.height) if isinstance(parsed_args.height, str) and parsed_args.height.isdigit() else parsed_args.height,
         bitrate=parsed_args.bitrate,
         use_mjpeg=parsed_args.mjpeg,
-        sensor_id=sensor_id
+        sensor_id=sensor_id,
+        secondary_port=secondary_port
     )
 
     # automatically offset the trigger port based on sensor_id to prevent overlaps

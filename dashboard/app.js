@@ -421,6 +421,7 @@ function setupROSInterfaces() {
 
     setupGPSROSInterfaces();
     setupIMUROSInterfaces();
+    setupMorseSubscribers();
 
     if (showing3D && !viewer3D) {
         init3DViewer();
@@ -472,6 +473,7 @@ function cleanupROSInterfaces() {
 
     cleanupGPSROSInterfaces();
     cleanupIMUROSInterfaces();
+    cleanupMorseSubscribers();
 
     resetModuleStatusUI();
     robotStatePublisherRunning = false;
@@ -1757,6 +1759,17 @@ function updateModuleStatusUI(status) {
                 cam1Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
             }
         }
+        if (key === 'stream_cam_2') {
+            const cam2Dot = document.getElementById('status-cam-2-dot');
+            const cam2Text = document.getElementById('status-cam-2-text');
+            const cam2Btn = document.getElementById('btn-toggle-cam-2');
+            if (cam2Dot) cam2Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam2Text) cam2Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam2Btn) {
+                cam2Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam2Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
+            }
+        }
     }
 }
 
@@ -1805,7 +1818,8 @@ function toggleModule(key) {
     // support toggling both process manager list buttons and specific viewport buttons
     const btn = document.getElementById(`btn-toggle-${key}`);
     const camBtn = (key === 'stream_cam_0') ? document.getElementById('btn-toggle-cam-0') : 
-                   (key === 'stream_cam_1') ? document.getElementById('btn-toggle-cam-1') : null;
+                   (key === 'stream_cam_1') ? document.getElementById('btn-toggle-cam-1') : 
+                   (key === 'stream_cam_2') ? document.getElementById('btn-toggle-cam-2') : null;
 
     const currentText = btn ? btn.innerText : (camBtn ? camBtn.innerText : "");
     const shouldStart = currentText.includes("START");
@@ -1876,6 +1890,12 @@ const cam1Toggle = document.getElementById('btn-toggle-cam-1');
 if (cam1Toggle) {
     cam1Toggle.addEventListener('click', () => {
         toggleModule('stream_cam_1');
+    });
+}
+const cam2Toggle = document.getElementById('btn-toggle-cam-2');
+if (cam2Toggle) {
+    cam2Toggle.addEventListener('click', () => {
+        toggleModule('stream_cam_2');
     });
 }
 
@@ -2942,6 +2962,353 @@ function updateIMUUI() {
         drawTacticalRadar();
     }
 }
+
+// Morse Code Dictionary for Live Dashboard Teletype Decoding
+const MORSE_TO_ENGLISH_TABLE = {
+    '*-': 'A', '-***': 'B', '-*-*': 'C', '-**': 'D', '*': 'E',
+    '**-*': 'F', '--*': 'G', '****': 'H', '**': 'I', '*---': 'J',
+    '-*-': 'K', '*-**': 'L', '--': 'M', '-*': 'N', '---': 'O',
+    '*--*': 'P', '--*-': 'Q', '*-*': 'R', '***': 'S', '-': 'T',
+    '**-': 'U', '***-': 'V', '*--': 'W', '-**-': 'X', '-*--': 'Y',
+    '--**': 'Z', '-----': '0', '*----': '1', '**---': '2', '***--': '3',
+    '****-': '4', '*****': '5', '-****': '6', '--***': '7', '---**': '8',
+    '----*': '9', '*-*-*-': '.', '--**--': ',', '**--**': '?'
+};
+
+let morseAudioEnabled = false;
+let audioCtx = null;
+
+function decodeMorseStringToEnglish(morseStr) {
+    if (!morseStr) return "";
+    const words = morseStr.split('  '); // Double space between words
+    return words.map(word => {
+        const letters = word.split(' '); // Single space between letters
+        return letters.map(code => MORSE_TO_ENGLISH_TABLE[code] || '?').join('');
+    }).join(' ');
+}
+
+function playMorseCWBeep(durationMs) {
+    if (!morseAudioEnabled) return;
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(750, audioCtx.currentTime); // 750Hz CW tone
+
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (durationMs / 1000.0));
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + (durationMs / 1000.0));
+    } catch(e) {
+        console.warn("Audio Context Error:", e);
+    }
+}
+
+function updateMorseTeletype(rawMsg) {
+    const rawStreamEl = document.getElementById('morse-raw-stream');
+    const teletypeEl = document.getElementById('morse-teletype-decoded');
+    const lastCharBadge = document.getElementById('morse-last-char-badge');
+
+    if (rawStreamEl) rawStreamEl.innerText = rawMsg || '---';
+
+    if (rawMsg && rawMsg !== '---') {
+        const decodedText = decodeMorseStringToEnglish(rawMsg);
+        if (teletypeEl) {
+            teletypeEl.innerText = decodedText ? decodedText : '[ DECODING... ]';
+        }
+
+        // Get last symbol
+        const parts = rawMsg.trim().split(' ');
+        const lastSymbol = parts[parts.length - 1];
+        const lastChar = MORSE_TO_ENGLISH_TABLE[lastSymbol] || '--';
+
+        if (lastCharBadge) {
+            lastCharBadge.innerText = `SYMBOL: ${lastSymbol} (${lastChar})`;
+        }
+
+        // Play audio beep for last symbol
+        if (lastSymbol.endsWith('-')) {
+            playMorseCWBeep(220); // Daw beep
+        } else if (lastSymbol.endsWith('*')) {
+            playMorseCWBeep(80);  // Dit beep
+        }
+    }
+}
+
+function simulateMorseTransmission() {
+    logMorseConsole("[Simulator] Injecting test Morse sequence...");
+    const sampleSequences = [
+        "*** - --- *--*",                        // STOP
+        "*** - --- *--* **** .. *** - --- *--*", // STOP HI STOP
+        "**** . .-.. .-.. ---",                  // HELLO
+        "*- -* -*--"                             // ANY
+    ];
+    const seq = sampleSequences[Math.floor(Math.random() * sampleSequences.length)];
+
+    if (connected && ros) {
+        const pub = new ROSLIB.Topic({
+            ros: ros,
+            name: '/morse_code',
+            messageType: 'enigma_machine_interfaces/msg/Morse'
+        });
+        pub.publish(new ROSLIB.Message({ message: seq }));
+        logMorseConsole(`[Simulator] Published to /morse_code: "${seq}"`);
+    } else {
+        // Local UI simulation if offline
+        updateMorseTeletype(seq);
+        logMorseConsole(`[Offline Sim] Decoded: "${decodeMorseStringToEnglish(seq)}"`);
+    }
+}
+
+let morseStrSub = null;
+let morsePixelSub = null;
+
+function setupMorseSubscribers() {
+    if (!ros || !connected) return;
+
+    if (morseStrSub) {
+        try { morseStrSub.unsubscribe(); } catch(e){}
+    }
+    if (morsePixelSub) {
+        try { morsePixelSub.unsubscribe(); } catch(e){}
+    }
+
+    morseStrSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/morse_code_str',
+        messageType: 'std_msgs/msg/String'
+    });
+
+    morseStrSub.subscribe((message) => {
+        const rawMsg = (message && message.data !== undefined) ? message.data : '---';
+        updateMorseTeletype(rawMsg);
+        logMorseConsole(`[ROS Topic]: Received '${rawMsg}'`);
+        queryTerminalPassword();
+    });
+
+    morsePixelSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/morse_recorder/pixel_count',
+        messageType: 'std_msgs/msg/Int32'
+    });
+
+    morsePixelSub.subscribe((message) => {
+        const pixCount = (message && message.data !== undefined) ? message.data : 0;
+        const telemetryEl = document.getElementById('morse-pixel-telemetry');
+        if (telemetryEl) {
+            telemetryEl.innerText = `WHITE PIXELS: ${pixCount} px`;
+            telemetryEl.style.color = pixCount > 0 ? "var(--accent-amber)" : "var(--text-muted)";
+        }
+    });
+}
+
+function cleanupMorseSubscribers() {
+    if (morseStrSub) {
+        try { morseStrSub.unsubscribe(); } catch(e){}
+        morseStrSub = null;
+    }
+    if (morsePixelSub) {
+        try { morsePixelSub.unsubscribe(); } catch(e){}
+        morsePixelSub = null;
+    }
+}
+
+function setMorseRecorderParam(paramName, val) {
+    if (!connected || !ros) return;
+
+    const paramService = new ROSLIB.Service({
+        ros: ros,
+        name: '/morse_recorder/set_parameters',
+        serviceType: 'rcl_interfaces/srv/SetParameters'
+    });
+
+    const req = new ROSLIB.ServiceRequest({
+        parameters: [
+            {
+                name: paramName,
+                value: {
+                    type: 2, // INTEGER
+                    integer_value: parseInt(val)
+                }
+            }
+        ]
+    });
+
+    paramService.callService(req, (res) => {
+        logMorseConsole(`[Param Set] ${paramName} -> ${val}`);
+    }, (err) => {
+        logMorseConsole(`[Param Error] Failed to update ${paramName}`);
+    });
+}
+
+function queryTerminalPassword() {
+    if (!connected || !ros) {
+        logMorseConsole("[Error] Not connected to ROS 2 bridge.");
+        return;
+    }
+
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/get_password',
+        serviceType: 'enigma_machine_interfaces/srv/GetPassword'
+    });
+
+    const request = new ROSLIB.ServiceRequest({});
+
+    logMorseConsole("Calling /get_password service...");
+    service.callService(request, (result) => {
+        if (result && result.password !== undefined) {
+            const passEl = document.getElementById('morse-terminal-password');
+            if (passEl) {
+                passEl.innerText = result.password ? result.password.toUpperCase() : '[ UNLOCKED / WAITING ]';
+            }
+            logMorseConsole(`[GetPassword Success] Decoded Password: "${result.password}"`);
+        } else {
+            logMorseConsole("[GetPassword Error] Invalid service response.");
+        }
+    }, (error) => {
+        logMorseConsole(`[GetPassword Error] ${error}`);
+    });
+}
+
+function setAndEncodeMessage() {
+    const inputEl = document.getElementById('input-morse-message');
+    if (!inputEl || !inputEl.value.trim()) {
+        logMorseConsole("[Warning] Please enter a message to encode.");
+        return;
+    }
+
+    const msg = inputEl.value.trim();
+    if (!connected || !ros) {
+        logMorseConsole("[Error] Not connected to ROS 2 bridge.");
+        return;
+    }
+
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/set_message',
+        serviceType: 'enigma_machine_interfaces/srv/SetMessage'
+    });
+
+    const request = new ROSLIB.ServiceRequest({
+        message: msg
+    });
+
+    logMorseConsole(`Calling /set_message with '${msg}'...`);
+    service.callService(request, (result) => {
+        logMorseConsole(`[SetMessage Success] Message '${msg}' set & encoded for appendage.`);
+    }, (error) => {
+        logMorseConsole(`[SetMessage Error] ${error}`);
+    });
+}
+
+function logMorseConsole(text) {
+    const logEl = document.getElementById('morse-console-log');
+    if (!logEl) return;
+    const timeStr = new Date().toLocaleTimeString();
+    logEl.textContent = `[${timeStr}] ${text}\n` + logEl.textContent;
+}
+
+function clearMorseTeletype() {
+    const rawStreamEl = document.getElementById('morse-raw-stream');
+    const teletypeEl = document.getElementById('morse-teletype-decoded');
+    const lastCharBadge = document.getElementById('morse-last-char-badge');
+
+    if (rawStreamEl) rawStreamEl.innerText = '---';
+    if (teletypeEl) teletypeEl.innerText = '[ TELETYPE READY ]';
+    if (lastCharBadge) lastCharBadge.innerText = 'SYMBOL: --';
+
+    logMorseConsole("[UI] Cleared raw stream and teletype display.");
+
+    // Call ROS 2 service to clear memory buffer on morse_recorder node
+    if (connected && ros) {
+        const service = new ROSLIB.Service({
+            ros: ros,
+            name: '/morse_recorder/reset',
+            serviceType: 'std_srvs/srv/Trigger'
+        });
+        service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+            logMorseConsole("[Reset Success] Cleared Morse node buffer memory.");
+        }, (error) => {
+            // Silently ignore if node is currently stopped
+        });
+    }
+}
+
+// Attach event listeners for Morse Code Section
+document.addEventListener('DOMContentLoaded', () => {
+    const btnGetPass = document.getElementById('btn-morse-get-password');
+    if (btnGetPass) {
+        btnGetPass.addEventListener('click', queryTerminalPassword);
+    }
+
+    const btnClear = document.getElementById('btn-morse-clear');
+    if (btnClear) {
+        btnClear.addEventListener('click', clearMorseTeletype);
+    }
+
+    const btnSetMsg = document.getElementById('btn-morse-set-message');
+    if (btnSetMsg) {
+        btnSetMsg.addEventListener('click', setAndEncodeMessage);
+    }
+
+    const btnSimulate = document.getElementById('btn-morse-simulate');
+    if (btnSimulate) {
+        btnSimulate.addEventListener('click', simulateMorseTransmission);
+    }
+
+    const btnAudioToggle = document.getElementById('btn-morse-audio-toggle');
+    if (btnAudioToggle) {
+        btnAudioToggle.addEventListener('click', () => {
+            morseAudioEnabled = !morseAudioEnabled;
+            btnAudioToggle.innerText = morseAudioEnabled ? "🔊 CW BEEP: ON" : "🔊 CW BEEP: OFF";
+            btnAudioToggle.className = morseAudioEnabled ? "neon-btn-green" : "neon-btn-blue";
+            if (morseAudioEnabled) playMorseCWBeep(100);
+        });
+    }
+
+    const inputMsg = document.getElementById('input-morse-message');
+    if (inputMsg) {
+        inputMsg.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                setAndEncodeMessage();
+            }
+        });
+    }
+
+    const sliderBright = document.getElementById('slider-brightness-thresh');
+    const valBright = document.getElementById('val-brightness-thresh');
+    if (sliderBright && valBright) {
+        sliderBright.addEventListener('input', (e) => {
+            valBright.innerText = e.target.value;
+        });
+        sliderBright.addEventListener('change', (e) => {
+            setMorseRecorderParam('brightness_threshold', e.target.value);
+        });
+    }
+
+    const sliderPix = document.getElementById('slider-pixel-thresh');
+    const valPix = document.getElementById('val-pixel-thresh');
+    if (sliderPix && valPix) {
+        sliderPix.addEventListener('input', (e) => {
+            valPix.innerText = e.target.value;
+        });
+        sliderPix.addEventListener('change', (e) => {
+            setMorseRecorderParam('pixel_count_threshold', e.target.value);
+        });
+    }
+});
 
 
 
