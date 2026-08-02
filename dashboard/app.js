@@ -1773,6 +1773,17 @@ function updateModuleStatusUI(status) {
                 cam1Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
             }
         }
+        if (key === 'stream_cam_2') {
+            const cam2Dot = document.getElementById('status-cam-2-dot');
+            const cam2Text = document.getElementById('status-cam-2-text');
+            const cam2Btn = document.getElementById('btn-toggle-cam-2');
+            if (cam2Dot) cam2Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam2Text) cam2Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam2Btn) {
+                cam2Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam2Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
+            }
+        }
     }
 }
 
@@ -1821,7 +1832,8 @@ function toggleModule(key) {
     // support toggling both process manager list buttons and specific viewport buttons
     const btn = document.getElementById(`btn-toggle-${key}`);
     const camBtn = (key === 'stream_cam_0') ? document.getElementById('btn-toggle-cam-0') : 
-                   (key === 'stream_cam_1') ? document.getElementById('btn-toggle-cam-1') : null;
+                   (key === 'stream_cam_1') ? document.getElementById('btn-toggle-cam-1') : 
+                   (key === 'stream_cam_2') ? document.getElementById('btn-toggle-cam-2') : null;
 
     const currentText = btn ? btn.innerText : (camBtn ? camBtn.innerText : "");
     const shouldStart = currentText.includes("START");
@@ -1892,6 +1904,12 @@ const cam1Toggle = document.getElementById('btn-toggle-cam-1');
 if (cam1Toggle) {
     cam1Toggle.addEventListener('click', () => {
         toggleModule('stream_cam_1');
+    });
+}
+const cam2Toggle = document.getElementById('btn-toggle-cam-2');
+if (cam2Toggle) {
+    cam2Toggle.addEventListener('click', () => {
+        toggleModule('stream_cam_2');
     });
 }
 
