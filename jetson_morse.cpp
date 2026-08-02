@@ -10,12 +10,11 @@ using namespace std;
 using namespace std::chrono_literals;
 
 constexpr int MORSE_PWM_PIN = 32;  // Physical Jetson Nano header pin
-constexpr int WPM = 18;
+constexpr int WPM = 5;
 constexpr int UNIT_MS = 1200 / WPM;
-constexpr int HOME = 95;
-constexpr int PRESS = 105;
-constexpr int PWM_RANGE = 255;
-constexpr int PWM_FREQUENCY = 2100;
+constexpr int HOME = 1000000;   // 1.0ms (0 degrees)
+constexpr int PRESS = 2000000;  // 2.0ms (180 degrees for bigger swing)
+constexpr int PWM_FREQUENCY = 50; // 50 Hz for standard servos
 
 const unsigned long long PERIOD_NS =
     1'000'000'000ULL / PWM_FREQUENCY;
@@ -46,16 +45,18 @@ const unordered_map<char, string> MORSE = {
 
 void writeFile(const string& file, unsigned long long value) {
     ofstream out(file);
-    if (!out) throw runtime_error("Cannot write to " + file);
+    if (!out) throw runtime_error("Cannot open " + file);
     out << value;
+    if (out.fail()) throw runtime_error("Failed to write value to " + file + " (Kernel rejected it)");
 }
 
-void setPWM(int value) {
-    writeFile(PWM_PATH + "duty_cycle", PERIOD_NS * value / PWM_RANGE);
+void setPWM(int duty_ns) {
+    writeFile(PWM_PATH + "duty_cycle", duty_ns);
 }
 
 void initialisePWM() {
     writeFile(PWM_PATH + "enable", 0);
+    writeFile(PWM_PATH + "duty_cycle", 0); // MUST be zero before changing period on Jetson
     writeFile(PWM_PATH + "period", PERIOD_NS);
     setPWM(HOME);
     writeFile(PWM_PATH + "enable", 1);
