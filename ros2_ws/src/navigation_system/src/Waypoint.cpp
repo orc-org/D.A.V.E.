@@ -112,3 +112,5 @@ void Waypoint::EarthCentred_To_GeodeticApprox() {
     latitude = latRad;
     longitude = lonRad;
 }
+
+#endif // WAYPOINT_CPP
