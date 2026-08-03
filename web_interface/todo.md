@@ -7,7 +7,7 @@ Arm position - done
 Hand state - done
 Arm button push trigger
 Wheel power monitor - done
-Toggle lights
+Toggle lights - done
 Camera servo position
 Set control sensitivity - Done
 Bearing monitor
@@ -20,4 +20,4 @@ fix camera servo position css - done
 responsive buttons (if time permits)
 
 Controller ---------------
-Make the tab/shift tab stuff to dpad
+Make the tab/shift tab stuff to dpad -done I think (Hard to test without knowing what its for)

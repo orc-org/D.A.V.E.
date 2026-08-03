@@ -4,6 +4,9 @@ const controller = (() => {
     let sensitivity = "fine";
     let last_message_time = Date.now(); //Needed so ui updates if controller gets unplugged (but the lights on the controller would also shut off)
     let previous_buttons = [];
+    let lights = false;
+    let handPosition = 0.5;
+    let lastHandUpdate = 0;
 
     function update(joyMsg) {
         if (checkStop()) return
@@ -70,6 +73,64 @@ const controller = (() => {
 
         }
 
+        // Toggle lights with Select button
+        if (select === 1 && previous_buttons[4] !== 1) {
+
+            if (lights) {
+                setLights(false);
+            } else {
+                setLights(true);
+            }
+
+        }
+
+        // holding bumpers should slowly adjust hand position slider (visually)
+        const now = Date.now();
+
+        if (now - lastHandUpdate > 50) {   // update every 50ms
+
+            if (RB === 1) {
+                handPosition += 0.01;
+                handPosition = Math.min(handPosition, 1.0);
+                setHandPosition(handPosition);
+                lastHandUpdate = now;
+            }
+
+
+            if (LB === 1) {
+                handPosition -= 0.01;
+                handPosition = Math.max(handPosition, 0.0);
+                setHandPosition(handPosition);
+                lastHandUpdate = now;
+            }
+        }
+
+        //Only sends the command after yuo release the bumper
+        if (previous_buttons[10] === 1 && RB === 0) {
+            sendHandPosition();
+        }
+
+        if (previous_buttons[9] === 1 && LB === 0) {
+            sendHandPosition();
+        }
+        
+        // D-pad controls UI focus
+        if (d_right === 1 && previous_buttons[14] !== 1) {
+            pressTab();
+        }
+        
+        if (d_down === 1 && previous_buttons[12] !== 1) {
+            pressTab();
+        }
+
+        if (d_left === 1 && previous_buttons[13] !== 1) {
+            pressShiftTab();
+        }
+
+        if (d_up === 1 && previous_buttons[11] !== 1) {
+            pressShiftTab();
+        }
+
         previous_buttons = [...buttons];
 
     }
@@ -94,6 +155,58 @@ const controller = (() => {
         }
     }
 
+    function pressTab() {
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Tab",
+            code: "Tab",
+            keyCode: 9,
+            which: 9,
+            bubbles: true
+        }));
+
+        document.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "Tab",
+            code: "Tab",
+            keyCode: 9,
+            which: 9,
+            bubbles: true
+        }));
+    }
+
+    function pressShiftTab() {
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Shift",
+            code: "ShiftLeft",
+            keyCode: 16,
+            which: 16,
+            bubbles: true
+        }));
+
+        document.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Tab",
+            code: "Tab",
+            keyCode: 9,
+            which: 9,
+            bubbles: true
+        }));
+
+        document.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "Tab",
+            code: "Tab",
+            keyCode: 9,
+            which: 9,
+            bubbles: true
+        }));
+
+        document.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "Shift",
+            code: "ShiftLeft",
+            keyCode: 16,
+            which: 16,
+            bubbles: true
+        }));
+    }
+
     function setSensitivity(newSensitivity) {
 
         sensitivity = newSensitivity;
@@ -107,8 +220,52 @@ const controller = (() => {
         }
 
     }
+
+    function setLights(state) {
+
+        lights = state;
+
+        const onButton = document.getElementById("light-on");
+        const offButton = document.getElementById("light-off");
+
+        if (window.setLightsButton) {
+
+            if (lights) {
+                window.setLightsButton(onButton);
+            } else {
+                window.setLightsButton(offButton);
+            }
+
+        }
+
+    }
     
-    
+    //This is so the slider changes visually while bumper is held
+    function setHandPosition(value) {
+
+        handPosition = value;
+
+        const slider = document.getElementById("hand-pos-slider");
+
+        if (slider) {
+            slider.value = value * 100;
+        }
+
+        const valueDisplay = document.getElementById("hand-pos-value");
+
+        if (valueDisplay) {
+            valueDisplay.textContent = Math.round(value * 100) + "%";
+        }
+    }
+
+    //This actually changes it
+    function sendHandPosition() {
+
+        if (window.publishHandPosition) {
+            window.publishHandPosition(handPosition);
+        }
+
+    }
 
     //This part makes it so the ui knows the controller is disconnected (Joy node just stops publishing if controller is unplugged, so it says "connected" still without this)
     setInterval(() => {
@@ -136,7 +293,8 @@ const controller = (() => {
         update,
         connected,
         disconnected,
-        setMode
+        setMode,
+        setLights
     };
 
 })();
