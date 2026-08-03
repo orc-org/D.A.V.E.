@@ -1,0 +1,92 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+	overlay-name = "DAVE Custom Pins Overlay";
+	compatible = "nvidia,p3768-0000+p3767-0000\0nvidia,p3768-0000+p3767-0001\0nvidia,p3768-0000+p3767-0003\0nvidia,p3768-0000+p3767-0004\0nvidia,p3768-0000+p3767-0005\0nvidia,p3768-0000+p3767-0000-super\0nvidia,p3768-0000+p3767-0001-super\0nvidia,p3768-0000+p3767-0003-super\0nvidia,p3768-0000+p3767-0004-super\0nvidia,p3768-0000+p3767-0005-super";
+
+	fragment@0 {
+		target = <0xffffffff>;
+
+		__overlay__ {
+			pinctrl-names = "default";
+			pinctrl-0 = <0x01>;
+
+			exp-header-pinmux {
+				phandle = <0x01>;
+
+				/* Pin 13: Stepper */
+				hdr40-pin13 {
+					nvidia,pins = "spi3_sck_py0";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 15: Stepper */
+				hdr40-pin15 {
+					nvidia,pins = "soc_gpio39_pn1";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 16: Stepper */
+				hdr40-pin16 {
+					nvidia,pins = "spi3_cs1_py4";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 18: Stepper */
+				hdr40-pin18 {
+					nvidia,pins = "spi3_cs0_py3";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 22: Stepper */
+				hdr40-pin22 {
+					nvidia,pins = "spi3_miso_py1";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 32: PWM0 for Servo */
+				hdr40-pin32 {
+					nvidia,pins = "soc_gpio19_pg6";
+					nvidia,function = "pwm0";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 33: Stepper */
+				hdr40-pin33 {
+					nvidia,pins = "soc_gpio21_ph0";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+			};
+		};
+	};
+
+	__symbols__ {
+		jetson_io_pinmux = "/fragment@0/__overlay__/exp-header-pinmux";
+	};
+
+	__fixups__ {
+		pinmux = "/fragment@0:target:0";
+	};
+
+	__local_fixups__ {
+		fragment@0 {
+			__overlay__ {
+				pinctrl-0 = <0x00>;
+			};
+		};
+	};
+};
