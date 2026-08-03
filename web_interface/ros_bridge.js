@@ -12,6 +12,7 @@ let armActionClient = null;
 let armTargetPub = null;
 let modePub = null;
 let sensitivityPub = null;
+let lightsPub = null;
 
 
 // ROS Subscribers
@@ -79,6 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 });
+
 
 function checkStop() {
     if (stopAll) {
@@ -162,8 +164,6 @@ function setupROS() {
     });
 
 
-
-
     wheelFLSub.subscribe((msg)=>{
         //console.log("Front left:", msg.data);
         updateWheelDisplay("wheel-fl-power", msg.data);
@@ -188,6 +188,13 @@ function setupROS() {
         messageType: "std_msgs/msg/String"
     });
 
+    //Lights node publisher
+    lightsPub = new ROSLIB.Topic({
+        ros: ros,
+        name: "/lights",
+        messageType: "std_msgs/msg/Bool"
+    });
+
     // Arm Position Control
     armTargetPub = new ROSLIB.Topic({
         ros: ros,
@@ -207,6 +214,7 @@ function setupROS() {
         name: '/gripper_state',
         messageType: 'std_msgs/msg/Float32'
     });
+    
 
     handStateSub.subscribe((msg) => {
         message = msg.data;
@@ -271,7 +279,8 @@ function publishHandPosition(value) {
             data: clampedValue
         }));
     }
-
+    
+    
     if (!handActionClient) {
         return;
     }
@@ -284,7 +293,12 @@ function publishHandPosition(value) {
     });
 
     handGoal.send();
+    
+
 }
+
+window.publishHandPosition = publishHandPosition;
+
 
 //Used to change drive and arm mode
 function publishMode(mode) {
@@ -328,3 +342,20 @@ function publishSensitivity(sensitivity) {
 }
 
 window.publishSensitivity = publishSensitivity;
+
+//Turns on/off lights
+function publishLights(state) {
+
+    if (!lightsPub) {
+        console.warn("Lights publisher not initialized");
+        return;
+    }
+
+    lightsPub.publish(new ROSLIB.Message({
+        data: state
+    }));
+
+    //console.log("Lights:", state ? "ON" : "OFF");
+}
+
+window.publishLights = publishLights;
