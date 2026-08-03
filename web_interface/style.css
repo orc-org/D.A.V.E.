@@ -12,11 +12,13 @@
     --accent-inactive: red;
     --accent-mid: orange;
 
+    --light: rgba(255, 255, 255, 0.4);
+
 }
 
 body {
     background-color: var(--bg-primary);
-    
+
     color: var(--text-default);
     font-variant: small-caps;
     font-family: "Gothic A1", sans-serif;
@@ -74,7 +76,7 @@ button {
     border: 1.5px solid var(--border-colour);
 }
 
-#pos-cont .data-title-inner{
+#pos-cont .data-title-inner {
     margin-left: 0%;
 }
 
@@ -222,19 +224,21 @@ button {
     margin-left: auto;
     border: 1.5px solid var(--border-colour);
 }
+
 #lower-cont .data-cont .data-title {
     margin-top: 1%;
     margin-bottom: 0.5%;
     margin-left: 3%;
 
 }
+
 #lower-cont .data-cont .cont .data-title-inner {
     margin-top: 0%;
     margin-bottom: 0.5%;
     margin-left: 3%;
 }
 
-#lower-cont .data{
+#lower-cont .data {
     padding-top: 1%;
     padding-bottom: 1%;
     margin-top: 0%;
@@ -284,6 +288,10 @@ button {
     width: 55%;
 }
 
+#wheel-cont .data-input {
+    margin-right: 2px;
+}
+
 .wheel-monitor {
     background-color: var(--accent-active);
     height: 15px;
@@ -297,7 +305,7 @@ button {
     font-family: g;
     justify-content: center;
     background-color: var(--accent-inactive);
-    
+
     height: 20px;
     border: 0;
     border-radius: 8px;
@@ -306,6 +314,7 @@ button {
     margin-right: auto;
     width: 97%;
 }
+
 .button-single.active {
     background-color: var(--accent-active);
 }
@@ -324,7 +333,7 @@ button {
 
 .toggle-three {
     background-color: var(--accent-active);
-text-align: center; 
+    text-align: center;
     line-height: 20px;
     font-family: g;
     font-size: 12px;
@@ -348,9 +357,11 @@ text-align: center;
 #sensitivity-coarse {
     background-color: var(--accent-inactive);
 }
+
 #sensitivity-fine {
     background-color: var(--accent-mid);
 }
+
 #sensitivity-ultra {
     background-color: var(--accent-active);
 }
@@ -371,7 +382,7 @@ text-align: center;
 
     width: 20%;
     height: 600px;
-    display: flex;
+
 
     margin-top: 1%;
     padding: 1%;
@@ -380,6 +391,44 @@ text-align: center;
     margin-left: auto;
     border: 1.5px solid var(--border-colour);
 }
+
+
+#gnss-cont .data .data-input {
+    margin-left: 8px;
+}
+
+#compass {
+    width: 100px;
+    height: 100px;
+    border-radius: 50px;
+    background-color: var(--accent-active);
+    margin-left: auto;
+    margin-right: auto;
+    rotate: 45deg;
+    box-shadow: var(--light) 0px 0px 30px inset;
+}
+
+#arrow-cont {
+    height: 100px;
+    width: 100px;
+}
+
+#compass-arrow {
+    height: 0;
+    width: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 50px solid white;
+    border-radius: 2px;
+
+    margin-left: auto;
+    margin-right: auto;
+
+
+
+}
+
+/* Sliders */
 
 .slide-container {
     width: 95%;
@@ -400,4 +449,10 @@ text-align: center;
     min-width: 0;
     height: 25px;
     background-color: var(--accent-active);
+}
+
+/* Camera servo */
+#camera-servo .data .data-input {
+    float: right;
+    margin-right: 5px;
 }

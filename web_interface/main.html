@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="script.js"></script>
     <script src="controller.js"></script>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/eventemitter3@5.0.1/dist/eventemitter3.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
     <script src="ros_bridge.js"></script>
@@ -148,6 +148,54 @@
 
 
         <div id="gnss-cont">
+            <div class="data-title">
+                GNSS Information
+            </div>
+            <div class="cont">
+
+                <div id="compass">
+                    <div id="arrow-cont">
+                        <div id="compass-arrow"></div>
+                    </div>
+                </div>
+
+                <div style="display: block; width: 60%;" id="beside-compass">
+                    <div class="data">
+                        <span class="data-title-inner">Speed</span>
+                        <span class="data-input">placeholder</span>
+                    </div>
+                    <div class="data">
+                        <span class="data-title-inner">Latitude</span>
+                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
+
+                        <br>
+
+                        <span class="data-title-inner">Longitude</span>
+                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
+                        <br>
+
+                        <span class="data-title-inner">Bearing</span>
+                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
+
+                    </div>
+                </div>
+
+            </div>
+            <div class="data">
+                        <span class="data-title-inner">Distance to next waypoint</span>
+                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
+
+                        <br>
+
+                        <span class="data-title-inner">Latitude of next waypoint</span>
+                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
+                        <br>
+
+                        <span class="data-title-inner">Longitude of next waypoint</span>
+                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
+            </div>
+
+
 
         </div>
     </div>
@@ -233,9 +281,6 @@
 
 
         </div>
-
-
-
 
     </div>
 

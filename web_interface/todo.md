@@ -12,12 +12,11 @@ Camera servo position
 Set control sensitivity - Done
 Bearing monitor
 Latitude/Longitude monitor
-Terminal input
-Terminal output
+
 
 FRONT END -----------------
 Gnss options - in progress
-fix camera servo position css - in progress
+fix camera servo position css - done
 responsive buttons (if time permits)
 
 Controller ---------------

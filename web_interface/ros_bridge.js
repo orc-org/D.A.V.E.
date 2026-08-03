@@ -1,5 +1,5 @@
 var connected = false;
-var stopAll = false;
+let stopAll = false;
 
 var ros = new ROSLIB.Ros({
     'url': 'ws://localhost:9090'
@@ -134,7 +134,6 @@ function setupROS() {
         name: "/control_mode",
         messageType: "std_msgs/msg/String"
     });
-    //console.log("Mode publisher initialized");
     
     //Subscribes to my wheel power topics
     wheelFLSub = new ROSLIB.Topic({

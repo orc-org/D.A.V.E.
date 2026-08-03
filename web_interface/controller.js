@@ -6,6 +6,7 @@ const controller = (() => {
     let previous_buttons = [];
 
     function update(joyMsg) {
+        if (checkStop()) return
         last_message_time = Date.now();
         
         const axes = joyMsg.axes;
