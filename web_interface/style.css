@@ -477,3 +477,12 @@ button {
     float: right;
     margin-right: 5px;
 }
+
+/* Cat in the hat meme pls dont delete */
+#mike {
+    position: absolute;
+    width: 35px;
+    height: auto;
+    opacity: 0.15; 
+
+}
