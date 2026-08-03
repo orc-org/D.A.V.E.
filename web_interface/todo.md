@@ -10,8 +10,8 @@ Wheel power monitor - done
 Toggle lights - done
 Camera servo position
 Set control sensitivity - Done
-Bearing monitor
-Latitude/Longitude monitor
+Bearing monitor - In progress
+Latitude/Longitude monitor - in progress
 
 
 FRONT END -----------------

@@ -28,11 +28,11 @@ let currentArmY = 0.0;
 
 document.addEventListener("DOMContentLoaded", () => {
     // Trigger emergency stop on button press
-    function emergencyStop() {
+    function StopAll() {
         stopAll = true;
-        console.log("Emergency Stop")
+        console.log("Stop All")
     }
-    document.getElementById("emergency-stop").onclick = emergencyStop
+    document.getElementById("stop-all").onclick = StopAll
 
     // Connect to ROS
 
@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function checkStop() {
     if (stopAll) {
-        console.log("Emergency Stop");
+        console.log("Stop All");
         return true;
     }
     return false;

@@ -12,8 +12,6 @@
     --accent-inactive: red;
     --accent-mid: orange;
 
-    --light: rgba(255, 255, 255, 0.4);
-
 }
 
 body {
@@ -398,34 +396,57 @@ button {
 }
 
 #compass {
+    position: relative;
     width: 100px;
     height: 100px;
     border-radius: 50px;
     background-color: var(--accent-active);
     margin-left: auto;
     margin-right: auto;
-    rotate: 45deg;
-    box-shadow: var(--light) 0px 0px 30px inset;
+    box-shadow: rgba(194, 255, 153, 0.5) 0px 0px 50px inset;
+    overflow: hidden;
+}
+
+#north-arrow,
+#south-arrow,
+#compass-arrow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -100%);
+    transform-origin: center bottom;
+}
+
+#north-arrow {
+    height: 0;
+    width: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 50px solid var(--accent-inactive);
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.30));
+}
+
+#south-arrow {
+    height: 0;
+    width: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 50px solid cornflowerblue;
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.30));
 }
 
 #arrow-cont {
-    height: 100px;
-    width: 100px;
+    position: absolute;
+    inset: 0;
 }
 
 #compass-arrow {
     height: 0;
     width: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 50px solid white;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 50px solid rgba(255, 255, 255, 0.3);
     border-radius: 2px;
-
-    margin-left: auto;
-    margin-right: auto;
-
-
-
 }
 
 /* Sliders */

@@ -135,10 +135,10 @@
 
                 </div>
 
-                <div class="data-title">Emergency Stop</div>
+                <div class="data-title">Stop Transmission</div>
                 <div class="data">
                     <div class="cont">
-                        <button class="button-single" id="emergency-stop">stop all</button>
+                        <button class="button-single" id="stop-all">stop all</button>
                     </div>
 
                 </div>
@@ -148,60 +148,72 @@
 
 
         <div id="gnss-cont">
-            <div class="data-title">
-                GNSS Information
-            </div>
-            <div class="cont">
+            <div class="data-cont" style="width: 100%; margin-bottom: 1%;">
+                <div class="data-title">
+                    GNSS Information
+                </div>
+                <div class="cont">
 
-                <div id="compass">
-                    <div id="arrow-cont">
-                        <div id="compass-arrow"></div>
+                    <div id="compass">
+                        <div id="arrow-cont">
+
+                            <div id="compass-arrow"></div>
+                        </div>
+                        <div id="north-arrow"></div>
+                        <div id="south-arrow"></div>
+
                     </div>
+
+                    <div style="display: block; width: 60%;" id="beside-compass">
+                        <div class="data">
+                            <span class="data-title-inner">Speed</span>
+                            <span class="data-input">placeholder</span>
+                        </div>
+                        <div class="data">
+                            <span class="data-title-inner">Latitude</span>
+                            <span class="data-input" style="float: right; margin-right: 8px;">00.00</span>
+
+                            <br>
+
+                            <span class="data-title-inner">Longitude</span>
+                            <span class="data-input" style="float: right; margin-right: 8px;">00.00</span>
+                            <br>
+
+                            <span class="data-title-inner">Bearing</span>
+                            <span class="data-input" style="float: right; margin-right: 8px;">00.00</span>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="data">
+                    <span class="data-title-inner">Distance to next waypoint</span>
+                    <span class="data-input" style="float: right; margin-right: 8px;">00.00</span>
+
+                    <br>
+
+                    <span class="data-title-inner">Latitude of next waypoint</span>
+                    <span class="data-input" style="float: right; margin-right: 8px;">00.00</span>
+                    <br>
+
+                    <span class="data-title-inner">Longitude of next waypoint</span>
+                    <span class="data-input" style="float: right; margin-right: 8px;">00.00</span>
                 </div>
 
-                <div style="display: block; width: 60%;" id="beside-compass">
-                    <div class="data">
-                        <span class="data-title-inner">Speed</span>
-                        <span class="data-input">placeholder</span>
-                    </div>
-                    <div class="data">
-                        <span class="data-title-inner">Latitude</span>
-                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
-
-                        <br>
-
-                        <span class="data-title-inner">Longitude</span>
-                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
-                        <br>
-
-                        <span class="data-title-inner">Bearing</span>
-                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
-
-                    </div>
+                <div class="data">
+                    <span class="data-title-inner">Current Route</span>
+                    <span class="data-input" style="float: right; margin-right: 8px;">0</span>
+                    <br>
+                    <span class="data-title-inner">Following</span>
+                    <span class="data-input" style="float: right; margin-right: 8px;">false</span>
                 </div>
 
             </div>
-            <div class="data">
-                        <span class="data-title-inner">Distance to next waypoint</span>
-                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
-
-                        <br>
-
-                        <span class="data-title-inner">Latitude of next waypoint</span>
-                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
-                        <br>
-
-                        <span class="data-title-inner">Longitude of next waypoint</span>
-                        <span class="data-input" style="float: right; margin-right: 5px;">00.00</span>
-            </div>
-
-
-
         </div>
     </div>
     <div id="lower-cont">
 
-        <div class="data-cont" style="width: 60%; margin-bottom: 1%; height:200px">
+        <div class="data-cont" style="width: 60%; margin-bottom: 1%; height:200px;">
 
 
             <div class="data-title">Camera Servo Positions</div>
