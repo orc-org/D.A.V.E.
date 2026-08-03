@@ -78,14 +78,40 @@ document.addEventListener('DOMContentLoaded', () => {
 //Set Lights
 document.addEventListener('DOMContentLoaded', () => {
     const lightDiv = document.getElementById('light-toggle');
+    if (!lightDiv) return;
     const dataInput = lightDiv.querySelector('.data-input');
     const buttons = lightDiv.querySelectorAll('.toggle-two');
 
+    function updateLights(clickedButton) {
+
+        buttons.forEach(button => {
+
+            if (button === clickedButton) {
+                button.classList.add('active-toggle');
+                button.style.backgroundColor = 'var(--accent-active)';
+            } 
+            else {
+                button.classList.remove('active-toggle');
+                button.style.backgroundColor = 'var(--accent-inactive)';
+            }
+
+        });
+    }
+
+    window.setLightsButton = function(button) {
+
+        dataInput.textContent = button.textContent;
+
+        updateLights(button);
+
+        if (window.publishLights) {
+            window.publishLights(button.id === "light-on");
+        }
+    };
+
     buttons.forEach(button => {
         button.addEventListener('click', () => {
-            dataInput.textContent = button.textContent;
-            buttons.forEach(btn => btn.classList.remove('active-toggle'));
-            button.classList.add('active-toggle');
+            window.setLightsButton(button);
         });
     });
 });
