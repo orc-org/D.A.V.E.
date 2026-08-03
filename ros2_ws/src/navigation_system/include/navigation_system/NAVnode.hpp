@@ -27,6 +27,7 @@
 
 //custom defined interfaces for use with topics, services and actions
 #include "navigation_interfaces/msg/velocity.hpp"
+#include "navigation_interfaces/msg/display_info.hpp"
 
 #include "navigation_interfaces/srv/void_service.hpp"
 #include "navigation_interfaces/srv/reset_home.hpp"
@@ -80,7 +81,7 @@ using AddEarthCentredObstacle = navigation_interfaces::srv::AddEarthCentredObsta
 using RemoveLocal = navigation_interfaces::srv::RemoveLocalWaypoint;
 using RemoveGeodetic = navigation_interfaces::srv::RemoveGeodeticWaypoint;
 using RemoveEarthCentred = navigation_interfaces::srv::RemoveEarthCentredWaypoint;
-using RemoveLastWaypoint = navigation_interfaces::srv::RemoveLastWaypoint;
+using RemoveLast = navigation_interfaces::srv::RemoveLastWaypoint;
 
 using NAVaction = navigation_interfaces::action::NavigationAction;
 using NAVGoalHandle = rclcpp_action::ServerGoalHandle<NAVaction>;
@@ -93,24 +94,16 @@ class NAVnode : public rclcpp::Node{
     // Attributes
 private:
     bool debug;                 // displays added information to the terminal for debugging purposes (false by default)
-    bool returnToBase;          // boolean to select the direction of travel along selected route 
+    bool travellingForwards;    // boolean to select the direction of travel along selected route 
 
     int obstacleCount;          // keeps track of how many obstacles are currently stored in the system 
     int obstacleLimit;          // maximum number of obstacles that can be stored in the system
     int waypointCount;          // keeps track of the number of waypoints stored in the system accross all routes 
 
+    int timerFrequency; // defines the speed of our main timer
     int timeSinceLastVelocityPublishing; // used in the numerical method for calculating the velocity of the rover
 
-
-    /*
-        Map Limits are used to define the available area that this node may reroute within. 
-        without this, we could get the situation where the computer decides to reroute through Edmonton to avoid obstacles
-        while this would work to avoid the obstacle, it's hardly practical/legal in the eyes of CIRC
-    */
-    double northernMapLimit; // distance Vertically from home base to the upper edge of the testing area
-    double southernMapLimit; // distance Vertically from home base to the lower edge of the testing area
-    double westernMapLimit;  // distance Horizontally from home base to the Left-most edge of the testing area
-    double easternMapLimit;  // distance Horizontally from home base to the Right-most edge of the testing area
+    string date;
     
     enum coordinates {local, geodetic, earthCentered};  // defines the three coordinate systems available to the pilot 
     enum coordinates preference; // used to select which form of the coordinates gets displayed to the pilot
@@ -123,6 +116,7 @@ private:
     enum preplannedRoute routeToEdit;   // to allow the operator to select which preplanned route to edit
     
     Waypoint* currentPosition;    // Waypoint to store the current position of the rover (updated often)
+    ListNode* nextWaypoint;       // the next waypoint that we will be visiting
 
     ListOfWaypoints pointsVisited;   // Doubly linked list to store the path that the rover has actually taken (whether it was planned or not)
     Obstacle** obstacles;            // Pointer to dynamic array to store Obstacles in the way of the rover. ordered by x coordinate
@@ -139,7 +133,9 @@ private:
 
     // Topics
     navigation_interfaces::msg::Velocity currentVelocity = navigation_interfaces::msg::Velocity();
-    rclcpp::Publisher<navigation_interfaces::msg::Velocity>::SharedPtr VelocityPublisher; 
+    navigation_interfaces::msg::DisplayInfo gnssInformation = navigation_interfaces::msg::DisplayInfo();
+    rclcpp::Publisher<navigation_interfaces::msg::Velocity>::SharedPtr VelocityPublisher;
+    rclcpp::Publisher<navigation_interfaces::msg::DisplayInfo>::SharedPtr DisplayInfoPublisher;
 
     // Services
 
@@ -156,6 +152,9 @@ private:
     rclcpp::Service<VoidService>::SharedPtr ToggleCircumnavigationStyleServer;
     rclcpp::Service<VoidService>::SharedPtr ToggleDirectionServer;
 
+    rclcpp::Service<VoidService>::SharedPtr TargetNextWaypointServer;
+    rclcpp::Service<VoidService>::SharedPtr TargetPreviousWaypointServer;
+
     rclcpp::Service<AddLocalWaypoint>::SharedPtr AddLocalWaypointServer;
     rclcpp::Service<AddLocalWaypointAtIndex>::SharedPtr AddLocalWaypointAtIndexServer;
     rclcpp::Service<AddLocalObstacle>::SharedPtr AddLocalObstacleServer;
@@ -168,6 +167,7 @@ private:
     rclcpp::Service<AddEarthCentredWaypointAtIndex>::SharedPtr AddEarthCentredWaypointAtIndexServer;
     rclcpp::Service<AddEarthCentredObstacle>::SharedPtr AddEarthCentredObstacleServer;
 
+    rclcpp::Service<RemoveLocal>::SharedPtr RemoveLocalServer;
     rclcpp::Service<RemoveLocal>::SharedPtr RemoveLocalWaypointServer;
     rclcpp::Service<RemoveLocal>::SharedPtr RemoveLocalObstacleServer;
 
@@ -177,7 +177,8 @@ private:
     rclcpp::Service<RemoveEarthCentred>::SharedPtr RemoveEarthCentredWaypointServer;
     rclcpp::Service<RemoveEarthCentred>::SharedPtr RemoveEarthCentredObstacleServer;
 
-    rclcpp::Service<RemoveLastWaypoint>::SharedPtr RemoveLastWaypointServer;
+    rclcpp::Service<RemoveLast>::SharedPtr RemoveLastWaypointServer;
+    rclcpp::Service<RemoveLast>::SharedPtr RemoveLastObstacleServer;
 
     rclcpp::Service<SendToGNSS>::SharedPtr   SendToGNSSServer;
     rclcpp::Service<ReadFromGNSS>::SharedPtr ReadFromGNSSServer;
@@ -331,6 +332,12 @@ private:
 
     std::string getCircumnavigationStyleName();
 
+    bool removeLocalObstacle_helper(int x, int y);
+
+    bool removeGeodeticObstacle_helper(int latitude, int longitude);
+
+    bool removeEarthCentredObstacle_helper(int x, int y, int z);
+
     // Constructor
 
     NAVnode();
@@ -363,7 +370,7 @@ private:
 
     void togglePreference(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
-    void toggleRoute(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
+    void toggleRouteToFollow(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
     void toggleRouteToEdit(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
@@ -373,7 +380,11 @@ private:
 
     void toggleCircumnavigationStyle(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
 
-    void selectRoute(const std::shared_ptr<SelectRoute::Request> request, std::shared_ptr<SelectRoute::Response> response);
+    void targetNextWaypoint(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
+
+    void targetPreviousWaypoint(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);
+
+    void selectRouteToFollow(const std::shared_ptr<SelectRoute::Request> request, std::shared_ptr<SelectRoute::Response> response);
     
     void selectRouteToEdit(const std::shared_ptr<SelectRoute::Request> request, std::shared_ptr<SelectRoute::Response> response);
 
@@ -399,19 +410,27 @@ private:
 
     void addEarthCentredObstacle(const std::shared_ptr<AddEarthCentredObstacle::Request> request, std::shared_ptr<AddEarthCentredObstacle::Response> response);
     
+    void removeLocal(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response);
+
     void removeLocalWaypoint(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response);
 
     void removeLocalObstacle(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response);
 
-    void removeGeodeticWaypoint(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response);
+    void removeGeodetic(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response);
 
+    void removeGeodeticWaypoint(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response);
+    
     void removeGeodeticObstacle(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response);
+
+    void removeEarthCentred(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response);
 
     void removeEarthCentredWaypoint(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response);
 
     void removeEarthCentredObstacle(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response);
 
-    void removeLastWaypoint(const std::shared_ptr<RemoveLastWaypoint::Request> request, std::shared_ptr<RemoveLastWaypoint::Response> response);
+    void removeLastWaypoint(const std::shared_ptr<RemoveLast::Request> request, std::shared_ptr<RemoveLast::Response> response);
+
+    void removeLastObstacle(const std::shared_ptr<RemoveLast::Request> request, std::shared_ptr<RemoveLast::Response> response);
 
     void sendToGNSS(const std::shared_ptr<SendToGNSS::Request> request, std::shared_ptr<SendToGNSS::Response> response);
 

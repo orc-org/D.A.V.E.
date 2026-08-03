@@ -16,6 +16,14 @@ int Obstacle::getLargestObstacle(){
 double Obstacle::getX() { return x; }
 double Obstacle::getY() { return y; }
 
+double Obstacle::getLatitude() { return latitude; }
+double Obstacle::getLongitude(){ return longitude; }
+double Obstacle::getAltitude() { return altitude; }
+
+double Obstacle::getECEF_x(){ return ECEF_x; }
+double Obstacle::getECEF_y(){ return ECEF_y; }
+double Obstacle::getECEF_z(){ return ECEF_z; }
+
     // constructors
 Obstacle::Obstacle() : Waypoint(0.0, 0.0), radius(defaultRadius) {
     if(largestObstacle < radius){

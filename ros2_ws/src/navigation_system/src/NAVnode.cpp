@@ -495,6 +495,52 @@ std::string NAVnode::getCircumnavigationStyleName(){
     return name;
 }
 
+bool NAVnode::removeLocalObstacle_helper(int x, int y){
+    for(int i = 0; i < obstacleCount; i++){
+        if ((obstacles[i]->getX() == x) && (obstacles[i]->getY() == y)){
+            if (i != obstacleCount - 1){ // if it's not the last obstacle in the array, swap it with the last obstacle in the array
+                Obstacle* temp = obstacles[i];
+                obstacles[i] = obstacles[obstacleCount];
+                obstacles[obstacleCount] = temp;
+            }
+            delete obstacles[obstacleCount--];
+            return true;
+        }
+    }
+    return false;
+}
+
+bool NAVnode::removeGeodeticObstacle_helper(int latitude, int longitude){
+    for(int i = 0; i < obstacleCount; i++){
+        if ((obstacles[i]->getLatitude() == latitude) && (obstacles[i]->getLongitude() == longitude)){
+            
+            if (i != obstacleCount - 1){ // if it's not the last obstacle in the array, swap it with the last obstacle in the array
+                Obstacle* temp = obstacles[i];
+                obstacles[i] = obstacles[obstacleCount];
+                obstacles[obstacleCount] = temp;
+            }
+            delete obstacles[obstacleCount--];
+            return true;
+        }
+    }
+    return false;
+}
+
+bool NAVnode::removeEarthCentredObstacle_helper(int x, int y, int z){
+    for(int i = 0; i < obstacleCount; i++){
+        if ((obstacles[i]->getECEF_x() == x) && (obstacles[i]->getECEF_y() == y) && (obstacles[i]->getECEF_z() == z)){
+            if (i != obstacleCount - 1){ // if it's not the last obstacle in the array, swap it with the last obstacle in the array
+                Obstacle* temp = obstacles[i];
+                obstacles[i] = obstacles[obstacleCount];
+                obstacles[obstacleCount] = temp;
+            }
+            delete obstacles[obstacleCount--];
+            return true;
+        }
+    }
+    return false;
+}
+
     // Constructor
 NAVnode::NAVnode() : Node("NAVnode") {
         
@@ -503,12 +549,15 @@ NAVnode::NAVnode() : Node("NAVnode") {
     currentVelocity.heading = 0;
 
     debug = false;
-    returnToBase = false;
+    travellingForwards = false;
         
     obstacleCount = 0;
     obstacleLimit = 10;
     waypointCount = 0;
+    timerFrequency = 5;
     timeSinceLastVelocityPublishing = 0;
+
+    date = "";
 
     obstacles = new Obstacle*[obstacleLimit];
     for (int i = 0; i < obstacleLimit; i++) {
@@ -518,11 +567,6 @@ NAVnode::NAVnode() : Node("NAVnode") {
     for (int i = 0; i < 5; i++) {
         lastFiveWaypoints[i] = currentPosition;
     }
-        
-    northernMapLimit = 100;
-    southernMapLimit = 100;
-    westernMapLimit = 100;
-    easternMapLimit = 100;
         
     preference = local;
     circumnavigationStyle = reroute;
@@ -539,20 +583,25 @@ NAVnode::NAVnode() : Node("NAVnode") {
     // here, we're using a queue size of 1 because it is more desireable to lose some data
     // than to be using outdated position data
     VelocityPublisher = this->create_publisher<navigation_interfaces::msg::Velocity>("Velocity", 1);
+    DisplayInfoPublisher = this->create_publisher<navigation_interfaces::msg::DisplayInfo>("NAVDisplayInfo", 1);
+
 
     // create services
     StopNavigatingServer      = this->create_service<VoidService>("StopNavigating", std::bind(&NAVnode::stopNavigating, this, _1, _2));
-    SelectRouteToFollowServer = this->create_service<SelectRoute>("SelectRoute",    std::bind(&NAVnode::selectRoute, this, _1, _2));
+    SelectRouteToFollowServer = this->create_service<SelectRoute>("SelectRoute",    std::bind(&NAVnode::selectRouteToFollow, this, _1, _2));
     SelectRouteToEditServer   = this->create_service<SelectRoute>("SelectRoute",    std::bind(&NAVnode::selectRouteToEdit, this, _1, _2));
     ResetHomeServer           = this->create_service<ResetHome>  ("ResetHome",      std::bind(&NAVnode::resetHome, this, _1, _2));
-    ClearRouteServer          = this->create_service<VoidService>("clearRoute",     std::bind(&NAVnode::clearRoute, this, _1, _2));
+    ClearRouteServer          = this->create_service<VoidService>("ClearRoute",     std::bind(&NAVnode::clearRoute, this, _1, _2));
         
     ToggleDebugServer                 = this->create_service<VoidService>("ToggleDebug",                 std::bind(&NAVnode::toggleDebug, this, _1, _2));
     TogglePreferenceServer            = this->create_service<VoidService>("TogglePreference",            std::bind(&NAVnode::togglePreference, this, _1, _2));
-    ToggleRouteToFollowServer         = this->create_service<VoidService>("ToggleRouteToFollow",         std::bind(&NAVnode::toggleRoute, this, _1, _2));
+    ToggleRouteToFollowServer         = this->create_service<VoidService>("ToggleRouteToFollow",         std::bind(&NAVnode::toggleRouteToFollow, this, _1, _2));
     ToggleRouteToEditServer           = this->create_service<VoidService>("ToggleRouteToEdit",           std::bind(&NAVnode::toggleRouteToEdit, this, _1, _2));
     ToggleCircumnavigationStyleServer = this->create_service<VoidService>("ToggleCircumnavigationStyle", std::bind(&NAVnode::toggleCircumnavigationStyle, this, _1, _2));
     ToggleDirectionServer             = this->create_service<VoidService>("ToggleDirection",             std::bind(&NAVnode::toggleDirection, this, _1, _2));
+
+    TargetNextWaypointServer      = this->create_service<VoidService>("TargetNextWaypoint",      std::bind(&NAVnode::targetNextWaypoint, this, _1, _2));
+    TargetPreviousWaypointServer  = this->create_service<VoidService>("TargetPreviousWaypoint",  std::bind(&NAVnode::targetPreviousWaypoint, this, _1, _2));
 
     AddLocalWaypointServer        = this->create_service<AddLocalWaypoint>       ("AddLocalWaypoint",        std::bind(&NAVnode::addLocalWaypoint, this, _1, _2));
     AddLocalWaypointAtIndexServer = this->create_service<AddLocalWaypointAtIndex>("AddLocalWaypointAtIndex", std::bind(&NAVnode::addLocalWaypointAtIndex, this, _1, _2));
@@ -566,6 +615,8 @@ NAVnode::NAVnode() : Node("NAVnode") {
     AddEarthCentredWaypointAtIndexServer = this->create_service<AddEarthCentredWaypointAtIndex>("AddEarthCentredWaypointAtIndex", std::bind(&NAVnode::addEarthCentredWaypointAtIndex, this, _1, _2));
     AddEarthCentredObstacleServer        = this->create_service<AddEarthCentredObstacle>       ("AddEarthCentredObstacle",        std::bind(&NAVnode::addEarthCentredObstacle, this, _1, _2));
 
+    RemoveLocalServer        = this->create_service<RemoveLocal>        ("RemoveLocal",        std::bind(&NAVnode::removeLocal, this, _1, _2));
+
     RemoveLocalObstacleServer        = this->create_service<RemoveLocal>        ("RemoveLocalObstacle",        std::bind(&NAVnode::removeLocalObstacle, this, _1, _2));
     RemoveGeodeticObstacleServer     = this->create_service<RemoveGeodetic>     ("RemoveGeodeticObstacle",     std::bind(&NAVnode::removeGeodeticObstacle, this, _1, _2));
     RemoveEarthCentredObstacleServer = this->create_service<RemoveEarthCentred> ("RemoveEarthCentredObstacle", std::bind(&NAVnode::removeEarthCentredObstacle, this, _1, _2));
@@ -573,7 +624,9 @@ NAVnode::NAVnode() : Node("NAVnode") {
     RemoveLocalWaypointServer        = this->create_service<RemoveLocal>        ("RemoveLocalWaypoint",        std::bind(&NAVnode::removeLocalWaypoint, this, _1, _2));
     RemoveGeodeticWaypointServer     = this->create_service<RemoveGeodetic>     ("RemoveGeodeticWaypoint",     std::bind(&NAVnode::removeGeodeticWaypoint, this, _1, _2));
     RemoveEarthCentredWaypointServer = this->create_service<RemoveEarthCentred> ("RemoveEarthCentredWaypoint", std::bind(&NAVnode::removeEarthCentredWaypoint, this, _1, _2));
-    RemoveLastWaypointServer         = this->create_service<RemoveLastWaypoint> ("RemoveLastWaypoint",         std::bind(&NAVnode::removeLastWaypoint, this, _1, _2));
+    
+    RemoveLastWaypointServer         = this->create_service<RemoveLast> ("RemoveLastWaypoint",         std::bind(&NAVnode::removeLastWaypoint, this, _1, _2));
+    RemoveLastObstacleServer         = this->create_service<RemoveLast> ("RemoveLastObstacle",         std::bind(&NAVnode::removeLastObstacle, this, _1, _2));
 
     SendToGNSSServer   = this->create_service<SendToGNSS>   ("SendToGNSS",   std::bind(&NAVnode::sendToGNSS, this, _1, _2));
     ReadFromGNSSServer = this->create_service<ReadFromGNSS> ("ReadFromGNSS", std::bind(&NAVnode::readFromGNSS, this, _1, _2));
@@ -587,14 +640,92 @@ NAVnode::NAVnode() : Node("NAVnode") {
         std::bind(&NAVnode::followRoute_Accepted, this, _1)
     );
 
-    //main timer will process gnss data once per second
-    timer = this->create_wall_timer(1s, std::bind(&NAVnode::mainTimer, this));
+    // main timer will process gnss data 5 times per second
+    std::chrono::seconds timerPeriod(1/timerFrequency);
+    timer = this->create_wall_timer(timerPeriod , std::bind(&NAVnode::mainTimer, this));
 
     }
 
     // timers
 void NAVnode::mainTimer(){
-    updatePositonData();
+    ///////////////////////////////////////////////
+    // Delete next If Block
+    // it's only used for testing purposes
+    ///////////////////////////////////////////////
+    if (int i = 1 == 1){
+    currentPosition = new Waypoint(0, 0);
+
+    gnssInformation.heading = 0;
+    gnssInformation.speed = 0;
+
+    gnssInformation.preference = preference;
+    gnssInformation.traveling_forwards = travellingForwards;
+
+    gnssInformation.route2follow = routeToFollow;
+    gnssInformation.route2edit = routeToEdit;
+
+    gnssInformation.local_x = currentPosition->getX();
+    gnssInformation.local_y = currentPosition->getY();
+    gnssInformation.waypoint_local_x = nextWaypoint->point->getX();
+    gnssInformation.waypoint_local_y = nextWaypoint->point->getY();
+
+    double dx = nextWaypoint->point->getX() - currentPosition->getX();
+    double dy = nextWaypoint->point->getY() - currentPosition->getY();
+
+    gnssInformation.range2waypoint = sqrt(dx * dx + dy * dy);
+
+    // normalize dx and dy to avoid errors in next step
+    dx /= gnssInformation.range2waypoint;
+    dy /= gnssInformation.range2waypoint;
+    
+    if(dx != 0) {
+        double angle = std::asin(dy / dx);
+
+        if (dx > 0 && dy >= 0)      gnssInformation.bearing2waypoint = Waypoint::pi / 2 - angle;
+        else if (dx < 0 && dy >= 0) gnssInformation.bearing2waypoint = Waypoint::pi * 3 / 2 + angle;
+        else if (dx < 0 && dy < 0)  gnssInformation.bearing2waypoint = Waypoint::pi * 3 / 2 - angle;
+        else if (dx > 0 && dy < 0)  gnssInformation.bearing2waypoint = Waypoint::pi / 2 + angle;
+    }
+    else if (dy > 0)
+        gnssInformation.bearing2waypoint = 0;
+    else 
+        gnssInformation.bearing2waypoint = Waypoint::pi;
+    
+    switch (preference){
+        case local : {
+            gnssInformation.rover_x = currentPosition->getX();
+            gnssInformation.rover_y = currentPosition->getY();
+            gnssInformation.rover_z = 0;
+            gnssInformation.next_waypoint_x = nextWaypoint->point->getX();
+            gnssInformation.next_waypoint_y = nextWaypoint->point->getY();
+            gnssInformation.next_waypoint_z = 0;
+            break;
+        }
+        case geodetic : {
+            gnssInformation.rover_x = currentPosition->getLatitude();
+            gnssInformation.rover_y = currentPosition->getLongitude();
+            gnssInformation.rover_z = currentPosition->getAltitude();
+            gnssInformation.next_waypoint_x = nextWaypoint->point->getLatitude();
+            gnssInformation.next_waypoint_y = nextWaypoint->point->getLongitude();
+            gnssInformation.next_waypoint_z = nextWaypoint->point->getAltitude();
+            break;
+        }
+        case earthCentered : {
+            gnssInformation.rover_x = currentPosition->getECEF_x();
+            gnssInformation.rover_y = currentPosition->getECEF_y();
+            gnssInformation.rover_z = currentPosition->getECEF_z();
+            gnssInformation.next_waypoint_x = nextWaypoint->point->getECEF_x();
+            gnssInformation.next_waypoint_y = nextWaypoint->point->getECEF_y();
+            gnssInformation.next_waypoint_z = nextWaypoint->point->getECEF_z();
+            break;
+        }
+    }
+    }
+    else
+        updatePositonData();
+
+
+    DisplayInfoPublisher->publish(gnssInformation);
 
     if (debug){
         // debug mode will print the current value for all our variables to the ros terminal thatt the navigation node is active in
@@ -605,13 +736,14 @@ void NAVnode::mainTimer(){
         printf("Number of Waypoints: %d Number of Obstacles: %d Current Maximun number of obstacles: %d \n\n\n", waypointCount, obstacleCount, obstacleLimit);
     }
 
-    if (timeSinceLastVelocityPublishing < 5) {
+    if (timeSinceLastVelocityPublishing < 5 * timerFrequency) {
         lastFiveWaypoints[timeSinceLastVelocityPublishing] = currentPosition;
         timeSinceLastVelocityPublishing++;
     }
 
-    if (timeSinceLastVelocityPublishing >= 5){
+    if (timeSinceLastVelocityPublishing >= 5 * timerFrequency){
         pointsVisited.add(currentPosition);
+        currentPosition = nullptr;
         updateVelocity();
         VelocityPublisher->publish(currentVelocity);
         timeSinceLastVelocityPublishing = 0;
@@ -619,10 +751,165 @@ void NAVnode::mainTimer(){
 }
 
 void NAVnode::updatePositonData(){
-        cout << GNSS->read() << '\n';
+    string message = GNSS->read();
 
-        currentPosition = new Waypoint(0,0); // change these coordinatesonce we learn how to parse the message from the GNSS
+    double latitude;
+    double longitude;
+    double altitude;
+
+    double heading;
+    double speed;
+    int start;
+
+    try {
+        // extract position and velocity data
+        /*
+            The GNSS data is formatted as an NMEA 0183 string
+            to get what we need, we are going to search for the commas that separate the different sections of the string
+
+            example string that contains the position of the Rover:
+            $GNGGA, UTCtime, Latitude, N, longitude, W, Quality, #ofSVs, HDOP, altitude, M, GeoidSeparation, M, age ID*checksum
+
+            example string that contains the position, heading and speed of the Rover:
+            $GPRMC, UTCtime, status, Latitude, N, longitude, W, speed(kts), TrueTrack, Date, MagneticDeclination, checksum
+
+            the following code will extract the values we need and will work anywhere in North America
+            If DaVE is to travel accross the pond, modify the code
+        */
+
+        start = message.find("RMC,", 0); // locate the section of the string with the RMC message
+        if (start != string::npos){
+
+            start += 4; // get past the $GPRMC, section
+            start = message.find("A,", start); // locate start of Latitude section
+
+            if (start != string::npos){ // if statement ensures the status is not void
+                latitude = stoi(message.substr(++start, 10));
+
+                start = message.find("N,", start); // find start of longitude section
+                longitude = stoi(message.substr(++start, 10));
+
+                start = message.find(",", start); // find the start of the speed section
+                speed = stoi(message.substr(++start, 5)) * 1.852; // multiply by 1.852 to convert from knots to km/h
+
+                start = message.find(",", start); // find the start of the heading section
+                heading = nextWaypoint->point->degToRad(stoi(message.substr(++start, 6)));
+
+                if(!date.empty()){
+                    start = message.find(",", start);
+                    date = message.substr(++start, 2) + "/" + message.substr(start + 2, 2) + "/" + message.substr(start + 4, 2);
+                }
+            }
+        }
+        else {
+            start = message.find("GGA,", 0); // locate the section of the string with the GGA message
+            
+            if (start != string::npos){
+
+                start += 4; // get past the $GNGGA, section
+                start = message.find(",", start); // find the start of the latitude section
+                latitude = stoi(message.substr(++start, 10));
+
+                start = message.find("N,", start) + 1; // find the start of the longitude section
+                longitude = -stoi(message.substr(++start, 10));
+
+                start = message.find("W,", start) + 1; // start of the Quality section
+                start = message.find(",", ++start);  // start of the SV count section
+                start = message.find(",", ++start);  // start of the HDOP section
+                start = message.find(",", ++start);  // start of the altitude section
+                altitude = stoi(message.substr(++start, 10));
+            }
+
+            start = message.find("VTG,", 0); // locate the section of the string with the track information
+
+            if(start != string::npos){
+
+                start += 4; // get past the $GPVTG, section
+                heading = nextWaypoint->point->degToRad(stoi(message.substr(start, 6)));
+
+                start = message.find("N,", start) + 1; // locate the section with speed in km/h
+                speed = stoi(message.substr(++start, 5));
+            }
+            
+        }
     }
+    catch (...) { /* If we don't look directly at it, it's as if the error never happened...*/ }
+
+    delete currentPosition;
+
+    if(latitude > 0 && longitude > 0){
+        currentPosition = new Waypoint(latitude,longitude, altitude, true);
+    }
+
+    gnssInformation.heading = heading;
+    gnssInformation.speed = speed;
+
+    gnssInformation.preference = preference;
+    gnssInformation.traveling_forwards = travellingForwards;
+
+    gnssInformation.route2follow = routeToFollow;
+    gnssInformation.route2edit = routeToEdit;
+
+    gnssInformation.local_x = currentPosition->getX();
+    gnssInformation.local_y = currentPosition->getY();
+    gnssInformation.waypoint_local_x = nextWaypoint->point->getX();
+    gnssInformation.waypoint_local_y = nextWaypoint->point->getY();
+
+    double dx = nextWaypoint->point->getX() - currentPosition->getX();
+    double dy = nextWaypoint->point->getY() - currentPosition->getY();
+
+    gnssInformation.range2waypoint = sqrt(dx * dx + dy * dy);
+
+    // normalize dx and dy to avoid errors in next step
+    dx /= gnssInformation.range2waypoint;
+    dy /= gnssInformation.range2waypoint;
+    
+    if(dx != 0) {
+        double angle = std::asin(dy / dx);
+
+        if (dx > 0 && dy >= 0)      gnssInformation.bearing2waypoint = Waypoint::pi / 2 - angle;
+        else if (dx < 0 && dy >= 0) gnssInformation.bearing2waypoint = Waypoint::pi * 3 / 2 + angle;
+        else if (dx < 0 && dy < 0)  gnssInformation.bearing2waypoint = Waypoint::pi * 3 / 2 - angle;
+        else if (dx > 0 && dy < 0)  gnssInformation.bearing2waypoint = Waypoint::pi / 2 + angle;
+    }
+    else if (dy > 0)
+        gnssInformation.bearing2waypoint = 0;
+    else 
+        gnssInformation.bearing2waypoint = Waypoint::pi;
+
+    
+    
+    switch (preference){
+        case local : {
+            gnssInformation.rover_x = currentPosition->getX();
+            gnssInformation.rover_y = currentPosition->getY();
+            gnssInformation.rover_z = 0;
+            gnssInformation.next_waypoint_x = nextWaypoint->point->getX();
+            gnssInformation.next_waypoint_y = nextWaypoint->point->getY();
+            gnssInformation.next_waypoint_z = 0;
+            break;
+        }
+        case geodetic : {
+            gnssInformation.rover_x = currentPosition->getLatitude();
+            gnssInformation.rover_y = currentPosition->getLongitude();
+            gnssInformation.rover_z = currentPosition->getAltitude();
+            gnssInformation.next_waypoint_x = nextWaypoint->point->getLatitude();
+            gnssInformation.next_waypoint_y = nextWaypoint->point->getLongitude();
+            gnssInformation.next_waypoint_z = nextWaypoint->point->getAltitude();
+            break;
+        }
+        case earthCentered : {
+            gnssInformation.rover_x = currentPosition->getECEF_x();
+            gnssInformation.rover_y = currentPosition->getECEF_y();
+            gnssInformation.rover_z = currentPosition->getECEF_z();
+            gnssInformation.next_waypoint_x = nextWaypoint->point->getECEF_x();
+            gnssInformation.next_waypoint_y = nextWaypoint->point->getECEF_y();
+            gnssInformation.next_waypoint_z = nextWaypoint->point->getECEF_z();
+            break;
+        }
+    }
+    
+}
 
 void NAVnode::updateVelocity(){
     double x = 0.0, y = 0.0, dX = 0.0, dY = 0.0;
@@ -671,7 +958,7 @@ void NAVnode::togglePreference(const std::shared_ptr<VoidService::Request> reque
     }
 }
 
-void NAVnode::toggleRoute(const std::shared_ptr<VoidService::Request> request, 
+void NAVnode::toggleRouteToFollow(const std::shared_ptr<VoidService::Request> request, 
                             std::shared_ptr<VoidService::Response> response){
     switch(routeToFollow){
         case(Route1): routeToFollow = Route2; break;
@@ -700,7 +987,7 @@ void NAVnode::toggleDebug(const std::shared_ptr<VoidService::Request> request,
 
 void NAVnode::toggleDirection(const std::shared_ptr<VoidService::Request> request, 
                                 std::shared_ptr<VoidService::Response> response){
-    returnToBase = !returnToBase;
+    travellingForwards = !travellingForwards;
 }
 
 void NAVnode::toggleCircumnavigationStyle(const std::shared_ptr<VoidService::Request> request, 
@@ -712,7 +999,21 @@ void NAVnode::toggleCircumnavigationStyle(const std::shared_ptr<VoidService::Req
     }
 }
 
-void NAVnode::selectRoute(const std::shared_ptr<SelectRoute::Request> request, 
+void NAVnode::targetNextWaypoint(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response){
+    if (travellingForwards)
+        nextWaypoint = nextWaypoint->next;
+    else
+        nextWaypoint = nextWaypoint->previous;
+}
+
+void NAVnode::targetPreviousWaypoint(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response){
+    if(travellingForwards)
+        nextWaypoint = nextWaypoint->previous;
+    else 
+        nextWaypoint = nextWaypoint->next;
+}
+
+void NAVnode::selectRouteToFollow(const std::shared_ptr<SelectRoute::Request> request, 
                             std::shared_ptr<SelectRoute::Response> response){
     switch(request->route){
         case Route1: routeToFollow = Route1; break;
@@ -751,17 +1052,22 @@ void NAVnode::clearRoute(const std::shared_ptr<VoidService::Request> request,
 
 void NAVnode::addLocalWaypoint(const std::shared_ptr<AddLocalWaypoint::Request> request, 
                                 std::shared_ptr<AddLocalWaypoint::Response> response){
+    currentPosition->setHome(currentPosition, 0); // ensure home is set
     routes[routeToEdit].add(new Waypoint(request->x, request->y));
 }
 
 void NAVnode::addLocalWaypointAtIndex(const std::shared_ptr<AddLocalWaypointAtIndex::Request> request, 
                                         std::shared_ptr<AddLocalWaypointAtIndex::Response> response){
+    currentPosition->setHome(currentPosition, 0); // ensure home is set
     routes[routeToEdit].add(new Waypoint(request->x, request->y), request->index);
 }
 
 void NAVnode::addLocalObstacle(const std::shared_ptr<AddLocalObstacle::Request> request, 
                                 std::shared_ptr<AddLocalObstacle::Response> response){
     (void)response;
+
+    currentPosition->setHome(currentPosition, 0); // ensure home is set
+
     // check if the array of obstacles is full
     if (obstacleCount == obstacleLimit){
         int newLimit = obstacleLimit + 10;
@@ -792,17 +1098,22 @@ void NAVnode::addLocalObstacle(const std::shared_ptr<AddLocalObstacle::Request> 
 
 void NAVnode::addGeodeticWaypoint(const std::shared_ptr<AddGeodeticWaypoint::Request> request, 
                                     std::shared_ptr<AddGeodeticWaypoint::Response> response){
+    currentPosition->setHome(currentPosition, 0); // ensure home is set
     routes[routeToEdit].add(new Waypoint(request->longitude, request->latitude, request->altitude, true));
 }
 
 void NAVnode::addGeodeticWaypointAtIndex(const std::shared_ptr<AddGeodeticWaypointAtIndex::Request> request, 
                                             std::shared_ptr<AddGeodeticWaypointAtIndex::Response> response){
+    currentPosition->setHome(currentPosition, 0); // ensure home is set
     routes[routeToEdit].add(new Waypoint(request->longitude, request->latitude, request->altitude, true), request->index);
 }
 
 void NAVnode::addGeodeticObstacle(const std::shared_ptr<AddGeodeticObstacle::Request> 
                                     request, std::shared_ptr<AddGeodeticObstacle::Response> response){
     (void)response;
+
+    currentPosition->setHome(currentPosition, 0); // ensure home is set
+
     // check if the array of obstacles is full
     if (obstacleCount == obstacleLimit){
         // increase make a larger array to store obstacles
@@ -835,17 +1146,22 @@ void NAVnode::addGeodeticObstacle(const std::shared_ptr<AddGeodeticObstacle::Req
 
 void NAVnode::addEarthCentredWaypoint(const std::shared_ptr<AddEarthCentredWaypoint::Request> request, 
                                         std::shared_ptr<AddEarthCentredWaypoint::Response> response){
+    currentPosition->setHome(currentPosition, 0); // ensure home is set
     routes[routeToEdit].add(new Waypoint(request->x, request->y, request->z, false));
 }
 
 void NAVnode::addEarthCentredWaypointAtIndex(const std::shared_ptr<AddEarthCentredWaypointAtIndex::Request> request, 
                                                 std::shared_ptr<AddEarthCentredWaypointAtIndex::Response> response){
+    currentPosition->setHome(currentPosition, 0); // ensure home is set
     routes[routeToEdit].add(new Waypoint(request->x, request->y, request->z, false), request->index);
 }
 
 void NAVnode::addEarthCentredObstacle(const std::shared_ptr<AddEarthCentredObstacle::Request> request, 
                                         std::shared_ptr<AddEarthCentredObstacle::Response> response){
     (void)response;
+
+    currentPosition->setHome(currentPosition, 0); // ensure home is set
+
     // check if the array of obstacles is full
     if (obstacleCount == obstacleLimit){
         // increase make a larger array to store obstacles
@@ -876,6 +1192,14 @@ void NAVnode::addEarthCentredObstacle(const std::shared_ptr<AddEarthCentredObsta
     checkTrackCollisions();
 }
 
+void NAVnode::removeLocal(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response){
+    if(routes[routeToFollow].removePoint(request->x, request-> y))
+        response->output = "Waypoint removed successfully";
+    else if(removeLocalObstacle_helper(request->x, request->y))
+        response->output = "Obstacle removed successfully";
+    else
+        response->output = "Point not found";
+}
 
 void NAVnode::removeLocalWaypoint(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response){
     if(routes[routeToFollow].removePoint(request->x, request-> y))
@@ -885,7 +1209,19 @@ void NAVnode::removeLocalWaypoint(const std::shared_ptr<RemoveLocal::Request> re
 }
 
 void NAVnode::removeLocalObstacle(const std::shared_ptr<RemoveLocal::Request> request, std::shared_ptr<RemoveLocal::Response> response){
-    
+    if(removeLocalObstacle_helper(request->x, request->y))
+        response->output = "Obstacle removed successfully";
+    else
+        response->output = "Obstacle not found";
+}
+
+void NAVnode::removeGeodetic(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response){
+    if(routes[routeToFollow].removeGeodeticPoint(request->latitude, request-> longitude))
+        response->output = "Waypoint removed successfully";
+    else if(removeGeodeticObstacle_helper(request->latitude, request-> longitude))
+        response->output = "Obstacle removed successfully";
+    else
+        response->output = "Point not found";
 }
 
 void NAVnode::removeGeodeticWaypoint(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response){
@@ -896,7 +1232,19 @@ void NAVnode::removeGeodeticWaypoint(const std::shared_ptr<RemoveGeodetic::Reque
 }
 
 void NAVnode::removeGeodeticObstacle(const std::shared_ptr<RemoveGeodetic::Request> request, std::shared_ptr<RemoveGeodetic::Response> response){
+    if(removeGeodeticObstacle_helper(request->latitude, request-> longitude))
+        response->output = "Obstacle removed successfully";
+    else
+        response->output = "Obstacle not found";
+}
 
+void NAVnode::removeEarthCentred(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response){
+    if(routes[routeToFollow].removeEarthCentredPoint(request->x, request->y, request->z))
+        response->output = "Waypoint removed successfully";
+    else if(removeEarthCentredObstacle_helper(request->x, request->y, request->z))
+        response->output = "Obstacle removed successfully";
+    else
+        response->output = "Point not found";
 }
 
 void NAVnode::removeEarthCentredWaypoint(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response){
@@ -907,10 +1255,13 @@ void NAVnode::removeEarthCentredWaypoint(const std::shared_ptr<RemoveEarthCentre
 }
 
 void NAVnode::removeEarthCentredObstacle(const std::shared_ptr<RemoveEarthCentred::Request> request, std::shared_ptr<RemoveEarthCentred::Response> response){
-
+    if(removeEarthCentredObstacle_helper(request->x, request->y, request->z))
+        response->output = "Obstacle removed successfully";
+    else
+        response->output = "Obstacle not found";
 }
 
-void NAVnode::removeLastWaypoint(const std::shared_ptr<RemoveLastWaypoint::Request> request, std::shared_ptr<RemoveLastWaypoint::Response> response){
+void NAVnode::removeLastWaypoint(const std::shared_ptr<RemoveLast::Request> request, std::shared_ptr<RemoveLast::Response> response){
     ListNode* temp = routes[routeToFollow].getHead();
 
     if(temp == nullptr)
@@ -918,6 +1269,15 @@ void NAVnode::removeLastWaypoint(const std::shared_ptr<RemoveLastWaypoint::Reque
     else {
         routes[routeToFollow].removeLast();
         response->output = "Last Waypoint Successfull Removed";
+    }
+}
+
+void NAVnode::removeLastObstacle(const std::shared_ptr<RemoveLast::Request> request, std::shared_ptr<RemoveLast::Response> response){
+    if(obstacleCount == 0)
+        response->output = "No Obstacles currently in the system";
+    else {
+        delete obstacles[obstacleCount--];
+        response->output = "Last Obstacle successfully removed";
     }
 }
 

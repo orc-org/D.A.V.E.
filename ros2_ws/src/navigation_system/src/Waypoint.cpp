@@ -89,6 +89,21 @@ void Waypoint::local_To_EarthCentred() {
     ECEF_z = home_ECEF_z + dZ;
 }
 
+std::array<double,3> Waypoint::local_To_EarthCentred(int x, int y){
+    double dX =
+        -sin(home_longitude) * x
+        -sin(home_latitude) * cos(home_longitude) * y;
+
+    double dY =
+            cos(home_longitude) * x
+        -sin(home_latitude) * sin(home_longitude) * y;
+
+    double dZ =
+        cos(home_latitude) * y;
+
+    return {home_ECEF_x + dX, home_ECEF_y + dY, home_ECEF_z + dZ};
+}
+
 void Waypoint::EarthCentred_To_GeodeticApprox() {
     double p = sqrt(ECEF_x * ECEF_x + ECEF_y * ECEF_y);
     if (p < 1e-9 && std::abs(ECEF_z) < 1e-9) {
@@ -111,6 +126,29 @@ void Waypoint::EarthCentred_To_GeodeticApprox() {
 
     latitude = latRad;
     longitude = lonRad;
+}
+
+std::array<double,2> Waypoint::local_To_GeodeticApprox(int x, int y){
+    auto ECEF_point = local_To_EarthCentred(x, y);
+
+    double p = sqrt(ECEF_point[0] * ECEF_point[0] + ECEF_point[1] * ECEF_point[1]);
+    if (p < 1e-9 && std::abs(ECEF_point[2]) < 1e-9) {
+        return {0, 0};
+    }
+
+    double lonRad = atan2(ECEF_point[1], ECEF_point[0]);
+    double latRad = atan2(ECEF_point[2], p * (1.0 - e2));
+    double h = 0.0;
+
+    for (int i = 0; i < 5; i++) {
+        double N = calcPrimeVerticalRadius(latRad);
+        double denom = N + h;
+        if (std::abs(denom) < 1e-9) break;
+        h = p / std::cos(latRad) - N;
+        latRad = atan2(ECEF_point[2], p * (1.0 - e2 * N / denom));
+    }
+
+    return {latRad, lonRad};
 }
 
 #endif // WAYPOINT_CPP

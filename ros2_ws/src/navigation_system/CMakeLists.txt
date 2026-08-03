@@ -17,32 +17,68 @@ find_package(rclcpp_components)
 find_package(navigation_interfaces REQUIRED)
 find_package(serial_interfaces REQUIRED)
 find_package(serial_communication REQUIRED)
+find_package(raylib REQUIRED)
 
 install(
   DIRECTORY ${ROS2_WS}/src/serial_communication/include/serial_communication
   DESTINATION include
 )
 
-set(SOURCE_FILES
-  src/Waypoint.cpp 
-  src/Obstacle.cpp 
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+set(SHARED_SOURCES
+  src/Waypoint.cpp
+  src/Obstacle.cpp
   src/ListOfWaypoints.cpp
-  src/NAVnode.cpp
+  src/Sprite.cpp
   ${ROS2_WS}/src/serial_communication/src/SerialPort.cpp
 )
 
-add_executable(NAVnode ${SOURCE_FILES} )
+set(NAVNODE_SOURCES
+  ${SHARED_SOURCES}
+  src/NAVnode.cpp
+)
+
+set(NAVDISPLAY_SOURCES
+  ${SHARED_SOURCES}
+  src/NAVDisplay.cpp
+)
+
+add_executable(NAVnode ${NAVNODE_SOURCES})
 ament_target_dependencies(NAVnode rclcpp rclcpp_action rclcpp_components navigation_interfaces serial_interfaces serial_communication)
+target_link_libraries(NAVnode raylib)
+
+add_executable(NAVDisplay ${NAVDISPLAY_SOURCES})
+target_link_libraries(NAVDisplay raylib)
+ament_target_dependencies(NAVDisplay rclcpp rclcpp_action navigation_interfaces raylib serial_communication)
 
 target_include_directories(NAVnode PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/navigation_system>
   $<INSTALL_INTERFACE:include/navigation_system>
+  $<BUILD_INTERFACE:${ROS2_WS}/src/serial_communication/include/serial_communication>
+  $<INSTALL_INTERFACE:include/serial_communication>
+  $<BUILD_INTERFACE:${ROS2_WS}/install/serial_interfaces/include/serial_interfaces>
+  $<INSTALL_INTERFACE:include/serial_interfaces/serial_interfaces>
 )
 
- 
+target_include_directories(NAVDisplay PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/navigation_system>
+  $<INSTALL_INTERFACE:include/navigation_system>
+  $<BUILD_INTERFACE:${ROS2_WS}/src/serial_communication/include/serial_communication>
+  $<INSTALL_INTERFACE:include/serial_communication>
+  $<BUILD_INTERFACE:${ROS2_WS}/install/serial_interfaces/include/serial_interfaces>
+  $<INSTALL_INTERFACE:include/serial_interfaces/serial_interfaces>
+)
+
+ament_export_include_directories(include)
+
 # install targets
 install(TARGETS
   NAVnode
+  NAVDisplay
   DESTINATION lib/${PROJECT_NAME})
 
 install(PROGRAMS
