@@ -122,7 +122,7 @@ public:
     Vector2 currentPosition; // current position of DaVE
     Vector2 nextWaypoint;
 
-    enum coordinates {local, geodetic, earthCentered};  // defines the three coordinate systems available to the pilot
+    enum coordinates {local, geodetic, earthCentred};  // defines the three coordinate systems available to the pilot
     enum coordinates preference; // used to select which form of the coordinates gets displayed to the pilot
 
     enum avoidanceStrategy {reroute, trackCrawling, automatic_Circumnavigation_Off}; // defines the methods of circumnavigating obstacles
@@ -497,7 +497,20 @@ public:
                     left shift + right click to remove obstacle
                     backspace to remove the last waypoint/obstacle
                 */
-                if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && IsKeyDown(KEY_LEFT_SHIFT)){
+                    Vector2 position = convertToLocalCordinates({GetMouseX(), GetMouseY()});
+                    removeLocalWaypoint(position.x, position.y); // remove actual waypoint in the NAVnode
+                    removeWaypoint(GetMouseX(), GetMouseY()); // remove simple obstacle from the display
+                }
+                else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && IsKeyDown(KEY_LEFT_SHIFT)){
+                    Vector2 position = convertToLocalCordinates({GetMouseX(), GetMouseY()});
+                    removeLocalObstacle(position.x, position.y);
+                    removeObstacle(GetMouseX(), GetMouseY());
+                } 
+                else if(IsKeyPressed(KEY_BACKSPACE)){
+                        removeLast();
+                }
+                else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
                     Vector2 position = convertToLocalCordinates({GetMouseX(), GetMouseY()});
                     if(resettingHome){
                         resettingHome = false;
@@ -528,19 +541,7 @@ public:
                         addLocalObstacle(position.x, position.y, radius / mappingFactor.x); // add actual obstacle on the NAVnode side
                     }
                 }
-                if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && IsKeyDown(KEY_LEFT_SHIFT)){
-                    Vector2 position = convertToLocalCordinates({GetMouseX(), GetMouseY()});
-                    removeLocalWaypoint(position.x, position.y); // remove actual waypoint in the NAVnode
-                    removeWaypoint(GetMouseX(), GetMouseY()); // remove simple obstacle from the display
-                }
-                else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && IsKeyDown(KEY_LEFT_SHIFT)){
-                    Vector2 position = convertToLocalCordinates({GetMouseX(), GetMouseY()});
-                    removeLocalObstacle(position.x, position.y);
-                    removeObstacle(GetMouseX(), GetMouseY());
-                } 
-                else if(IsKeyPressed(KEY_BACKSPACE)){
-                        removeLast();
-                }
+                
 
                 // Route Selection
                 /*
@@ -667,7 +668,33 @@ public:
     }
 
     void getInfo(const DisplayInfo &data){
+        currentPosition.x = data.local_x;
+        currentPosition.y = data.local_y;
+        nextWaypoint.x = data.waypoint_local_x;
+        nextWaypoint.y = data.waypoint_local_y;
+        
 
+        switch(data.route2follow){
+            case data.ROUTE1 : routeToFollow = Route1; break;
+            case data.ROUTE2 : routeToFollow = Route2; break;
+            case data.ROUTE3 : routeToFollow = Route3; break;
+            case data.ROUTE4 : routeToFollow = Route4; break;
+            case data.ROUTE5 : routeToFollow = Route5; break;
+        }
+
+        switch(data.route2edit){
+            case data.ROUTE1 : routeToEdit = Route1; break;
+            case data.ROUTE2 : routeToEdit = Route2; break;
+            case data.ROUTE3 : routeToEdit = Route3; break;
+            case data.ROUTE4 : routeToEdit = Route4; break;
+            case data.ROUTE5 : routeToEdit = Route5; break;
+        }
+
+        switch(data.preference){
+            case data.LOCAL : preference = local; break;
+            case data.GEODETIC : preference = geodetic; break;
+            case data.EARTH_CENTRED : preference = earthCentred; break;
+        }
     }
 
     void goToNextWaypoint(){

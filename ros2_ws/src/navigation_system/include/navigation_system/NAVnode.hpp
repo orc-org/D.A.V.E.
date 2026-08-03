@@ -10,6 +10,8 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <fstream>
+#include <filesystem>
 
 // used for ros publishers and servers
 #include <chrono>
@@ -105,7 +107,7 @@ private:
 
     string date;
     
-    enum coordinates {local, geodetic, earthCentered};  // defines the three coordinate systems available to the pilot 
+    enum coordinates {local, geodetic, earthCentred};  // defines the three coordinate systems available to the pilot 
     enum coordinates preference; // used to select which form of the coordinates gets displayed to the pilot
 
     enum avoidanceStrategy {reroute, trackCrawling, automatic_Circumnavigation_Off}; // defines the methods of circumnavigating obstacles
@@ -125,7 +127,7 @@ private:
     Waypoint* lastFiveWaypoints[5];  // array to store the 5 most recent waypoints
                                      // this will be used to estimate the rovers velocity
 
-    SerialPort* GNSS;
+    //SerialPort* GNSS;
 
     //////////////////////////////////////////
     // Ros Stuff Definition
@@ -133,7 +135,7 @@ private:
 
     // Topics
     navigation_interfaces::msg::Velocity currentVelocity = navigation_interfaces::msg::Velocity();
-    navigation_interfaces::msg::DisplayInfo gnssInformation = navigation_interfaces::msg::DisplayInfo();
+
     rclcpp::Publisher<navigation_interfaces::msg::Velocity>::SharedPtr VelocityPublisher;
     rclcpp::Publisher<navigation_interfaces::msg::DisplayInfo>::SharedPtr DisplayInfoPublisher;
 
@@ -191,7 +193,7 @@ private:
     // Timers
     rclcpp::TimerBase::SharedPtr timer;
 
-    //size_t = count_;
+    size_t count_;
 
     ////////////////////////////////////////////
     // End Ros stuff Definition
@@ -342,6 +344,10 @@ private:
 
     NAVnode();
 
+    // Destructor
+
+    ~NAVnode();
+
     // timers
     void mainTimer();
 
@@ -446,4 +452,5 @@ void followRoute_Accepted(const std::shared_ptr<NAVGoalHandle> goal_handle);
 void followRoute_Execute(const std::shared_ptr<NAVGoalHandle> goal_handle);
 
 };
+
 
