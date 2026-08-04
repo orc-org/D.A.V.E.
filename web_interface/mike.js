@@ -91,7 +91,7 @@ function playMikeSound() {
 
     let sound;
 
-    if (random < 0.05) {
+    if (random < 0.02) {
         sound = document.getElementById("fun_song"); // 5%
     } 
     else if (random < 0.10) {
