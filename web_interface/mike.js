@@ -92,9 +92,9 @@ function playMikeSound() {
     let sound;
 
     if (random < 0.02) {
-        sound = document.getElementById("fun_song"); // 5%
+        sound = document.getElementById("fun_song");
     } 
-    else if (random < 0.10) {
+    else if (random < 0.06) {
         sound = document.getElementById("swamp");
     }
     else {
