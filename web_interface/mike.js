@@ -1,8 +1,27 @@
 const mike = document.getElementById("mike");
-const mike_laugh = document.getElementById("mike-laugh");
+//const mike_laugh = document.getElementById("mike-laugh");
 const foxy = document.getElementById("foxy");
 const foxy_scream = document.getElementById("foxy-scream")
-//console.log(foxy_scream);
+//Mike Myers Stim List
+const mikeSounds = [
+    document.getElementById("mike-laugh"),
+    document.getElementById("accident"),
+    document.getElementById("babysit"),
+    document.getElementById("excited"),
+    document.getElementById("oh_yeah"),
+    document.getElementById("ruined"),
+    document.getElementById("sonuva"),
+    document.getElementById("stupid"),
+    document.getElementById("swamp"),
+    document.getElementById("that_couldve_gone_better"),
+    document.getElementById("thats_disgusting"),
+    document.getElementById("ugly_mom"),
+    document.getElementById("wheeze"),
+    document.getElementById("fun_song")
+];
+mikeSounds.forEach((sound, index) => {
+    console.log(index, sound);
+});
 
 let x = Math.random() * window.innerWidth;
 let y = Math.random() * window.innerHeight;
@@ -27,7 +46,7 @@ function animateMike() {
     mike.style.left = x + "px";
     mike.style.top = y + "px";
 
-    const margin = 10;
+    const margin = 5;
 
     const hitLeft = x <= margin;
     const hitRight = x + mike.offsetWidth >= window.innerWidth - margin;
@@ -66,15 +85,31 @@ function triggerJumpscare() {
     }, 800);
 }
 
-mike.onclick = function() {
+function playMikeSound() {
 
-    console.log("Mike Myers");
+    let random = Math.random();
 
-    mike_laugh.currentTime = 0;
-    mike_laugh.play();
+    let sound;
 
-};
-/*
+    if (random < 0.05) {
+        sound = document.getElementById("fun_song"); // 5%
+    } 
+    else if (random < 0.15) {
+        sound = document.getElementById("swamp"); // 10%
+    }
+    else {
+        sound = mikeSounds[Math.floor(Math.random() * mikeSounds.length)];
+    }
+
+    sound.currentTime = 0;
+    sound.play();
+}
+
+mike.onclick = playMikeSound;
+
+window.playMikeSound = playMikeSound;
+
+
 function spawnMikeAtCorner() {
 
     // Put Mike near the top-right corner
@@ -87,7 +122,7 @@ function spawnMikeAtCorner() {
 
     console.log("Mike spawned near corner");
 }
-*/
-//document.getElementById("test-corner").onclick = spawnMikeAtCorner;
 
-//document.getElementById("test-jumpscare").onclick = triggerJumpscare;
+document.getElementById("test-corner").onclick = spawnMikeAtCorner;
+
+document.getElementById("test-jumpscare").onclick = triggerJumpscare;
