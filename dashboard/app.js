@@ -9,6 +9,8 @@ let autoModePub = null;
 let armManualVelPub = null;
 let gripperTargetPub = null;
 let gripperActionClient = null;
+let lightsPub = null;
+let servoCommandsPub = null;
 
 // Subscribers
 let jointStateSub = null;
@@ -243,6 +245,18 @@ function setupROSInterfaces() {
         messageType: 'std_msgs/msg/Float32'
     });
 
+    lightsPub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/lights',
+        messageType: 'std_msgs/msg/Bool'
+    });
+
+    servoCommandsPub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/servo_commands',
+        messageType: 'std_msgs/msg/String'
+    });
+
     // Action Client for gripper
     gripperActionClient = new ROSLIB.ActionClient({
         ros: ros,
@@ -364,6 +378,23 @@ function setupROSInterfaces() {
             }
         } catch (e) {
             console.error("Failed to parse process status JSON:", e);
+        }
+    });
+
+    const batteryStatusSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/battery/status',
+        messageType: 'std_msgs/msg/String'
+    });
+    batteryStatusSub.subscribe((msg) => {
+        try {
+            const batt = JSON.parse(msg.data);
+            document.getElementById('batt-val-soc').innerText = `${batt.SOC}%`;
+            document.getElementById('batt-val-volts').innerText = `${batt.voltage}V`;
+            document.getElementById('batt-val-amps').innerText = `${batt.current}A`;
+            document.getElementById('batt-val-status').innerText = batt.battery_status ? batt.battery_status.toUpperCase() : "OK";
+        } catch (e) {
+            console.error("Failed to parse battery JSON:", e);
         }
     });
 
@@ -1128,6 +1159,52 @@ function sendGripperCommand(position) {
 
 const gripperOpenBtn = document.getElementById('btn-gripper-open');
 const gripperCloseBtn = document.getElementById('btn-gripper-close');
+
+const lightOnBtn = document.getElementById('btn-light-on');
+const lightOffBtn = document.getElementById('btn-light-off');
+
+if (lightOnBtn) {
+    lightOnBtn.addEventListener('click', () => {
+        if (!lightsPub) return;
+        const msg = new ROSLIB.Message({ data: true });
+        lightsPub.publish(msg);
+        console.log("Published Lights ON");
+    });
+}
+if (lightOffBtn) {
+    lightOffBtn.addEventListener('click', () => {
+        if (!lightsPub) return;
+        const msg = new ROSLIB.Message({ data: false });
+        lightsPub.publish(msg);
+        console.log("Published Lights OFF");
+    });
+}
+
+const servo1LeftBtn = document.getElementById('btn-servo1-left');
+const servo1RightBtn = document.getElementById('btn-servo1-right');
+const servo2LeftBtn = document.getElementById('btn-servo2-left');
+const servo2RightBtn = document.getElementById('btn-servo2-right');
+
+function publishServoCommand(cmd) {
+    if (!servoCommandsPub) return;
+    const msg = new ROSLIB.Message({ data: cmd });
+    servoCommandsPub.publish(msg);
+    console.log("Published Servo Command: " + cmd);
+}
+
+function bindServoBtn(btn, moveCmd, stopCmd) {
+    if (!btn) return;
+    btn.addEventListener('mousedown', () => publishServoCommand(moveCmd));
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); publishServoCommand(moveCmd); });
+    btn.addEventListener('mouseup', () => publishServoCommand(stopCmd));
+    btn.addEventListener('mouseleave', () => publishServoCommand(stopCmd));
+    btn.addEventListener('touchend', () => publishServoCommand(stopCmd));
+}
+
+bindServoBtn(servo1LeftBtn, 'servo1_left', 'servo1_stop');
+bindServoBtn(servo1RightBtn, 'servo1_right', 'servo1_stop');
+bindServoBtn(servo2LeftBtn, 'servo2_left', 'servo2_stop');
+bindServoBtn(servo2RightBtn, 'servo2_right', 'servo2_stop');
 
 if (gripperOpenBtn) {
     gripperOpenBtn.addEventListener('mousedown', () => { gripperOpenBtnActive = true; });

@@ -70,6 +70,30 @@
 					nvidia,tristate = <0x00>;
 					nvidia,enable-input = <0x00>;
 				};
+
+				/* Pin 21: Servo */
+				hdr40-pin21 {
+					nvidia,pins = "spi1_miso_pz4";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 23: Servo */
+				hdr40-pin23 {
+					nvidia,pins = "spi1_sck_pz3";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 24: Servo */
+				hdr40-pin24 {
+					nvidia,pins = "spi1_cs0_pz6";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
 			};
 		};
 	};

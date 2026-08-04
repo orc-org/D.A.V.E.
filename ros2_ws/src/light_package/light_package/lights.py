@@ -9,7 +9,7 @@ import Jetson.GPIO as GPIO
 
 
 # BCM pin number (CHANGE THIS)
-GPIO_LIGHT_PIN = 40
+GPIO_LIGHT_PIN = 12
 
 
 class LightController(Node):
@@ -17,7 +17,7 @@ class LightController(Node):
     def __init__(self):
         super().__init__("light_controller")
 
-        GPIO.setmode(GPIO.BCM)
+        GPIO.setmode(GPIO.BOARD)
         GPIO.setwarnings(False)
 
         GPIO.setup(GPIO_LIGHT_PIN, GPIO.OUT)

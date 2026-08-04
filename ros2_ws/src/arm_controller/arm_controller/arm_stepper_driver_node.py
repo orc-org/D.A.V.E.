@@ -115,19 +115,19 @@ class ArmStepperDriverNode(Node):
         # DM556Y Driver #1: Arm Joint Stepper
         self.declare_parameter('arm_gear_ratio', 50.0)        # 50:1 gearbox on arm joint
         self.declare_parameter('arm_motor_steps', 1600)       # DM556Y microsteps
-        self.declare_parameter('arm_step_pin', 15)            # Jetson Board Pin 33 (STEP)
-        self.declare_parameter('arm_dir_pin', 13)             # Jetson Board Pin 29 (DIR)
-        self.declare_parameter('arm_enable_pin', 16)          # Jetson Board Pin 31 (ENABLE)
+        self.declare_parameter('arm_step_pin', 33)            # Jetson Board Pin 33 (STEP)
+        self.declare_parameter('arm_dir_pin', 18)             # Jetson Board Pin 29 (DIR)
+        self.declare_parameter('arm_enable_pin', 22)          # Jetson Board Pin 31 (ENABLE)
         self.declare_parameter('arm_invert_dir', False)
         self.declare_parameter('arm_active_low', False)       # False for standard 3.3V HIGH (UP) / 0V LOW (DOWN) logic
         self.declare_parameter('arm_max_velocity_rad_s', 0.5) # 0.5 rad/s (approx 30 deg/s for smooth motion)
 
-        # DM556Y Driver #2: Gripper Stepper
+        # DM556Y Driver #1: Gripper Stepper
         self.declare_parameter('gripper_lead_pitch', 0.008)   # 8mm lead screw pitch
         self.declare_parameter('gripper_motor_steps', 1600)   # DM556Y microsteps
-        self.declare_parameter('gripper_step_pin', 33)       # Jetson Board Pin 37 (STEP)
-        self.declare_parameter('gripper_dir_pin', 18)        # Jetson Board Pin 35 (DIR)
-        self.declare_parameter('gripper_enable_pin', 22)     # Jetson Board Pin 38 (ENABLE)
+        self.declare_parameter('gripper_step_pin', 15)       # Jetson Board Pin 37 (STEP)
+        self.declare_parameter('gripper_dir_pin', 13)        # Jetson Board Pin 35 (DIR)
+        self.declare_parameter('gripper_enable_pin', 16)     # Jetson Board Pin 38 (ENABLE)
         self.declare_parameter('gripper_invert_dir', False)
         self.declare_parameter('gripper_active_low', False)      # False for standard 3.3V HIGH (OPEN) / 0V LOW (CLOSE) logic
         self.declare_parameter('gripper_max_velocity_m_s', 0.05) # 0.05 m/s
