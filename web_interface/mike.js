@@ -12,12 +12,12 @@ const mikeSounds = [
     document.getElementById("ruined"),
     document.getElementById("sonuva"),
     document.getElementById("stupid"),
-    document.getElementById("swamp"),
+    //document.getElementById("swamp"),
     document.getElementById("that_couldve_gone_better"),
     document.getElementById("thats_disgusting"),
     document.getElementById("ugly_mom"),
     document.getElementById("wheeze"),
-    document.getElementById("fun_song")
+    //document.getElementById("fun_song")
 ];
 mikeSounds.forEach((sound, index) => {
     console.log(index, sound);
@@ -94,7 +94,7 @@ function playMikeSound() {
     if (random < 0.02) {
         sound = document.getElementById("fun_song");
     } 
-    else if (random < 0.06) {
+    else if (random < 0.05) {
         sound = document.getElementById("swamp");
     }
     else {
