@@ -28,7 +28,6 @@
 #include "SerialPort.hpp"
 
 //custom defined interfaces for use with topics, services and actions
-#include "navigation_interfaces/msg/velocity.hpp"
 #include "navigation_interfaces/msg/display_info.hpp"
 
 #include "navigation_interfaces/srv/void_service.hpp"
@@ -102,8 +101,8 @@ private:
     int obstacleLimit;          // maximum number of obstacles that can be stored in the system
     int waypointCount;          // keeps track of the number of waypoints stored in the system accross all routes 
 
-    int timerFrequency; // defines the speed of our main timer
-    int timeSinceLastVelocityPublishing; // used in the numerical method for calculating the velocity of the rover
+    int pointsLogged;         // safeguard to ensure we don't end up logging 100Gb of NAV data at the end of the task (capped at 250)
+    int cyclesSinceLogUpdated;  // keeps track of when points visited was last updated. we will update it every 20 seconds as that would yeild 180 lines after an hour (which is detailed, without being too much data);
 
     string date;
     
@@ -127,16 +126,13 @@ private:
     Waypoint* lastFiveWaypoints[5];  // array to store the 5 most recent waypoints
                                      // this will be used to estimate the rovers velocity
 
-    //SerialPort* GNSS;
+    SerialPort* GNSS;
 
     //////////////////////////////////////////
     // Ros Stuff Definition
     //////////////////////////////////////////
 
     // Topics
-    navigation_interfaces::msg::Velocity currentVelocity = navigation_interfaces::msg::Velocity();
-
-    rclcpp::Publisher<navigation_interfaces::msg::Velocity>::SharedPtr VelocityPublisher;
     rclcpp::Publisher<navigation_interfaces::msg::DisplayInfo>::SharedPtr DisplayInfoPublisher;
 
     // Services
@@ -369,7 +365,7 @@ private:
         this is aweful, but since we are mainly going to be using the directional data to calibrate the heading indicator that is 
         powered by the IMU, this is good enough
     */
-    void updateVelocity();
+    // void updateVelocity();
 
     // service callback functions
     void stopNavigating(const std::shared_ptr<VoidService::Request> request, std::shared_ptr<VoidService::Response> response);

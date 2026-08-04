@@ -68,8 +68,14 @@ struct simpleWaypoint{
     void draw(){
         DrawCircle(x, y, 2, BLUE);
     }
+    void drawInEditMode(){
+        DrawCircle(x * 2, y * 2, 5, BLUE);
+    }
     void drawOnRoute(){
         DrawCircle(x, y, 2, GREEN);
+    }
+    void drawOnRouteInEditMode(){
+        DrawCircle(x * 2, y * 2, 5, GREEN);
     }
 };
 
@@ -80,6 +86,10 @@ struct simpleObstacle{
     void draw(){
         DrawCircle(x, y, 2, RED);
         DrawCircleLines(x, y, radius, RED);
+    }
+    void drawInEditMode(){
+        DrawCircle(x * 2, y * 2, 5, RED);
+        DrawCircleLines(x * 2, y * 2, radius * 2, RED);
     }
 };
 
@@ -179,7 +189,7 @@ public:
         int nextObstacle_x;
         int nextObstacle_y;
 
-        enum zoomLevels {Half, None, TwoTimes, ThreeTimes, FourTimes};
+        enum zoomLevels {Quarter, Half, None, TwoTimes, ThreeTimes, FourTimes};
         enum zoomLevels cameraZoom = None;
 
         SetConfigFlags(FLAG_WINDOW_RESIZABLE);           // make our window resizeable
@@ -187,7 +197,7 @@ public:
         SetTargetFPS(30);
 
         Vector2 primaryMonitor = GetMonitorPosition(0); // get the position of the primary monitor
-        SetWindowPosition(primaryMonitor.x + GetMonitorWidth(0) * 0.8, primaryMonitor.y + GetMonitorHeight(0) * 0.083); // offset our window by a specific amount when it is initialized
+        SetWindowPosition(primaryMonitor.x + GetMonitorWidth(0) * 0.8, primaryMonitor.y + GetMonitorHeight(0) * 0.333); // offset our window by a specific amount when it is initialized
 
         // Load Textures
         const std::string pathToBackground      = resolveAssetPath("Floor.png");
@@ -198,7 +208,8 @@ public:
         Texture2D DaVE_texture    = LoadTexture(pathToDaVE_texture.c_str());    // A simple image to be used as a sprite to represent DaVE
         Texture2D compass_texture = LoadTexture(pathToCompass_texture.c_str()); // a simple Rose de Vent to indicate where north is (always up)
 
-        Vector2 origin = {background.width * 0.5f, background.height * 0.5f};
+        Vector2 origin = {background.width * 0.5, background.width * 0.5};
+        Vector2 mousePosition = {};
 
         /*
             the mapping factor is used to deal with converting between pixels on screen and meters in the real world
@@ -212,7 +223,7 @@ public:
 
             *NOTE* the pixel coordinate is the position on the image as measured from the top right corner (hence the -ve sign in the y components of the lambda expressions)
         */
-        Vector2 mappingFactor = {background.width / 1000.0f, background.height / 1000.0f};
+        Vector2 mappingFactor = {background.width / 2000.0f, background.height / 2000.0f};
 
         auto convertToLocalCordinates = [&](Vector2 pixelPosition)-> Vector2{ 
             return {(pixelPosition.x - origin.x) / mappingFactor.x, -(pixelPosition.y - origin.y) / mappingFactor.y};
@@ -222,12 +233,21 @@ public:
             return {localPosition.x * mappingFactor.x + origin.x, -localPosition.y * mappingFactor.y + origin.y};
         };
 
+        auto convertToPixelCoordinates_x = [&](int x)-> int{ 
+            return {static_cast<int>(std::round(x * mappingFactor.x + origin.x))};
+        };
+
+        auto convertToPixelCoordinates_y = [&](int y)-> int{ 
+            return {static_cast<int>(std::round(-y * mappingFactor.y + origin.y))};
+        };
+
         /*
             A render texture is a surface you can draw on within the window
             we are using one so that we can resize the window while still preserving aspect ratio and
             so that we can segment our main window into a top part for a mini Map and a bottom part for a bearing indicator
         */
         RenderTexture2D map = LoadRenderTexture(BASE_W, BASE_H);
+        RenderTexture2D editingMap = LoadRenderTexture(background.width, background.height);
 
         /*
             we will be implementing our "minimap" by using a full size map and a camera
@@ -264,14 +284,19 @@ public:
             // Navigating mode
             ///////////////////////////////////////////////////////
 
+            mousePosition.x = GetMouseX();
+            mousePosition.y = GetMouseY();
+
             if(!editingMode){
 
                 ///////////////////////////////////////////////////////
                 // Update Values
                 ///////////////////////////////////////////////////////
 
-                // update position Data for DaVE
-                //updatePosition();
+                // // update position Data for DaVE
+                // DaVE.setPosition(convertToPixelCoordinates(currentPosition));
+
+                DaVE.setPosition(convertToPixelCoordinates({0, 0}));
 
                 // update camera target
                 camera.target = DaVE.getPosition();
@@ -291,17 +316,17 @@ public:
                 if(IsKeyDown(KEY_F1)){
                     BeginDrawing();
                         ClearBackground(RAYWHITE);
-                        DrawText("Enter Editing Mode                          ->      E",               12, 10,  10, BLACK);
-                        DrawText("Change Camera Zoom (5 levels)               ->      Z",               12, 30,  10, BLACK);
-                        DrawText("Begin Following Next Route                  ->      Up Arrow",        12, 50,  10, BLACK);
-                        DrawText("Begin Following Previous Route              ->      Down Arrow",      12, 70,  10, BLACK);
-                        DrawText("Begin Following Specific Route              ->      1, 2, 3, 4 or 5", 12, 90,  10, BLACK);
-                        DrawText("Toggle Debug                                ->      F2",              12, 110, 10, BLACK);
-                        DrawText("Toggle Preference                           ->      F3",              12, 130, 10, BLACK);
-                        DrawText("Toggle Direction of Travel                  ->      D",               12, 150, 10, BLACK);
-                        DrawText("Manually Target Next Waypoint               ->      Right Arrow",     12, 170, 10, BLACK);
-                        DrawText("Manually Target Previous Waypoint           ->      Left Arrow",      12, 190, 10, BLACK);
-                        DrawText("Close Window (WARNING: This Is Ireversible) ->      Asterisk",        12, 210, 10, BLACK);
+                        DrawText("Enter Editing Mode                                   ->      E",             12, 10,  10, BLACK);
+                        DrawText("Change Camera Zoom (5 levels)                    ->      Z",                 12, 30,  10, BLACK);
+                        DrawText("Begin Following Next Route                         ->      Up Arrow",        12, 50,  10, BLACK);
+                        DrawText("Begin Following Previous Route                    ->      Down Arrow",       12, 70,  10, BLACK);
+                        DrawText("Begin Following Specific Route                     ->      1, 2, 3, 4 or 5", 12, 90,  10, BLACK);
+                        DrawText("Toggle Debug                                          ->      F2",           12, 110, 10, BLACK);
+                        DrawText("Toggle Preference                                   ->      F3",             12, 130, 10, BLACK);
+                        DrawText("Toggle Direction of Travel                         ->      D",               12, 150, 10, BLACK);
+                        DrawText("Manually Target Next Waypoint                   ->      Right Arrow",        12, 170, 10, BLACK);
+                        DrawText("Manually Target Previous Waypoint              ->      Left Arrow",          12, 190, 10, BLACK);
+                        DrawText("Close Window (WARNING: This Is Ireversible)   ->      Asterisk",             12, 210, 10, BLACK);
                     EndDrawing();
                     continue;
                 }
@@ -317,6 +342,11 @@ public:
                 // toggle Camera Zoom
                 if(IsKeyPressed(KEY_Z)){
                     switch(cameraZoom){
+                        case Quarter : {
+                            cameraZoom = Half;
+                            camera.zoom = 0.5f;
+                            break;
+                        }
                         case Half : {
                             cameraZoom = None;
                             camera.zoom = 1.0f;
@@ -338,8 +368,8 @@ public:
                             break;
                         }
                         case FourTimes : {
-                            cameraZoom = Half;
-                            camera.zoom = 0.5f;
+                            cameraZoom = Quarter;
+                            camera.zoom = 0.25f;
                             break;
                         }
                     }
@@ -412,6 +442,7 @@ public:
                         DrawTexture(background, 0, 0, WHITE);
                         drawObstacles();
                         drawWaypoints();
+                        DrawCircle(convertToPixelCoordinates_x(nextWaypoint.x), convertToPixelCoordinates_y(nextWaypoint.y), 6, ORANGE);
                     EndMode2D();
                 EndTextureMode();
 
@@ -453,6 +484,8 @@ public:
                 // Update Values
                 ///////////////////////////////////////////////////////
 
+                // mousePosition.x -= 250;
+                // mousePosition.y -= 250;
 
                 ////////////////////////////////////////////////////////
                 // Handle Keyboard Input
@@ -465,17 +498,17 @@ public:
                 if(IsKeyDown(KEY_F1)){
                     BeginDrawing();
                         ClearBackground(RAYWHITE);
-                        DrawText("Add Waypoint ------------------------ Left Click",                                      12, 10,  10, BLACK);
-                        DrawText("Revove Waypoint --------------------- Shift + Left Click",                              12, 30,  10, BLACK);
-                        DrawText("Add Obstacle ------------------------ Right Click + Drag to set radius",                12, 50,  10, BLACK);
-                        DrawText("Revove Obstacle --------------------- Shift + Right Click",                             12, 70,  10, BLACK);
-                        DrawText("Revove Last Obstacle/Waypoint ------- Backspace",                                       12, 90,  10, BLACK);
-                        DrawText("Edit Next Route --------------------- Up Arrow",                                        12, 110, 10, BLACK);
-                        DrawText("Edit Previous Route ----------------- Down Arrow",                                      12, 130, 10, BLACK);
-                        DrawText("Select Route To Edit ---------------- 1, 2, 3, 4 or 5",                                 12, 150, 10, BLACK);
-                        DrawText("Reset Home To Next Waypoint --------- H + O + M + E, then place a waypoint like usual", 12, 170, 10, BLACK);
-                        DrawText("Clear Current Route ----------------- K + I + L",                                       12, 190, 10, BLACK);
-                        DrawText("Exit Editing Mode ------------------- Enter",                                           12, 210, 10, BLACK);
+                        DrawText("Add Waypoint                            ->      Left Click",                                12, 10,  10, BLACK);
+                        DrawText("Revove Waypoint                       ->      Shift + Left Click",                          12, 30,  10, BLACK);
+                        DrawText("Add Obstacle                            ->      Right Click + Drag to set radius",            12, 50,  10, BLACK);
+                        DrawText("Revove Obstacle                       ->      Shift + Right Click",                         12, 70,  10, BLACK);
+                        DrawText("Revove Last Obstacle/Waypoint   ->      Backspace",                                         12, 90,  10, BLACK);
+                        DrawText("Edit Next Route                        ->      Up Arrow",                                   12, 110, 10, BLACK);
+                        DrawText("Edit Previous Route                   ->      Down Arrow",                                  12, 130, 10, BLACK);
+                        DrawText("Select Route To Edit                 ->      1, 2, 3, 4 or 5",                              12, 150, 10, BLACK);
+                        DrawText("Reset Home To Next Waypoint      ->      H + O + M + E, then place a waypoint like usual",  12, 170, 10, BLACK);
+                        DrawText("Clear Current Route                  ->      K + I + L",                                    12, 190, 10, BLACK);
+                        DrawText("Exit Editing Mode                       ->      Enter",                                     12, 210, 10, BLACK);
                     EndDrawing();
                     continue;
                 }
@@ -483,7 +516,7 @@ public:
                 // Exiting Editng Mode
                 if(IsKeyPressed(KEY_ENTER)){
                     editingMode = false;
-                    SetWindowPosition(primaryMonitor.x + GetMonitorWidth(0) * 0.8, primaryMonitor.y + GetMonitorHeight(0) * 0.083);
+                    SetWindowPosition(primaryMonitor.x + GetMonitorWidth(0) * 0.8, primaryMonitor.y + GetMonitorHeight(0) * 0.333);
                     SetWindowSize(500, 500);
                     continue;
                 }
@@ -498,36 +531,36 @@ public:
                     backspace to remove the last waypoint/obstacle
                 */
                 if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && IsKeyDown(KEY_LEFT_SHIFT)){
-                    Vector2 position = convertToLocalCordinates({GetMouseX(), GetMouseY()});
+                    Vector2 position = convertToLocalCordinates({mousePosition.x, mousePosition.y});
                     removeLocalWaypoint(position.x, position.y); // remove actual waypoint in the NAVnode
-                    removeWaypoint(GetMouseX(), GetMouseY()); // remove simple obstacle from the display
+                    removeWaypoint(mousePosition.x, mousePosition.y); // remove simple obstacle from the display
                 }
                 else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && IsKeyDown(KEY_LEFT_SHIFT)){
-                    Vector2 position = convertToLocalCordinates({GetMouseX(), GetMouseY()});
+                    Vector2 position = convertToLocalCordinates({mousePosition.x, mousePosition.y});
                     removeLocalObstacle(position.x, position.y);
-                    removeObstacle(GetMouseX(), GetMouseY());
+                    removeObstacle(mousePosition.x, mousePosition.y);
                 } 
                 else if(IsKeyPressed(KEY_BACKSPACE)){
                         removeLast();
                 }
                 else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
-                    Vector2 position = convertToLocalCordinates({GetMouseX(), GetMouseY()});
+                    Vector2 position = convertToLocalCordinates({mousePosition.x, mousePosition.y});
                     if(resettingHome){
                         resettingHome = false;
                         resetHome(position.x, position.y);
                     }
                     else{
-                        addWaypoint(GetMouseX(), GetMouseY());    // add simple waypoint on display side
+                        addWaypoint(mousePosition.x, mousePosition.y);    // add simple waypoint on display side
                         addLocalWaypoint(position.x, position.y); // add actual waypoint on NAVnode side
                     }
                 }
                 else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
-                    nextObstacle_x = GetMouseX();
-                    nextObstacle_y = GetMouseY();
+                    nextObstacle_x = mousePosition.x;
+                    nextObstacle_y = mousePosition.y;
                 }
                 else if(IsMouseButtonReleased(MOUSE_BUTTON_RIGHT)){
-                    int dx = nextObstacle_x - GetMouseX();
-                    int dy = nextObstacle_y - GetMouseY();                
+                    int dx = nextObstacle_x - mousePosition.x;
+                    int dy = nextObstacle_y - mousePosition.y;                
                     int radius = std::sqrt(dx * dx + dy * dy);
 
                     if (radius / mappingFactor.x < 1){
@@ -577,29 +610,40 @@ public:
                 /*
                     after indicating that you wish to reset the home location, the next waypoint that you place will become the new home location
                 */
-                if(IsKeyPressed(KEY_H) && IsKeyPressed(KEY_O) && IsKeyPressed(KEY_M) && IsKeyPressed(KEY_E))
+                if(IsKeyDown(KEY_H) && IsKeyDown(KEY_O) && IsKeyDown(KEY_M) && IsKeyDown(KEY_E))
                     resettingHome = true;
 
                 // clear Route
-                if(IsKeyPressed(KEY_K) && IsKeyPressed(KEY_I) && IsKeyPressed(KEY_L))
+                if(IsKeyDown(KEY_K) && IsKeyDown(KEY_I) && IsKeyDown(KEY_L))
                     clearRoute();
 
                 ///////////////////////////////////////////////////////
                 // Render Frame
                 ///////////////////////////////////////////////////////
 
+                Rectangle src  = { 0, 0, background.width, -background.height};
+                Rectangle dest = { 0, 0, 1000 , 1000};
+
+                BeginTextureMode(editingMap); // start drawing onto the map
+                    ClearBackground(WHITE); // ensure we are starting with a blank canvas
+
+                    DrawTexture(background, 0, 0, WHITE);
+                    drawObstacles();
+                    drawWaypoints();
+                    DrawCircle(convertToPixelCoordinates_x(nextWaypoint.x), convertToPixelCoordinates_y(nextWaypoint.y), 6, ORANGE);
+            
+                EndTextureMode();
+
                 BeginDrawing();
                     ClearBackground(GRAY);
                     
                     // Draw Map
-                    DrawTexture(background, 0, 0, WHITE);
-                    drawObstacles();
-                    drawWaypoints();
+                    DrawTexturePro(editingMap.texture, src, dest, {0, 0}, 0.0f, WHITE);
                     
                     // Draw Text Ribbon
-                    DrawRectangle(0, BASE_H - 32, BASE_W, 32, ColorAlpha(RAYWHITE, 0.6f));
-                    DrawText(TextFormat("Mouse: %.0f,%.0f", GetMouseX(), GetMouseY()), 12, BASE_H - 24, 20, BLACK);
-                    DrawText(TextFormat("Route: %.0d", routeToEdit - 1), 256, BASE_H - 24, 20, BLACK);
+                    DrawRectangle(0, 1000 - 32, 1000, 32, ColorAlpha(RAYWHITE, 0.6f));
+                    DrawText(TextFormat("Mouse: %.0f,%.0f", (mousePosition.x - 500) * 2, (-mousePosition.y + 500) * 2), 12, 1000 - 24, 20, BLACK);
+                    DrawText(TextFormat("Route: %.0d", routeToEdit + 1), 256, 1000 - 24, 20, BLACK);
 
                 EndDrawing();
             }
@@ -609,32 +653,36 @@ public:
         UnloadTexture(DaVE_texture);
         UnloadTexture(compass_texture);
         UnloadRenderTexture(map);
+        UnloadRenderTexture(editingMap);
 
         CloseWindow();
     }
 
     void drawWaypoints(){
+        
         for(int i = 0; i < 5; i++){
             if(waypoints[i].size() == 0) 
                 continue;
             else if(i == routeToFollow) {
-                waypoints[routeToFollow][0].drawOnRoute();
+                waypoints[routeToFollow][0].drawOnRouteInEditMode();
                 for(unsigned int j = 1; j < waypoints[routeToFollow].size(); j++){
-                    waypoints[routeToFollow][j].drawOnRoute();
-                    DrawLine(waypoints[routeToFollow][j - 1].x, waypoints[routeToFollow][j - 1].y, 
-                        waypoints[routeToFollow][j].x, waypoints[routeToFollow][j].y, GREEN);
+                    waypoints[routeToFollow][j].drawOnRouteInEditMode();
+                    DrawLine(waypoints[routeToFollow][j - 1].x * 2, waypoints[routeToFollow][j - 1].y * 2, 
+                        waypoints[routeToFollow][j].x * 2, waypoints[routeToFollow][j].y * 2, GREEN);
                 }
             }
             else
                 for(simpleWaypoint point : waypoints[i])
-                    point.draw();
+                    point.drawInEditMode();
         }
-        DrawCircle(nextWaypoint.x, nextWaypoint.y, 6, ORANGE);
+        
     }
 
     void drawObstacles(){
+        
         for(simpleObstacle thing : obstacles)
-            thing.draw();
+            thing.drawInEditMode();
+        
     }
 
     void addWaypoint(int x, int y){
@@ -877,10 +925,12 @@ public:
         auto request = std::make_shared<RemoveLastWaypoint::Request>();
 
         if (!wasAWaypointTheLastPointAdded.back()){
+            if (obstacles.size() == 0) return;
             RemoveLastObstacleClient->async_send_request(request, std::bind(&NAVDisplay::removeLast_response, this,_1));
             obstacles.pop_back();
         }
         else{
+            if (waypoints[routeToEdit].size() == 0) return;
             RemoveLastWaypointClient->async_send_request(request, std::bind(&NAVDisplay::removeLast_response, this,_1));
             waypoints[routeToEdit].pop_back();
         }
