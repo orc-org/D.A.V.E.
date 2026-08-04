@@ -1,10 +1,15 @@
 const mike = document.getElementById("mike");
 const mike_laugh = document.getElementById("mike-laugh");
+const foxy = document.getElementById("foxy");
+const foxy_scream = document.getElementById("foxy-scream")
+//console.log(foxy_scream);
 
-let x = 100;
-let y = 100;
-let dx = 1;
-let dy = 1;
+let x = Math.random() * window.innerWidth;
+let y = Math.random() * window.innerHeight;
+
+let dx = (Math.random() < 0.5 ? -1 : 1);
+let dy = (Math.random() < 0.5 ? -1 : 1);
+let jumpscareCooldown = false;
 
 function animateMike() {
 
@@ -22,11 +27,44 @@ function animateMike() {
     mike.style.left = x + "px";
     mike.style.top = y + "px";
 
+    const margin = 10;
+
+    const hitLeft = x <= margin;
+    const hitRight = x + mike.offsetWidth >= window.innerWidth - margin;
+    const hitTop = y <= margin;
+    const hitBottom = y + mike.offsetHeight >= window.innerHeight - margin;
+
+    if ((hitLeft || hitRight) && (hitTop || hitBottom) && !jumpscareCooldown) {
+        console.log("CORNER HIT!");
+        triggerJumpscare();
+    }
+
     requestAnimationFrame(animateMike);
 }
 
 animateMike();
 
+function triggerJumpscare() {
+
+    if (jumpscareCooldown) return;
+
+    jumpscareCooldown = true;
+
+    const foxy = document.getElementById("foxy");
+
+    // restart gif
+    foxy.src = "images/foxy_jumpscare_visual.gif?" + Date.now();
+
+    foxy.style.display = "block";
+
+    foxy_scream.currentTime = 0;
+    foxy_scream.play();
+
+    setTimeout(() => {
+        foxy.style.display = "none";
+        jumpscareCooldown = false;
+    }, 800);
+}
 
 mike.onclick = function() {
 
@@ -36,5 +74,20 @@ mike.onclick = function() {
     mike_laugh.play();
 
 };
+/*
+function spawnMikeAtCorner() {
 
+    // Put Mike near the top-right corner
+    x = window.innerWidth - mike.offsetWidth - 2;
+    y = 2;
 
+    // Make him travel into the corner
+    dx = 1;
+    dy = -1;
+
+    console.log("Mike spawned near corner");
+}
+*/
+//document.getElementById("test-corner").onclick = spawnMikeAtCorner;
+
+//document.getElementById("test-jumpscare").onclick = triggerJumpscare;
