@@ -19,9 +19,9 @@ const mikeSounds = [
     document.getElementById("wheeze"),
     //document.getElementById("fun_song")
 ];
-mikeSounds.forEach((sound, index) => {
-    console.log(index, sound);
-});
+//mikeSounds.forEach((sound, index) => {
+//    console.log(index, sound);
+//});
 
 let x = Math.random() * window.innerWidth;
 let y = Math.random() * window.innerHeight;
