@@ -422,7 +422,7 @@ button {
     width: 0;
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
-    border-bottom: 50px solid var(--accent-inactive);
+    border-bottom: 50px solid rgb(187, 43, 43);
     filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.30));
 }
 
@@ -431,7 +431,7 @@ button {
     width: 0;
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
-    border-bottom: 50px solid cornflowerblue;
+    border-bottom: 50px solid rgb(98, 140, 255);
     filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.30));
 }
 
