@@ -43,18 +43,13 @@ class DashboardHelperNode(Node):
                 "pattern": "vesc_can_driver_node",
                 "proc": None
             },
-            "stepper_driver": {
-                "name": "Stepper Wheel Driver",
-                "cmd": ["ros2", "run", "drive_package", "stepper_driver_node"],
-                "pattern": "stepper_driver_node",
-                "proc": None
-            },
             "arm_stepper_driver": {
-                "name": "Arm Stepper Driver",
+                "name": "Arm & Gripper Steppers (DM556Y)",
                 "cmd": ["ros2", "run", "arm_controller", "arm_stepper_driver"],
                 "pattern": "arm_stepper_driver",
                 "proc": None
             },
+
             "stream_cam_0": {
                 "name": "Camera 0 Streamer (CSIPort0)",
                 "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "csi", "--device", "0", "--host", "192.168.1.87", "--port", "5000"],
@@ -67,6 +62,12 @@ class DashboardHelperNode(Node):
                 "pattern": "video_streamer.py.*--device 1",
                 "proc": None
             },
+            "stream_cam_2": {
+                "name": "Camera 2 Streamer (USB Video2)",
+                "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "v4l2", "--device", "/dev/video2", "--host", "192.168.1.87", "--port", "5004"],
+                "pattern": "video_streamer.py.*--device /dev/video2",
+                "proc": None
+            },
             "gps_bridge": {
                 "name": "GPS Serial Bridge",
                 "cmd": ["ros2", "run", "navigation_system", "gps_bridge_node.py"],
@@ -77,6 +78,42 @@ class DashboardHelperNode(Node):
                 "name": "Navigation Controller (NAVnode)",
                 "cmd": ["ros2", "run", "navigation_system", "NAVnode"],
                 "pattern": "NAVnode",
+                "proc": None
+            },
+            "imu_telemetry": {
+                "name": "IMU Telemetry Node",
+                "cmd": ["ros2", "run", "imu", "telemetry"],
+                "pattern": "imu.*telemetry",
+                "proc": None
+            },
+            "imu_kalman_filter": {
+                "name": "IMU Kalman Filter",
+                "cmd": ["ros2", "run", "imu", "kalman_filter"],
+                "pattern": "imu.*kalman_filter",
+                "proc": None
+            },
+            "imu_launch": {
+                "name": "IMU System Launch (HW)",
+                "cmd": ["ros2", "launch", "imu", "imu.launch.py", "sim_mode:=false"],
+                "pattern": "imu.launch.py",
+                "proc": None
+            },
+            "rover_ekf": {
+                "name": "Rover EKF Sensor Fusion (Wheel+IMU+GPS)",
+                "cmd": ["ros2", "run", "rover_ekf", "ekf_node"],
+                "pattern": "rover_ekf.*ekf_node",
+                "proc": None
+            },
+            "morse_recorder": {
+                "name": "Morse Code Recorder (UDP/Camera)",
+                "cmd": ["ros2", "run", "enigma_machine", "morse_recorder.py"],
+                "pattern": "morse_recorder.py",
+                "proc": None
+            },
+            "enigma_node": {
+                "name": "Enigma Machine Decoder/Encoder",
+                "cmd": ["ros2", "run", "enigma_machine", "enigma_node"],
+                "pattern": "enigma_node",
                 "proc": None
             }
         }
@@ -149,7 +186,7 @@ class DashboardHelperNode(Node):
                     cmd_str = " ".join(cmd)
                     full_cmd = [
                         "bash", "-c",
-                        f"source /opt/ros/humble/setup.bash 2>/dev/null; source /home/orc/D.A.V.E./ros2_ws/install/setup.bash 2>/dev/null; exec {cmd_str}"
+                        f"source /opt/ros/humble/setup.bash 2>/dev/null; source /home/orc/D.A.V.E./ros2_ws/install/setup.bash 2>/dev/null; export ROS_DOMAIN_ID=1; exec {cmd_str}"
                     ]
                     log_file = open(f"/tmp/dashboard_proc_{key}.log", "w")
                     proc = subprocess.Popen(
