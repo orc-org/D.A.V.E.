@@ -116,18 +116,18 @@ class ArmStepperDriverNode(Node):
         self.declare_parameter('arm_gear_ratio', 50.0)        # 50:1 gearbox on arm joint
         self.declare_parameter('arm_motor_steps', 1600)       # DM556Y microsteps
         self.declare_parameter('arm_step_pin', 33)            # Jetson Board Pin 33 (STEP)
-        self.declare_parameter('arm_dir_pin', 18)             # Jetson Board Pin 29 (DIR)
-        self.declare_parameter('arm_enable_pin', 22)          # Jetson Board Pin 31 (ENABLE)
+        self.declare_parameter('arm_dir_pin', 18)             # Jetson Board Pin 18 (DIR)
+        self.declare_parameter('arm_enable_pin', 22)          # Jetson Board Pin 22 (ENABLE)
         self.declare_parameter('arm_invert_dir', False)
         self.declare_parameter('arm_active_low', False)       # False for standard 3.3V HIGH (UP) / 0V LOW (DOWN) logic
         self.declare_parameter('arm_max_velocity_rad_s', 0.5) # 0.5 rad/s (approx 30 deg/s for smooth motion)
 
-        # DM556Y Driver #1: Gripper Stepper
+        # DM556Y Driver #2: Gripper Stepper
         self.declare_parameter('gripper_lead_pitch', 0.008)   # 8mm lead screw pitch
         self.declare_parameter('gripper_motor_steps', 1600)   # DM556Y microsteps
-        self.declare_parameter('gripper_step_pin', 15)       # Jetson Board Pin 37 (STEP)
-        self.declare_parameter('gripper_dir_pin', 13)        # Jetson Board Pin 35 (DIR)
-        self.declare_parameter('gripper_enable_pin', 16)     # Jetson Board Pin 38 (ENABLE)
+        self.declare_parameter('gripper_step_pin', 32)       # Jetson Board Pin 32 (STEP)
+        self.declare_parameter('gripper_dir_pin', 13)        # Jetson Board Pin 13 (DIR)
+        self.declare_parameter('gripper_enable_pin', 16)     # Jetson Board Pin 16 (ENABLE)
         self.declare_parameter('gripper_invert_dir', False)
         self.declare_parameter('gripper_active_low', False)      # False for standard 3.3V HIGH (OPEN) / 0V LOW (CLOSE) logic
         self.declare_parameter('gripper_max_velocity_m_s', 0.05) # 0.05 m/s
@@ -212,16 +212,20 @@ class ArmStepperDriverNode(Node):
         self.current_arm_step = 0
         self.target_arm_step = 0
 
+        # Assuming the gripper starts fully OPEN (0.0)
         self.target_gripper_pos = 0.0   # 0.0 = open, 1.0 = closed
         self.current_gripper_pos = 0.0
-        self.current_gripper_step = 0
-        self.target_gripper_step = 0
+        
+        # 0.0 (open) mathematically equals 40,000 steps (0.2m * 200,000 steps/m)
+        # 1.0 (closed) mathematically equals 0 steps
+        self.current_gripper_step = int(0.2 * self.gripper_steps_per_m)
+        self.target_gripper_step = self.current_gripper_step
 
         self.last_control_time = time.time()
         self.last_log_time = 0.0
 
         # ROS 2 Subscriptions & Publishers
-        self.joint_sub = self.create_subscription(JointState, '/joint_states', self.joint_state_callback, 10)
+        self.joint_sub = self.create_subscription(JointState, 'joint_states', self.joint_state_callback, 10)
         self.manual_vel_sub = self.create_subscription(Float32, '/arm_manual_vel', self.manual_vel_callback, 10)
         self.gripper_state_pub = self.create_publisher(Float32, '/gripper_state', 10)
         self.gripper_target_sub = self.create_subscription(Float32, '/gripper_target', self.gripper_target_callback, 10)
@@ -253,6 +257,8 @@ class ArmStepperDriverNode(Node):
             idx = msg.name.index('arm_joint')
             self.target_arm_angle = msg.position[idx]
             self.target_arm_step = int(self.target_arm_angle * self.arm_steps_per_rad)
+            # DEBUG LOG
+            self.get_logger().info(f"DEBUG: joint_state_callback updated target_arm_step to {self.target_arm_step}")
 
     def gripper_target_callback(self, msg):
         self.target_gripper_pos = max(0.0, min(1.0, msg.data))
@@ -268,15 +274,26 @@ class ArmStepperDriverNode(Node):
         is_manual_active = (now_time - self.last_manual_vel_time < 0.4) and (abs(self.manual_vel_input) > 0.01)
 
         if is_manual_active:
-            # Negative velocity = ARM UP (Forward), Positive velocity = ARM DOWN (Reverse)
-            step_dir = 1 if self.manual_vel_input < 0 else -1
-            self.arm_hw.start_pwm(forward=(step_dir > 0), freq_hz=self.arm_step_freq_hz)
+            # Positive velocity = ARM UP (Forward), Negative velocity = ARM DOWN (Reverse)
+            step_dir = 1 if self.manual_vel_input > 0 else -1
             
-            # Step position accumulation during continuous motion
-            max_steps_sec = self.arm_max_vel * self.arm_steps_per_rad
-            steps_added = int(max_steps_sec * dt * abs(self.manual_vel_input / 0.3))
-            self.current_arm_step += step_dir * max(1, steps_added)
-            self.current_arm_angle = self.current_arm_step / self.arm_steps_per_rad
+            # Step position accumulation during continuous motion (Match dashboard speed perfectly)
+            # Mathematically integrate the float angle first to completely eliminate int truncation drift over time
+            angle_added = abs(self.manual_vel_input) * dt
+            proposed_angle = self.current_arm_angle + (step_dir * angle_added)
+            
+            # Clamp to +/- 90 degrees (1.570796 rad) to match the dashboard limits
+            proposed_angle = max(-1.57079632679, min(1.57079632679, proposed_angle))
+            proposed_step = int(proposed_angle * self.arm_steps_per_rad)
+            
+            # Only start PWM if there's actually a physical step needed
+            if proposed_step != self.current_arm_step:
+                self.arm_hw.start_pwm(forward=(step_dir > 0), freq_hz=self.arm_step_freq_hz)
+            else:
+                self.arm_hw.stop_pwm()
+                
+            self.current_arm_step = proposed_step
+            self.current_arm_angle = proposed_angle
             self.target_arm_step = self.current_arm_step
             self.target_arm_angle = self.current_arm_angle
         else:

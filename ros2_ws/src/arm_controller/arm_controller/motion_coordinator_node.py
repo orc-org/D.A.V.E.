@@ -90,6 +90,7 @@ class MotionCoordinatorNode(Node):
         self._action_server = ActionServer(self, MoveToPoint, 'move_to_point', execute_callback=self.execute_move_goal)
 
         self.timer_period = 0.05
+        self.last_update_time = time.time()
         self.timer = self.create_timer(self.timer_period, self.update_loop)
         self.get_logger().info('Arm Controller: All Interfaces (Topic/Srv/Action) Loaded')
 
@@ -110,6 +111,10 @@ class MotionCoordinatorNode(Node):
         self.get_logger().info(f"Control Mode changed: {'AUTO (IK)' if self.auto_mode else 'MANUAL'}")
 
     def update_loop(self):
+        now_time = time.time()
+        dt = now_time - self.last_update_time
+        self.last_update_time = now_time
+
         # calculate manual drive speeds from subscriptions
         left_speed = (self.fl_vel + self.rl_vel) * 0.5
         right_speed = (self.fr_vel + self.rr_vel) * 0.5
@@ -120,9 +125,9 @@ class MotionCoordinatorNode(Node):
         angular_vel = (right_speed - left_speed) * 0.5 * scale
 
         # update base position from wheel telemetry integration
-        self.base.angle_z += angular_vel * self.timer_period
-        self.base.offset_x += linear_vel * math.cos(self.base.angle_z) * self.timer_period
-        self.base.offset_y += linear_vel * math.sin(self.base.angle_z) * self.timer_period
+        self.base.angle_z += angular_vel * dt
+        self.base.offset_x += linear_vel * math.cos(self.base.angle_z) * dt
+        self.base.offset_y += linear_vel * math.sin(self.base.angle_z) * dt
 
         if self.auto_mode:
             # save original base pose before running IK
@@ -141,8 +146,8 @@ class MotionCoordinatorNode(Node):
             self.base.angle_z = orig_yaw
             
             # calculate target velocities
-            target_linear = linear_delta / self.timer_period
-            target_angular = angular_delta / self.timer_period
+            target_linear = linear_delta / dt
+            target_angular = angular_delta / dt
             
             # clamp to safe physical limits (m/s and rad/s)
             max_linear = 0.8
@@ -164,17 +169,17 @@ class MotionCoordinatorNode(Node):
             # manual mode: update arm joint angle from manual velocity command
             if abs(self.arm_manual_vel) > 0.01:
                 current_deg = math.degrees(self.wrist.angle_y)
-                new_deg = current_deg + math.degrees(self.arm_manual_vel) * self.timer_period
+                new_deg = current_deg + math.degrees(self.arm_manual_vel) * dt
                 self.wrist.set_angles(ay=new_deg)
             
             # reset filtered commands in manual mode
             self.cmd_linear_x = 0.0
             self.cmd_angular_z = 0.0
         # update 3D model joint (and simulate wheel spin + gripper move)
-        self.fl_wheel_angle = (self.fl_wheel_angle + self.fl_vel * 5.0 * self.timer_period) % (2.0 * math.pi)
-        self.fr_wheel_angle = (self.fr_wheel_angle + self.fr_vel * 5.0 * self.timer_period) % (2.0 * math.pi)
-        self.rl_wheel_angle = (self.rl_wheel_angle + self.rl_vel * 5.0 * self.timer_period) % (2.0 * math.pi)
-        self.rr_wheel_angle = (self.rr_wheel_angle + self.rr_vel * 5.0 * self.timer_period) % (2.0 * math.pi)
+        self.fl_wheel_angle = (self.fl_wheel_angle + self.fl_vel * 5.0 * dt) % (2.0 * math.pi)
+        self.fr_wheel_angle = (self.fr_wheel_angle + self.fr_vel * 5.0 * dt) % (2.0 * math.pi)
+        self.rl_wheel_angle = (self.rl_wheel_angle + self.rl_vel * 5.0 * dt) % (2.0 * math.pi)
+        self.rr_wheel_angle = (self.rr_wheel_angle + self.rr_vel * 5.0 * dt) % (2.0 * math.pi)
 
         # calculate stepper motor shaft angle based on gripper travel spacing
         # pitch of 8mm travel per rev gives 25 revs total for the 0.2m linear range
