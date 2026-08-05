@@ -24,6 +24,8 @@ const controller = (() => {
         const leftY = axes[1];
         const rightX = axes[2];
         const rightY = axes[3];
+        const LT = axes[4];
+        const RT = axes[5];
 
         const cross = buttons[0];
         const circle = buttons[1];
@@ -42,6 +44,9 @@ const controller = (() => {
         const d_right = buttons[14];
         const touchpad = buttons[15]; //Dont touch this button
         const mic = buttons[16];
+
+        updateViewer({leftX, leftY, rightX, rightY, LT, RT, cross, circle, square, triangle, select, start, LB, RB, L3, R3, d_up, d_down, d_left, d_right, touchpad, mic
+        });
 
         //Uncomment if need to see if html reads controller
         //console.log(joyMsg);
@@ -296,6 +301,60 @@ const controller = (() => {
             .style.backgroundColor = "var(--accent-inactive)";
     }
 
+    //Testing Input Viewer on UI
+
+    function setPressed(id, pressed) {
+
+        const element = document.getElementById(id);
+
+        if (!element) return;
+
+        element.classList.toggle("pressed", pressed === 1);
+    }
+
+    function updateViewer(c) {
+
+        // Sticks
+        document.getElementById("left-stick-thumb").style.transform =
+            `translate(${-c.leftX * 20}px, ${-c.leftY * 20}px)`;
+
+        document.getElementById("right-stick-thumb").style.transform =
+            `translate(${-c.rightX * 20}px, ${-c.rightY * 20}px)`;
+
+        // Face buttons
+        setPressed("cross", c.cross);
+        setPressed("circle", c.circle);
+        setPressed("square", c.square);
+        setPressed("triangle", c.triangle);
+
+        // Shoulders
+        setPressed("l1", c.LB);
+        setPressed("r1", c.RB);
+
+        // D-pad
+        setPressed("d-up", c.d_up);
+        setPressed("d-down", c.d_down);
+        setPressed("d-left", c.d_left);
+        setPressed("d-right", c.d_right);
+
+        // Other buttons
+        setPressed("start", c.start);
+        setPressed("select", c.select);
+        setPressed("touchpad", c.touchpad);
+        setPressed("mic", c.mic);
+
+        const ltFill = document.querySelector("#LT .trigger-fill");
+        const rtFill = document.querySelector("#RT .trigger-fill");
+
+        if (ltFill) {
+            ltFill.style.height = `${((1 - c.LT) / 2) * 100}%`;
+        }
+
+        if (rtFill) {
+            rtFill.style.height = `${((1 - c.RT) / 2) * 100}%`;
+        }
+    }
+
     return {
         update,
         connected,
@@ -303,5 +362,4 @@ const controller = (() => {
         setMode,
         setLights
     };
-
 })();
