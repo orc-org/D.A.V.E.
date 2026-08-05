@@ -381,13 +381,16 @@ button {
     width: 20%;
     height: 600px;
 
-
     margin-top: 1%;
     padding: 1%;
     padding-bottom: 0;
     margin-right: auto;
     margin-left: auto;
+
     border: 1.5px solid var(--border-colour);
+
+    display: flex;
+    flex-direction: column;
 }
 
 
@@ -496,4 +499,192 @@ button {
     object-fit: cover;
     z-index: 99999;
     pointer-events: none;
+}
+
+#controller-viewer {
+    position: relative;
+
+    width: 80%;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    margin-top: auto;
+    margin-bottom: 10px;
+
+    z-index: 1;
+}
+
+#controller-image {
+    width: 100%;
+    display: block;
+}
+
+
+/* Only overlay controls are absolute */
+#controller-viewer .stick,
+#controller-viewer .button-overlay,
+#controller-viewer .trigger {
+    position: absolute;
+}
+
+
+/* Stick movement indicators */
+.stick {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: lime;
+    opacity: 0.7;
+}
+
+
+/* Button indicators */
+.button-overlay {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: red;
+    opacity: 0.4;
+}
+
+.button-overlay.pressed {
+    opacity: 0.8;
+}
+
+
+.trigger {
+    width: 12px;
+    height: 40px;
+
+    background: #333;
+    border-radius: 5px;
+
+    overflow: hidden;
+
+    position: absolute;
+}
+
+.trigger-fill {
+    width: 100%;
+    height: 0%;
+
+    background: orange;
+    border-radius: 5px;
+
+    position: absolute;
+    bottom: 0;
+}
+
+/* Controller overlay positions */
+
+/* Analog sticks */
+#left-stick-thumb {
+    top: 40.5%;
+    left: 29.3%;
+}
+
+#right-stick-thumb {
+    top: 40.5%;
+    left: 62%;
+}
+
+
+/* Face buttons */
+#cross {
+    top: 34%;
+    left: 78.48%;
+}
+
+#circle {
+    top: 23.5%;
+    left: 86%;
+}
+
+#square {
+    top: 23.5%;
+    left: 71%;
+}
+
+#triangle {
+    top: 13%;
+    left: 78.48%;
+}
+
+
+/* Shoulder buttons */
+#l1 {
+    top: 2%;
+    left: 17%;
+}
+
+#r1 {
+    top: 2%;
+    left: 78.48%;
+}
+
+
+/* Triggers */
+#LT {
+    top: -10%;
+    left: 5%;
+}
+
+#RT {
+    top: -10%;
+    left: 90%;
+}
+
+#LT-track {
+    left: 20%;
+    top: 10%;
+}
+
+#RT-track {
+    right: 20%;
+    top: 10%;
+}
+
+
+/* D-pad */
+#d-up {
+    top: 16%;
+    left: 16.25%;
+}
+
+#d-down {
+    top: 31%;
+    left: 16.25%;
+}
+
+#d-left {
+    top: 23.5%;
+    left: 11%;
+}
+
+#d-right {
+    top: 23.5%;
+    left: 21.5%;
+}
+
+
+/* Other buttons */
+#select {
+    top: 10%;
+    left: 24%;
+}
+
+#start {
+    top: 10%;
+    left: 71%;
+}
+
+#touchpad {
+    top: 10%;
+    left: 47%;
+}
+
+#mic {
+    top: 51%;
+    left: 47%;
 }
