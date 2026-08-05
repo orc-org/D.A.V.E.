@@ -21,8 +21,35 @@ let frMotorSub = null;
 let rlMotorSub = null;
 let rrMotorSub = null;
 let cmdVelSub = null;
+let gpsFixSub = null;
+let gpsNmeaSub = null;
+let gpsTargetPub = null;
 
-// 3D Viewer State
+// IMU Subscribers & State
+let imuEulerSub = null;
+let imuFilteredEulerSub = null;
+let imuRawSub = null;
+let imuFilteredSub = null;
+let imuOdomSub = null;
+let imuStrSub = null;
+
+let imuEulerData = { roll: 0.0, pitch: 0.0, yaw: 0.0, lastUpdate: null };
+let imuFilteredEulerData = { roll: 0.0, pitch: 0.0, yaw: 0.0, lastUpdate: null };
+let imuMotionData = {
+    accel: { x: 0.0, y: 0.0, z: 9.81 },
+    gyro: { x: 0.0, y: 0.0, z: 0.0 }
+};
+let imuOdomData = {
+    pos: { x: 0.0, y: 0.0, z: 0.0 },
+    vel: { x: 0.0, y: 0.0, z: 0.0 }
+};
+let imuPublishingEnabled = true;
+
+// Rover Path Trajectory History
+let roverPathHistory = []; // Array of { lat, lon, x, y, timestamp }
+let leafletPathPolyline = null;
+
+// 3d viewer state (Disabled - 3D Robot View removed)
 let showing3D = false;
 let viewer3D = null;
 let tfClient = null;
@@ -220,7 +247,7 @@ function setupROSInterfaces() {
     gripperActionClient = new ROSLIB.ActionClient({
         ros: ros,
         serverName: '/gripper_command',
-        actionName: 'arm_interfaces/action/GripperCommand'
+        actionName: 'arm_interfaces/GripperCommand'
     });
 
     // Subscribers
@@ -293,17 +320,22 @@ function setupROSInterfaces() {
     tfSub.subscribe((msg) => {
         for (let i = 0; i < msg.transforms.length; i++) {
             let t = msg.transforms[i];
-            if (t.child_frame_id === 'base_link') {
+            // Accept TF transforms from authoritative odom or map frames to avoid collisions
+            if (t.child_frame_id === 'base_link' && (t.header.frame_id === 'odom' || t.header.frame_id === 'map')) {
                 let x = t.transform.translation.x;
                 let y = t.transform.translation.y;
-                valBasePos.innerText = `X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`;
+                if (valBasePos) valBasePos.innerText = `X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`;
 
-                // Extract Heading (Yaw) from Quaternion
-                let qz = t.transform.rotation.z;
-                let qw = t.transform.rotation.w;
-                let yaw = 2.0 * Math.atan2(qz, qw);
+                // Extract Heading (Yaw) from 3D Quaternion
+                let qx = t.transform.rotation.x || 0.0;
+                let qy = t.transform.rotation.y || 0.0;
+                let qz = t.transform.rotation.z || 0.0;
+                let qw = t.transform.rotation.w || 1.0;
+                let siny_cosp = 2.0 * (qw * qz + qx * qy);
+                let cosy_cosp = 1.0 - 2.0 * (qy * qy + qz * qz);
+                let yaw = Math.atan2(siny_cosp, cosy_cosp);
                 let deg = yaw * (180.0 / Math.PI);
-                valBaseYaw.innerText = `${yaw.toFixed(2)} rad (${deg.toFixed(1)}°)`;
+                if (valBaseYaw) valBaseYaw.innerText = `${yaw.toFixed(2)} rad (${deg.toFixed(1)}°)`;
             }
         }
     });
@@ -387,6 +419,10 @@ function setupROSInterfaces() {
     // Send initial auto mode status
     publishMode();
 
+    setupGPSROSInterfaces();
+    setupIMUROSInterfaces();
+    setupMorseSubscribers();
+
     if (showing3D && !viewer3D) {
         init3DViewer();
     }
@@ -434,6 +470,10 @@ function cleanupROSInterfaces() {
     if (rlMotorSub) { rlMotorSub.unsubscribe(); rlMotorSub = null; }
     if (rrMotorSub) { rrMotorSub.unsubscribe(); rrMotorSub = null; }
     if (cmdVelSub) { cmdVelSub.unsubscribe(); cmdVelSub = null; }
+
+    cleanupGPSROSInterfaces();
+    cleanupIMUROSInterfaces();
+    cleanupMorseSubscribers();
 
     resetModuleStatusUI();
     robotStatePublisherRunning = false;
@@ -768,15 +808,15 @@ function startControlLoopTimer() {
             }
         }
         
-        // UI Button Gripper control (runs in both modes, whether gamepad is connected or not)
-        if (gripperOpenBtnActive) {
+        // UI Button & Keyboard (Z / C) Gripper control (runs in both modes, whether gamepad is connected or not)
+        if (gripperOpenBtnActive || keysPressed['z']) {
             const oldVal = currentGripperTarget;
             currentGripperTarget = Math.max(0.0, currentGripperTarget - 0.05);
             if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
                 publishGripperTarget(currentGripperTarget);
             }
         }
-        if (gripperCloseBtnActive) {
+        if (gripperCloseBtnActive || keysPressed['c']) {
             const oldVal = currentGripperTarget;
             currentGripperTarget = Math.min(1.0, currentGripperTarget + 0.05);
             if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
@@ -1491,6 +1531,7 @@ class LocalTFClient {
 
 // 3D Viewer initialization and destruction functions
 function init3DViewer() {
+    if (!showing3D) return;
     if (!connected || !ros) {
         console.warn('init3DViewer: Not connected to ROS.');
         return;
@@ -1606,7 +1647,7 @@ function loadURDFClient() {
         ros: ros,
         tfClient: tfClient,
         rootObject: viewer3D.scene,
-        param: '/robot_state_publisher:robot_description'
+        param: 'robot_description'
     });
 }
 
@@ -1652,8 +1693,8 @@ function updateModuleStatusUI(status) {
     const drawer = document.getElementById('modules-drawer');
     if (!drawer) return;
 
-    // Build module list dynamically from received status if not initialized
-    if (!modulesInitialized) {
+    const currentKeys = Object.keys(status).join(',');
+    if (!modulesInitialized || drawer.getAttribute('data-keys') !== currentKeys) {
         drawer.innerHTML = '';
         for (const key in status) {
             const info = status[key];
@@ -1668,10 +1709,11 @@ function updateModuleStatusUI(status) {
             `;
             drawer.appendChild(row);
         }
+        drawer.setAttribute('data-keys', currentKeys);
         modulesInitialized = true;
     }
 
-    // Update statuses and buttons
+    // update statuses and buttons
     for (const key in status) {
         const info = status[key];
         const isRunning = info.running;
@@ -1693,6 +1735,41 @@ function updateModuleStatusUI(status) {
                 btn.className = "module-toggle-btn neon-btn-blue";
             }
         }
+
+        // update corresponding camera card UI widgets if these are the stream modules
+        if (key === 'stream_cam_0') {
+            const cam0Dot = document.getElementById('status-cam-0-dot');
+            const cam0Text = document.getElementById('status-cam-0-text');
+            const cam0Btn = document.getElementById('btn-toggle-cam-0');
+            if (cam0Dot) cam0Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam0Text) cam0Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam0Btn) {
+                cam0Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam0Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
+            }
+        }
+        if (key === 'stream_cam_1') {
+            const cam1Dot = document.getElementById('status-cam-1-dot');
+            const cam1Text = document.getElementById('status-cam-1-text');
+            const cam1Btn = document.getElementById('btn-toggle-cam-1');
+            if (cam1Dot) cam1Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam1Text) cam1Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam1Btn) {
+                cam1Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam1Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
+            }
+        }
+        if (key === 'stream_cam_2') {
+            const cam2Dot = document.getElementById('status-cam-2-dot');
+            const cam2Text = document.getElementById('status-cam-2-text');
+            const cam2Btn = document.getElementById('btn-toggle-cam-2');
+            if (cam2Dot) cam2Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam2Text) cam2Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam2Btn) {
+                cam2Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam2Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
+            }
+        }
     }
 }
 
@@ -1709,6 +1786,27 @@ function resetModuleStatusUI() {
             btn.disabled = false;
         });
     }
+    // reset camera card indicators too
+    const cam0Dot = document.getElementById('status-cam-0-dot');
+    const cam0Text = document.getElementById('status-cam-0-text');
+    const cam0Btn = document.getElementById('btn-toggle-cam-0');
+    if (cam0Dot) cam0Dot.className = "status-indicator disconnected";
+    if (cam0Text) cam0Text.innerText = "OFFLINE";
+    if (cam0Btn) {
+        cam0Btn.innerText = "START STREAM";
+        cam0Btn.className = "neon-btn-blue";
+        cam0Btn.disabled = false;
+    }
+    const cam1Dot = document.getElementById('status-cam-1-dot');
+    const cam1Text = document.getElementById('status-cam-1-text');
+    const cam1Btn = document.getElementById('btn-toggle-cam-1');
+    if (cam1Dot) cam1Dot.className = "status-indicator disconnected";
+    if (cam1Text) cam1Text.innerText = "OFFLINE";
+    if (cam1Btn) {
+        cam1Btn.innerText = "START STREAM";
+        cam1Btn.className = "neon-btn-blue";
+        cam1Btn.disabled = false;
+    }
 }
 
 function toggleModule(key) {
@@ -1716,14 +1814,24 @@ function toggleModule(key) {
         console.warn("Cannot toggle module: Not connected to ROS.");
         return;
     }
+    
+    // support toggling both process manager list buttons and specific viewport buttons
     const btn = document.getElementById(`btn-toggle-${key}`);
-    if (!btn) return;
-    
-    const shouldStart = btn.innerText === "START";
-    
-    // Set button to busy/loading state
-    btn.innerText = shouldStart ? "STARTING..." : "STOPPING...";
-    btn.disabled = true;
+    const camBtn = (key === 'stream_cam_0') ? document.getElementById('btn-toggle-cam-0') : 
+                   (key === 'stream_cam_1') ? document.getElementById('btn-toggle-cam-1') : 
+                   (key === 'stream_cam_2') ? document.getElementById('btn-toggle-cam-2') : null;
+
+    const currentText = btn ? btn.innerText : (camBtn ? camBtn.innerText : "");
+    const shouldStart = currentText.includes("START");
+
+    if (btn) {
+        btn.innerText = shouldStart ? "STARTING..." : "STOPPING...";
+        btn.disabled = true;
+    }
+    if (camBtn) {
+        camBtn.innerText = shouldStart ? "STARTING..." : "STOPPING...";
+        camBtn.disabled = true;
+    }
     
     const service = new ROSLIB.Service({
         ros: ros,
@@ -1736,27 +1844,31 @@ function toggleModule(key) {
     });
     
     service.callService(request, (result) => {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
+        if (camBtn) camBtn.disabled = false;
         if (result && result.success) {
             console.log(`Successfully toggled ${key}: ${result.message}`);
         } else {
             console.error(`Failed to toggle ${key}: ${result ? result.message : 'Unknown error'}`);
-            btn.innerText = shouldStart ? "START" : "STOP";
+            if (btn) btn.innerText = shouldStart ? "START" : "STOP";
+            if (camBtn) camBtn.innerText = shouldStart ? "START STREAM" : "STOP STREAM";
         }
     }, (error) => {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
+        if (camBtn) camBtn.disabled = false;
         console.error(`Service call error for ${key}:`, error);
-        btn.innerText = shouldStart ? "START" : "STOP";
+        if (btn) btn.innerText = shouldStart ? "START" : "STOP";
+        if (camBtn) camBtn.innerText = shouldStart ? "START STREAM" : "STOP STREAM";
     });
 }
 
-// Collapsible Panel Event Listener
+// collapsible panel event listener
 btnToggleModules.addEventListener('click', () => {
     modulesDrawer.classList.toggle('collapsed');
     modulesCollapseIcon.classList.toggle('collapsed');
 });
 
-// Click delegation for toggle buttons
+// click delegation for toggle buttons
 modulesDrawer.addEventListener('click', (e) => {
     const btn = e.target.closest('.module-toggle-btn');
     if (btn) {
@@ -1766,4 +1878,1438 @@ modulesDrawer.addEventListener('click', (e) => {
         }
     }
 });
+
+// click listeners for main panel camera toggle buttons
+const cam0Toggle = document.getElementById('btn-toggle-cam-0');
+if (cam0Toggle) {
+    cam0Toggle.addEventListener('click', () => {
+        toggleModule('stream_cam_0');
+    });
+}
+const cam1Toggle = document.getElementById('btn-toggle-cam-1');
+if (cam1Toggle) {
+    cam1Toggle.addEventListener('click', () => {
+        toggleModule('stream_cam_1');
+    });
+}
+const cam2Toggle = document.getElementById('btn-toggle-cam-2');
+if (cam2Toggle) {
+    cam2Toggle.addEventListener('click', () => {
+        toggleModule('stream_cam_2');
+    });
+}
+
+// click listener to collapse/expand diagnostics log panel
+const diagConsole = document.getElementById('diagnostic-console');
+const diagHeader = document.getElementById('diag-header');
+const diagCollapseBtn = document.getElementById('diag-collapse-btn');
+
+if (diagHeader && diagConsole && diagCollapseBtn) {
+    diagHeader.addEventListener('click', () => {
+        const isCollapsed = diagConsole.style.height === '24px';
+        if (isCollapsed) {
+            diagConsole.style.height = '120px';
+            diagCollapseBtn.innerText = '[ HIDE ]';
+        } else {
+            diagConsole.style.height = '24px';
+            diagCollapseBtn.innerText = '[ SHOW ]';
+        }
+    });
+}
+
+// ====================================================
+// 9. GPS & LOCATION NAVIGATION SYSTEM
+// ====================================================
+
+let gpsCurrentFix = {
+    latitude: null,
+    longitude: null,
+    altitude: null,
+    status: -1, // STATUS_NO_FIX
+    satellites: 0,
+    hdop: 0,
+    lastUpdate: null
+};
+
+let gpsHomeOrigin = {
+    latitude: null,
+    longitude: null,
+    altitude: null,
+    isSet: false
+};
+
+let gpsTargetWaypoint = {
+    latitude: null,
+    longitude: null,
+    x: null,
+    y: null,
+    isSet: false
+};
+
+let gpsMapMode = 'radar';
+let leafletMap = null;
+let leafletRoverMarker = null;
+let leafletTargetMarker = null;
+let leafletPolyline = null;
+
+let nmeaAutoScroll = true;
+
+// Math utility helpers for GPS calculation
+function calculateDistanceMeters(lat1, lon1, lat2, lon2) {
+    if (lat1 === null || lon1 === null || lat2 === null || lon2 === null) return 0.0;
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+function calculateBearingDegrees(lat1, lon1, lat2, lon2) {
+    if (lat1 === null || lon1 === null || lat2 === null || lon2 === null) return 0.0;
+    const phi1 = lat1 * Math.PI / 180;
+    const phi2 = lat2 * Math.PI / 180;
+    const lam1 = lon1 * Math.PI / 180;
+    const lam2 = lon2 * Math.PI / 180;
+    const y = Math.sin(lam2 - lam1) * Math.cos(phi2);
+    const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(lam2 - lam1);
+    let bearing = Math.atan2(y, x) * 180 / Math.PI;
+    return (bearing + 360) % 360;
+}
+
+function getCompassDirection(bearingDeg) {
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const idx = Math.round(bearingDeg / 45) % 8;
+    return dirs[idx];
+}
+
+function offsetLatLonByMeters(lat, lon, dxMeters, dyMeters) {
+    if (lat === null || lon === null) return { latitude: 0.0, longitude: 0.0 };
+    const R = 6371000;
+    const newLat = lat + (dyMeters / R) * (180 / Math.PI);
+    const newLon = lon + (dxMeters / (R * Math.cos(lat * Math.PI / 180))) * (180 / Math.PI);
+    return { latitude: newLat, longitude: newLon };
+}
+
+// 1. Setup GPS ROS Topics
+function setupGPSROSInterfaces() {
+    if (!ros) return;
+
+    gpsFixSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/gps/fix',
+        messageType: 'sensor_msgs/msg/NavSatFix'
+    });
+    gpsFixSub.subscribe((msg) => {
+        if (msg && msg.latitude !== undefined && msg.longitude !== undefined) {
+            gpsCurrentFix.latitude = msg.latitude;
+            gpsCurrentFix.longitude = msg.longitude;
+            gpsCurrentFix.altitude = msg.altitude || 0.0;
+            gpsCurrentFix.status = (msg.status && msg.status.status !== undefined) ? msg.status.status : 0;
+            gpsCurrentFix.lastUpdate = Date.now();
+
+            if (!gpsHomeOrigin.isSet && gpsCurrentFix.status >= 0) {
+                gpsHomeOrigin.latitude = msg.latitude;
+                gpsHomeOrigin.longitude = msg.longitude;
+                gpsHomeOrigin.altitude = msg.altitude || 0.0;
+                gpsHomeOrigin.isSet = true;
+            }
+
+            if (gpsCurrentFix.status >= 0) {
+                recordRoverPathPoint(msg.latitude, msg.longitude, null, null);
+            }
+
+            updateGPSUI();
+        }
+    });
+
+    gpsNmeaSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/gps/nmea_raw',
+        messageType: 'std_msgs/msg/String'
+    });
+    gpsNmeaSub.subscribe((msg) => {
+        if (msg && msg.data) {
+            appendNmeaLog(msg.data);
+        }
+    });
+
+    gpsTargetPub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/gps/set_target',
+        messageType: 'geometry_msgs/msg/Point'
+    });
+}
+
+function cleanupGPSROSInterfaces() {
+    if (gpsFixSub) { gpsFixSub.unsubscribe(); gpsFixSub = null; }
+    if (gpsNmeaSub) { gpsNmeaSub.unsubscribe(); gpsNmeaSub = null; }
+    gpsTargetPub = null;
+}
+
+// 2. UI Update Function
+function updateGPSUI() {
+    const fixDot = document.getElementById('gps-fix-status-dot');
+    const fixText = document.getElementById('gps-fix-status-text');
+    const isFixed = gpsCurrentFix.status >= 0 && gpsCurrentFix.latitude !== null;
+
+    if (fixDot) {
+        fixDot.className = isFixed ? "status-indicator connected" : "status-indicator disconnected";
+    }
+    if (fixText) {
+        fixText.innerText = isFixed ? "3D FIX (GNSS)" : "NO FIX";
+        fixText.style.color = isFixed ? "var(--accent-green)" : "var(--accent-red)";
+    }
+
+    // Telemetry Cards (in SYSTEM TELEMETRY)
+    const teleCoords = document.getElementById('val-gps-telemetry-coords');
+    const teleFix = document.getElementById('val-gps-telemetry-fix');
+    if (teleCoords) {
+        teleCoords.innerText = isFixed ? `${gpsCurrentFix.latitude.toFixed(6)}°, ${gpsCurrentFix.longitude.toFixed(6)}°` : "Lat: --, Lon: --";
+    }
+    if (teleFix) {
+        teleFix.innerText = isFixed ? `FIX 3D (${gpsCurrentFix.altitude.toFixed(1)} m)` : "NO FIX (-- m)";
+    }
+
+    // Detailed Location Cards
+    const latDet = document.getElementById('val-gps-lat-det');
+    const lonDet = document.getElementById('val-gps-lon-det');
+    const altDet = document.getElementById('val-gps-alt-det');
+    const qualityDet = document.getElementById('val-gps-quality');
+    const distDet = document.getElementById('val-gps-dist');
+    const bearingDet = document.getElementById('val-gps-bearing');
+    const roverCoordsShort = document.getElementById('map-rover-coords-short');
+
+    if (latDet) latDet.innerText = isFixed ? `${gpsCurrentFix.latitude.toFixed(6)}°` : "--";
+    if (lonDet) lonDet.innerText = isFixed ? `${gpsCurrentFix.longitude.toFixed(6)}°` : "--";
+    if (altDet) altDet.innerText = isFixed ? `${gpsCurrentFix.altitude.toFixed(1)} m` : "-- m";
+    if (roverCoordsShort) roverCoordsShort.innerText = isFixed ? `${gpsCurrentFix.latitude.toFixed(5)}, ${gpsCurrentFix.longitude.toFixed(5)}` : "NO FIX";
+
+    if (qualityDet) {
+        if (isFixed) {
+            qualityDet.innerText = "3D FIX (GOOD)";
+            qualityDet.style.color = "var(--accent-green)";
+        } else {
+            qualityDet.innerText = "SEARCHING...";
+            qualityDet.style.color = "var(--accent-amber)";
+        }
+    }
+
+    // Distance and bearing calculations if target set
+    const mapTargetCoords = document.getElementById('map-target-coords');
+    const mapTargetDistBearing = document.getElementById('map-target-dist-bearing');
+
+    if (isFixed && gpsTargetWaypoint.isSet && gpsTargetWaypoint.latitude !== null && gpsTargetWaypoint.longitude !== null) {
+        const dist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsTargetWaypoint.latitude, gpsTargetWaypoint.longitude);
+        const bearing = calculateBearingDegrees(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsTargetWaypoint.latitude, gpsTargetWaypoint.longitude);
+        const cardDir = getCompassDirection(bearing);
+
+        if (distDet) distDet.innerText = `${dist.toFixed(1)} m`;
+        if (bearingDet) bearingDet.innerText = `${bearing.toFixed(1)}° (${cardDir})`;
+        if (mapTargetCoords) mapTargetCoords.innerText = `Lat: ${gpsTargetWaypoint.latitude.toFixed(6)} | Lon: ${gpsTargetWaypoint.longitude.toFixed(6)}`;
+        if (mapTargetDistBearing) mapTargetDistBearing.innerText = `Dist: ${dist.toFixed(1)} m | Bear: ${bearing.toFixed(1)}° (${cardDir})`;
+    } else {
+        if (distDet) distDet.innerText = "-- m";
+        if (bearingDet) bearingDet.innerText = "--°";
+        if (mapTargetCoords) mapTargetCoords.innerText = "Lat: -- | Lon: --";
+        if (mapTargetDistBearing) mapTargetDistBearing.innerText = "Dist: -- m | Bear: --°";
+    }
+
+    // Render maps
+    if (gpsMapMode === 'radar') {
+        drawTacticalRadar();
+    } else if (gpsMapMode === 'map' && leafletMap) {
+        updateLeafletMap();
+    }
+}
+
+// 3. Raw NMEA Inspector logger
+function appendNmeaLog(line) {
+    const logBox = document.getElementById('nmea-stream-log');
+    if (!logBox) return;
+
+    if (logBox.children.length === 1 && logBox.children[0].innerText.includes('Waiting for Serial Input')) {
+        logBox.innerHTML = '';
+    }
+
+    const timeStr = new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.style.borderBottom = '1px solid rgba(255,255,255,0.03)';
+    entry.style.padding = '2px 0';
+
+    if (line.includes('GGA')) {
+        entry.style.color = 'var(--accent-blue)';
+    } else if (line.includes('RMC')) {
+        entry.style.color = 'var(--accent-green)';
+    } else {
+        entry.style.color = 'var(--text-muted)';
+    }
+
+    entry.innerText = `[${timeStr}] ${line}`;
+    logBox.appendChild(entry);
+
+    while (logBox.children.length > 50) {
+        logBox.removeChild(logBox.firstChild);
+    }
+
+    if (nmeaAutoScroll) {
+        logBox.scrollTop = logBox.scrollHeight;
+    }
+}
+
+function recordRoverPathPoint(lat, lon, x, y) {
+    if (lat === null || lon === null || isNaN(lat) || isNaN(lon)) return;
+    const now = Date.now();
+    if (roverPathHistory.length > 0) {
+        const last = roverPathHistory[roverPathHistory.length - 1];
+        const dist = calculateDistanceMeters(last.lat, last.lon, lat, lon);
+        if (dist < 0.2) return; // Only add point if moved at least 0.2 meters
+    }
+    roverPathHistory.push({ lat: lat, lon: lon, x: x || 0, y: y || 0, timestamp: now });
+    if (roverPathHistory.length > 500) {
+        roverPathHistory.shift(); // Keep max 500 points
+    }
+}
+
+// 4. Tactical Radar Canvas Renderer (Clean static grid with trajectory path line)
+function drawTacticalRadar() {
+    const canvas = document.getElementById('gps-radar-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const rect = canvas.getBoundingClientRect();
+    if (canvas.width !== rect.width || canvas.height !== rect.height) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+    }
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const maxRadius = Math.min(w, h) / 2 - 25;
+
+    ctx.fillStyle = '#050811';
+    ctx.fillRect(0, 0, w, h);
+
+    const rings = [0.25, 0.5, 0.75, 1.0];
+    const ringDistances = [5, 10, 20, 50];
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.15)';
+    ctx.lineWidth = 1;
+
+    rings.forEach((rRatio, idx) => {
+        const r = maxRadius * rRatio;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(0, 229, 255, 0.4)';
+        ctx.font = '10px monospace';
+        ctx.fillText(`${ringDistances[idx]}m`, cx + r + 4, cy - 4);
+    });
+
+    ctx.beginPath();
+    ctx.moveTo(cx - maxRadius, cy);
+    ctx.lineTo(cx + maxRadius, cy);
+    ctx.moveTo(cx, cy - maxRadius);
+    ctx.lineTo(cx, cy + maxRadius);
+    ctx.stroke();
+
+    ctx.fillStyle = '#00e5ff';
+    ctx.font = 'bold 12px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', cx, cy - maxRadius - 12);
+    ctx.fillText('S', cx, cy + maxRadius + 12);
+    ctx.fillText('E', cx + maxRadius + 12, cy);
+    ctx.fillText('W', cx - maxRadius - 12, cy);
+
+    // Draw Rover Trajectory Path Line (if history exists)
+    if (roverPathHistory.length > 1 && gpsCurrentFix.latitude !== null && gpsCurrentFix.longitude !== null) {
+        ctx.save();
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#00e5ff';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+
+        let firstPoint = true;
+        for (let i = 0; i < roverPathHistory.length; i++) {
+            const pt = roverPathHistory[i];
+            const dist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, pt.lat, pt.lon);
+            if (dist > 100) continue;
+
+            const bearing = calculateBearingDegrees(gpsCurrentFix.latitude, gpsCurrentFix.longitude, pt.lat, pt.lon);
+            const rad = (bearing - 90) * Math.PI / 180;
+            const px = cx + (dist / 50) * maxRadius * Math.cos(rad);
+            const py = cy + (dist / 50) * maxRadius * Math.sin(rad);
+
+            if (firstPoint) {
+                ctx.moveTo(px, py);
+                firstPoint = false;
+            } else {
+                ctx.lineTo(px, py);
+            }
+        }
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Draw neon green breadcrumb dots along historical path
+        for (let i = 0; i < roverPathHistory.length; i += 3) {
+            const pt = roverPathHistory[i];
+            const dist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, pt.lat, pt.lon);
+            if (dist > 100) continue;
+            const bearing = calculateBearingDegrees(gpsCurrentFix.latitude, gpsCurrentFix.longitude, pt.lat, pt.lon);
+            const rad = (bearing - 90) * Math.PI / 180;
+            const px = cx + (dist / 50) * maxRadius * Math.cos(rad);
+            const py = cy + (dist / 50) * maxRadius * Math.sin(rad);
+
+            ctx.fillStyle = 'rgba(57, 255, 20, 0.75)';
+            ctx.beginPath();
+            ctx.arc(px, py, 2.5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    // Draw Home Origin (if set and fix available)
+    if (gpsCurrentFix.latitude !== null && gpsHomeOrigin.isSet && gpsHomeOrigin.latitude !== null) {
+        const homeDist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsHomeOrigin.latitude, gpsHomeOrigin.longitude);
+        if (homeDist < 100) {
+            const homeBearing = calculateBearingDegrees(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsHomeOrigin.latitude, gpsHomeOrigin.longitude);
+            const homeRad = (homeBearing - 90) * Math.PI / 180;
+            const px = cx + (homeDist / 50) * maxRadius * Math.cos(homeRad);
+            const py = cy + (homeDist / 50) * maxRadius * Math.sin(homeRad);
+
+            ctx.fillStyle = '#ffaa00';
+            ctx.beginPath();
+            ctx.arc(px, py, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.font = '10px monospace';
+            ctx.fillText('HOME', px, py - 8);
+        }
+    }
+
+    // Draw Target Waypoint (if set)
+    if (gpsCurrentFix.latitude !== null && gpsTargetWaypoint.isSet && gpsTargetWaypoint.latitude !== null && gpsTargetWaypoint.longitude !== null) {
+        const dist = calculateDistanceMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsTargetWaypoint.latitude, gpsTargetWaypoint.longitude);
+        const bearing = calculateBearingDegrees(gpsCurrentFix.latitude, gpsCurrentFix.longitude, gpsTargetWaypoint.latitude, gpsTargetWaypoint.longitude);
+        const rad = (bearing - 90) * Math.PI / 180;
+
+        const clampedDist = Math.min(dist, 50);
+        const tx = cx + (clampedDist / 50) * maxRadius * Math.cos(rad);
+        const ty = cy + (clampedDist / 50) * maxRadius * Math.sin(rad);
+
+        ctx.strokeStyle = '#ffaa00';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath();
+        ctx.arc(tx, ty, 7, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px monospace';
+        ctx.fillText(`TARGET (${dist.toFixed(1)}m)`, tx, ty - 12);
+    }
+
+    // Rover Icon (Center of Radar) with Heading Pointer (Priority: Raw /imu/euler -> Filtered /imu/filtered_euler -> TF Base Yaw)
+    let headingRad = 0;
+    const isImuRaw = imuEulerData.lastUpdate !== null && (Date.now() - imuEulerData.lastUpdate < 5000);
+    const isImuFiltered = imuFilteredEulerData.lastUpdate !== null && (Date.now() - imuFilteredEulerData.lastUpdate < 5000);
+
+    if (isImuRaw) {
+        headingRad = -(imuEulerData.yaw * Math.PI / 180.0);
+    } else if (isImuFiltered) {
+        headingRad = -(imuFilteredEulerData.yaw * Math.PI / 180.0);
+    } else if (typeof valBaseYaw !== 'undefined' && valBaseYaw) {
+        const yawText = valBaseYaw.innerText || '0';
+        const match = yawText.match(/(-?\d+\.?\d*)\s*rad/);
+        if (match) {
+            headingRad = -parseFloat(match[1]);
+        }
+    }
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(headingRad);
+    ctx.fillStyle = '#39ff14';
+    ctx.beginPath();
+    ctx.moveTo(0, -12);
+    ctx.lineTo(8, 10);
+    ctx.lineTo(0, 6);
+    ctx.lineTo(-8, 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+}
+
+// 5. Leaflet Map
+function initLeafletMap() {
+    const mapDiv = document.getElementById('leaflet-map');
+    if (!mapDiv || typeof L === 'undefined') return;
+
+    if (leafletMap) {
+        leafletMap.invalidateSize();
+        return;
+    }
+
+    const initLat = gpsCurrentFix.latitude || 37.774929;
+    const initLon = gpsCurrentFix.longitude || -122.419416;
+
+    try {
+        leafletMap = L.map('leaflet-map', {
+            zoomControl: true,
+            attributionControl: false
+        }).setView([initLat, initLon], 18);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(leafletMap);
+
+        const roverIcon = L.divIcon({
+            className: 'custom-rover-marker',
+            html: '<div class="radar-pulse-dot"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        leafletRoverMarker = L.marker([initLat, initLon], { icon: roverIcon })
+            .addTo(leafletMap)
+            .bindPopup('<b>D.A.V.E. Rover</b><br>GNSS Location');
+
+        leafletMap.on('click', (e) => {
+            if (gpsCurrentFix.latitude !== null) {
+                setTargetWaypoint(e.latlng.lat, e.latlng.lng);
+            }
+        });
+
+    } catch (err) {
+        console.error("Failed to initialize Leaflet Map:", err);
+    }
+}
+
+function updateLeafletMap() {
+    if (!leafletMap || typeof L === 'undefined') return;
+
+    const lat = gpsCurrentFix.latitude;
+    const lon = gpsCurrentFix.longitude;
+
+    if (lat !== null && lon !== null && leafletRoverMarker) {
+        leafletRoverMarker.setLatLng([lat, lon]);
+    }
+
+    if (gpsTargetWaypoint.isSet && gpsTargetWaypoint.latitude !== null && gpsTargetWaypoint.longitude !== null) {
+        const targetLat = gpsTargetWaypoint.latitude;
+        const targetLon = gpsTargetWaypoint.longitude;
+
+        if (!leafletTargetMarker) {
+            leafletTargetMarker = L.marker([targetLat, targetLon]).addTo(leafletMap)
+                .bindPopup('<b>Target Waypoint</b>');
+        } else {
+            leafletTargetMarker.setLatLng([targetLat, targetLon]);
+        }
+
+        if (lat !== null && lon !== null) {
+            if (!leafletPolyline) {
+                leafletPolyline = L.polyline([[lat, lon], [targetLat, targetLon]], { color: '#ffaa00', weight: 3, dashArray: '6, 6' }).addTo(leafletMap);
+            } else {
+                leafletPolyline.setLatLngs([[lat, lon], [targetLat, targetLon]]);
+            }
+        }
+    } else {
+        if (leafletTargetMarker) {
+            leafletMap.removeLayer(leafletTargetMarker);
+            leafletTargetMarker = null;
+        }
+        if (leafletPolyline) {
+            leafletMap.removeLayer(leafletPolyline);
+            leafletPolyline = null;
+        }
+    }
+}
+
+// 6. Waypoint & Origin Actions
+function setTargetWaypoint(lat, lon) {
+    gpsTargetWaypoint.latitude = lat;
+    gpsTargetWaypoint.longitude = lon;
+    gpsTargetWaypoint.isSet = true;
+
+    if (gpsHomeOrigin.isSet && gpsHomeOrigin.latitude !== null) {
+        const dx = calculateDistanceMeters(gpsHomeOrigin.latitude, gpsHomeOrigin.longitude, gpsHomeOrigin.latitude, lon);
+        const dy = calculateDistanceMeters(gpsHomeOrigin.latitude, gpsHomeOrigin.longitude, lat, gpsHomeOrigin.longitude);
+        const signX = lon >= gpsHomeOrigin.longitude ? 1 : -1;
+        const signY = lat >= gpsHomeOrigin.latitude ? 1 : -1;
+        gpsTargetWaypoint.x = dx * signX;
+        gpsTargetWaypoint.y = dy * signY;
+    }
+
+    if (connected && gpsTargetPub) {
+        const msg = new ROSLIB.Message({
+            x: gpsTargetWaypoint.x || 0.0,
+            y: gpsTargetWaypoint.y || 0.0,
+            z: 0.0
+        });
+        gpsTargetPub.publish(msg);
+    }
+
+    updateGPSUI();
+}
+
+function clearTargetWaypoint() {
+    gpsTargetWaypoint.latitude = null;
+    gpsTargetWaypoint.longitude = null;
+    gpsTargetWaypoint.isSet = false;
+    updateGPSUI();
+}
+
+function setHomeOrigin() {
+    if (gpsCurrentFix.latitude !== null) {
+        gpsHomeOrigin.latitude = gpsCurrentFix.latitude;
+        gpsHomeOrigin.longitude = gpsCurrentFix.longitude;
+        gpsHomeOrigin.altitude = gpsCurrentFix.altitude;
+        gpsHomeOrigin.isSet = true;
+        console.log(`GPS Home Origin set to ${gpsHomeOrigin.latitude}, ${gpsHomeOrigin.longitude}`);
+        updateGPSUI();
+    }
+}
+
+// 7. Event Listeners for Location Navigation Section
+document.addEventListener('DOMContentLoaded', () => {
+    const selectMapMode = document.getElementById('gps-map-mode');
+    const btnSetHome = document.getElementById('btn-set-home-origin');
+    const btnSetTarget = document.getElementById('btn-set-target-waypoint');
+    const btnCenter = document.getElementById('btn-center-rover');
+    const btnClearTarget = document.getElementById('btn-clear-waypoint');
+    const btnAutoscroll = document.getElementById('btn-toggle-nmea-autoscroll');
+    const btnClearNmea = document.getElementById('btn-clear-nmea');
+    const radarCanvas = document.getElementById('gps-radar-canvas');
+
+    if (selectMapMode) {
+        selectMapMode.addEventListener('change', (e) => {
+            gpsMapMode = e.target.value;
+            const radarCanvas = document.getElementById('gps-radar-canvas');
+            const leafletDiv = document.getElementById('leaflet-map');
+
+            if (gpsMapMode === 'radar') {
+                if (radarCanvas) radarCanvas.style.display = 'block';
+                if (leafletDiv) leafletDiv.style.display = 'none';
+                drawTacticalRadar();
+            } else {
+                if (radarCanvas) radarCanvas.style.display = 'none';
+                if (leafletDiv) leafletDiv.style.display = 'block';
+                initLeafletMap();
+                updateLeafletMap();
+            }
+        });
+    }
+
+    if (btnSetHome) {
+        btnSetHome.addEventListener('click', () => {
+            setHomeOrigin();
+        });
+    }
+
+    if (btnSetTarget) {
+        btnSetTarget.addEventListener('click', () => {
+            const defaultLat = gpsCurrentFix.latitude ? gpsCurrentFix.latitude.toFixed(6) : "37.774929";
+            const defaultLon = gpsCurrentFix.longitude ? gpsCurrentFix.longitude.toFixed(6) : "-122.419416";
+            const targetLatStr = prompt("Enter Target Latitude (Decimal Degrees):", defaultLat);
+            const targetLonStr = prompt("Enter Target Longitude (Decimal Degrees):", defaultLon);
+            if (targetLatStr && targetLonStr) {
+                const lat = parseFloat(targetLatStr);
+                const lon = parseFloat(targetLonStr);
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    setTargetWaypoint(lat, lon);
+                }
+            }
+        });
+    }
+
+    if (btnCenter) {
+        btnCenter.addEventListener('click', () => {
+            if (gpsMapMode === 'map' && leafletMap && gpsCurrentFix.latitude !== null) {
+                leafletMap.setView([gpsCurrentFix.latitude, gpsCurrentFix.longitude], 18);
+            } else {
+                drawTacticalRadar();
+            }
+        });
+    }
+
+    if (btnClearTarget) {
+        btnClearTarget.addEventListener('click', () => {
+            clearTargetWaypoint();
+        });
+    }
+
+    const btnClearPath = document.getElementById('btn-clear-path');
+    if (btnClearPath) {
+        btnClearPath.addEventListener('click', () => {
+            roverPathHistory = [];
+            if (leafletPathPolyline && leafletMap) {
+                leafletMap.removeLayer(leafletPathPolyline);
+                leafletPathPolyline = null;
+            }
+            drawTacticalRadar();
+        });
+    }
+
+    if (btnAutoscroll) {
+        btnAutoscroll.addEventListener('click', () => {
+            nmeaAutoScroll = !nmeaAutoScroll;
+            btnAutoscroll.innerText = nmeaAutoScroll ? "AUTOSCROLL ON" : "AUTOSCROLL OFF";
+            btnAutoscroll.style.color = nmeaAutoScroll ? "var(--accent-blue)" : "var(--text-muted)";
+        });
+    }
+
+    if (btnClearNmea) {
+        btnClearNmea.addEventListener('click', () => {
+            const logBox = document.getElementById('nmea-stream-log');
+            if (logBox) logBox.innerHTML = '';
+        });
+    }
+
+    if (radarCanvas) {
+        radarCanvas.addEventListener('click', (e) => {
+            if (gpsCurrentFix.latitude === null) return;
+            const rect = radarCanvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            const cx = radarCanvas.width / 2;
+            const cy = radarCanvas.height / 2;
+            const maxRadius = Math.min(radarCanvas.width, radarCanvas.height) / 2 - 25;
+
+            const dxPx = clickX - cx;
+            const dyPx = clickY - cy;
+
+            const dxMeters = (dxPx / maxRadius) * 50;
+            const dyMeters = (-dyPx / maxRadius) * 50;
+
+            const targetCoords = offsetLatLonByMeters(gpsCurrentFix.latitude, gpsCurrentFix.longitude, dxMeters, dyMeters);
+            setTargetWaypoint(targetCoords.latitude, targetCoords.longitude);
+        });
+    }
+
+    // IMU Command & Service Button Event Listeners
+    const btnImuCalibrate = document.getElementById('btn-imu-calibrate');
+    const btnImuTogglePub = document.getElementById('btn-imu-toggle-pub');
+    const btnImuStatus = document.getElementById('btn-imu-status');
+    const btnImuResetFilter = document.getElementById('btn-imu-reset-filter');
+    const btnImuGetState = document.getElementById('btn-imu-get-state');
+
+    const btnCalibrateNorth = document.getElementById('btn-calibrate-north');
+    if (btnCalibrateNorth) btnCalibrateNorth.addEventListener('click', callIMUCalibrate);
+    if (btnImuCalibrate) btnImuCalibrate.addEventListener('click', callIMUCalibrate);
+    if (btnImuTogglePub) btnImuTogglePub.addEventListener('click', callIMUTogglePublishing);
+    if (btnImuStatus) btnImuStatus.addEventListener('click', callIMUGetStatus);
+    if (btnImuResetFilter) btnImuResetFilter.addEventListener('click', callIMUResetFilter);
+    if (btnImuGetState) btnImuGetState.addEventListener('click', callIMUGetState);
+
+    drawTacticalRadar();
+    updateGPSUI();
+    updateIMUUI();
+});
+
+// ====================================================
+// 10. IMU & ATTITUDE TELEMETRY & COMMAND SYSTEM
+// ====================================================
+
+function setupIMUROSInterfaces() {
+    if (!ros) return;
+
+    // 1. /imu/euler (Raw Euler Roll, Pitch, Yaw)
+    imuEulerSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/euler',
+        messageType: 'geometry_msgs/msg/Vector3'
+    });
+    imuEulerSub.subscribe((msg) => {
+        if (msg) {
+            imuEulerData.roll = msg.x || 0.0;
+            imuEulerData.pitch = msg.y || 0.0;
+            imuEulerData.yaw = msg.z || 0.0;
+            imuEulerData.lastUpdate = Date.now();
+            updateIMUUI();
+        }
+    });
+
+    // 2. /imu/filtered_euler (UKF Filtered Euler Roll, Pitch, Yaw)
+    imuFilteredEulerSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/filtered_euler',
+        messageType: 'geometry_msgs/msg/Vector3'
+    });
+    imuFilteredEulerSub.subscribe((msg) => {
+        if (msg) {
+            imuFilteredEulerData.roll = msg.x || 0.0;
+            imuFilteredEulerData.pitch = msg.y || 0.0;
+            imuFilteredEulerData.yaw = msg.z || 0.0;
+            imuFilteredEulerData.lastUpdate = Date.now();
+            updateIMUUI();
+        }
+    });
+
+    // 3. /imu/data_raw (Raw Accelerometer and Gyroscope Telemetry)
+    imuRawSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/data_raw',
+        messageType: 'sensor_msgs/msg/Imu'
+    });
+    imuRawSub.subscribe((msg) => {
+        if (msg) {
+            if (msg.linear_acceleration) {
+                imuMotionData.accel = {
+                    x: msg.linear_acceleration.x || 0.0,
+                    y: msg.linear_acceleration.y || 0.0,
+                    z: msg.linear_acceleration.z || 0.0
+                };
+            }
+            if (msg.angular_velocity) {
+                imuMotionData.gyro = {
+                    x: msg.angular_velocity.x || 0.0,
+                    y: msg.angular_velocity.y || 0.0,
+                    z: msg.angular_velocity.z || 0.0
+                };
+            }
+            updateIMUUI();
+        }
+    });
+
+    // 4. /imu/odometry (UKF 15D Filtered Odometry Pose and Twist)
+    imuOdomSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/odometry',
+        messageType: 'nav_msgs/msg/Odometry'
+    });
+    imuOdomSub.subscribe((msg) => {
+        if (msg && msg.pose && msg.pose.pose && msg.twist && msg.twist.twist) {
+            imuOdomData.pos = {
+                x: msg.pose.pose.position.x || 0.0,
+                y: msg.pose.pose.position.y || 0.0,
+                z: msg.pose.pose.position.z || 0.0
+            };
+            imuOdomData.vel = {
+                x: msg.twist.twist.linear.x || 0.0,
+                y: msg.twist.twist.linear.y || 0.0,
+                z: msg.twist.twist.linear.z || 0.0
+            };
+            updateIMUUI();
+        }
+    });
+
+    // 5. /ekf/odometry (Fused EKF Wheel+IMU+GPS Odometry Pose and Twist)
+    ekfOdomSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/ekf/odometry',
+        messageType: 'nav_msgs/msg/Odometry'
+    });
+    ekfOdomSub.subscribe((msg) => {
+        if (msg && msg.pose && msg.pose.pose && msg.twist && msg.twist.twist) {
+            imuOdomData.pos = {
+                x: msg.pose.pose.position.x || 0.0,
+                y: msg.pose.pose.position.y || 0.0,
+                z: msg.pose.pose.position.z || 0.0
+            };
+            imuOdomData.vel = {
+                x: msg.twist.twist.linear.x || 0.0,
+                y: msg.twist.twist.linear.y || 0.0,
+                z: msg.twist.twist.linear.z || 0.0
+            };
+            const ekfValEl = document.getElementById('val-ekf-telemetry-fusion');
+            if (ekfValEl) {
+                const x = imuOdomData.pos.x;
+                const y = imuOdomData.pos.y;
+                const vx = imuOdomData.vel.x;
+                ekfValEl.innerText = `X: ${x.toFixed(2)}m | Y: ${y.toFixed(2)}m | Speed: ${vx.toFixed(2)} m/s`;
+            }
+            updateIMUUI();
+        }
+    });
+
+    // 5. /imu/telemetry_str (Formatted Multi-line Telemetry String)
+    imuStrSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/imu/telemetry_str',
+        messageType: 'std_msgs/msg/String'
+    });
+    imuStrSub.subscribe((msg) => {
+        if (msg && msg.data) {
+            const streamLog = document.getElementById('imu-stream-log');
+            if (streamLog) {
+                streamLog.innerText = msg.data;
+            }
+        }
+    });
+}
+
+function cleanupIMUROSInterfaces() {
+    if (imuEulerSub) { imuEulerSub.unsubscribe(); imuEulerSub = null; }
+    if (imuFilteredEulerSub) { imuFilteredEulerSub.unsubscribe(); imuFilteredEulerSub = null; }
+    if (imuRawSub) { imuRawSub.unsubscribe(); imuRawSub = null; }
+    if (imuFilteredSub) { imuFilteredSub.unsubscribe(); imuFilteredSub = null; }
+    if (imuOdomSub) { imuOdomSub.unsubscribe(); imuOdomSub = null; }
+    if (imuStrSub) { imuStrSub.unsubscribe(); imuStrSub = null; }
+}
+
+function logIMUServiceResponse(actionName, success, message) {
+    const logBox = document.getElementById('imu-service-response-log');
+    if (!logBox) return;
+    const timeStr = new Date().toLocaleTimeString();
+    const statusStr = success ? "SUCCESS" : "FAILED";
+    const newEntry = `[${timeStr}] [${actionName}] -> ${statusStr}: ${message}\n`;
+    logBox.innerText = newEntry + logBox.innerText;
+}
+
+function callIMUCalibrate() {
+    if (!ros) {
+        logIMUServiceResponse("Calibrate", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_telemetry/calibrate',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Calibrate", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Calibrate", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUTogglePublishing() {
+    if (!ros) {
+        logIMUServiceResponse("Toggle Publishing", false, "ROS Bridge not connected.");
+        return;
+    }
+    imuPublishingEnabled = !imuPublishingEnabled;
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_telemetry/enable_publishing',
+        serviceType: 'std_srvs/srv/SetBool'
+    });
+    const request = new ROSLIB.ServiceRequest({ data: imuPublishingEnabled });
+    service.callService(request, (result) => {
+        if (result) {
+            logIMUServiceResponse("Toggle Publishing", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Toggle Publishing", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUGetStatus() {
+    if (!ros) {
+        logIMUServiceResponse("Get Status", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_telemetry/get_status',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Get Status", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Get Status", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUResetFilter() {
+    if (!ros) {
+        logIMUServiceResponse("Reset Filter", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_kalman_filter/reset_filter',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Reset Filter", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Reset Filter", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUGetState() {
+    if (!ros) {
+        logIMUServiceResponse("Get Filter State", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_kalman_filter/get_state',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Get Filter State", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Get Filter State", false, `Service Error: ${error}`);
+    });
+}
+
+function updateIMUUI() {
+    const isRawAvailable = imuEulerData.lastUpdate !== null && (Date.now() - imuEulerData.lastUpdate < 3000);
+    const isFilteredAvailable = imuFilteredEulerData.lastUpdate !== null && (Date.now() - imuFilteredEulerData.lastUpdate < 3000);
+    const hasData = isRawAvailable || isFilteredAvailable;
+
+    const imuDot = document.getElementById('imu-status-dot');
+    const imuStatusText = document.getElementById('imu-status-text');
+    if (imuDot) {
+        imuDot.className = hasData ? "status-indicator connected" : "status-indicator disconnected";
+    }
+    if (imuStatusText) {
+        imuStatusText.innerText = hasData ? (isRawAvailable ? "IMU ONLINE (RAW)" : "IMU ONLINE (UKF)") : "NO IMU DATA";
+        imuStatusText.style.color = hasData ? "var(--accent-green)" : "var(--text-muted)";
+    }
+
+    const badge = document.getElementById('imu-mode-badge');
+    if (badge) {
+        badge.innerText = isRawAvailable ? "RAW TELEMETRY (/imu/euler)" : (isFilteredAvailable ? "FILTERED (UKF 15D)" : "OFFLINE");
+    }
+
+    // Prioritize raw BNO085 hardware orientation (/imu/euler) over dead-reckoned kalman filter
+    const euler = isRawAvailable ? imuEulerData : imuFilteredEulerData;
+
+    // Update Roll, Pitch, Yaw values
+    const rollEl = document.getElementById('val-imu-roll');
+    const pitchEl = document.getElementById('val-imu-pitch');
+    const yawEl = document.getElementById('val-imu-yaw');
+
+    if (rollEl) rollEl.innerText = `${euler.roll.toFixed(1)}°`;
+    if (pitchEl) pitchEl.innerText = `${euler.pitch.toFixed(1)}°`;
+    if (yawEl) yawEl.innerText = `${euler.yaw.toFixed(1)}°`;
+
+    const valBaseYawEl = document.getElementById('val-base-yaw');
+    if (valBaseYawEl && euler) {
+        const yawRad = (euler.yaw * Math.PI) / 180.0;
+        valBaseYawEl.innerText = `${yawRad.toFixed(2)} rad (${euler.yaw.toFixed(1)}°)`;
+    }
+
+    // Update bar indicators
+    const barRoll = document.getElementById('bar-imu-roll');
+    const barPitch = document.getElementById('bar-imu-pitch');
+    const barYaw = document.getElementById('bar-imu-yaw');
+
+    if (barRoll) {
+        const rollPct = Math.min(100, Math.max(0, ((euler.roll + 180) / 360) * 100));
+        barRoll.style.width = `${rollPct}%`;
+    }
+    if (barPitch) {
+        const pitchPct = Math.min(100, Math.max(0, ((euler.pitch + 180) / 360) * 100));
+        barPitch.style.width = `${pitchPct}%`;
+    }
+    if (barYaw) {
+        const yawNormalized = ((euler.yaw % 360) + 360) % 360;
+        barYaw.style.width = `${(yawNormalized / 360) * 100}%`;
+    }
+
+    // Motion data (Accel & Gyro)
+    const accelEl = document.getElementById('val-imu-accel');
+    const gyroEl = document.getElementById('val-imu-gyro');
+    if (accelEl) {
+        accelEl.innerText = `X: ${imuMotionData.accel.x.toFixed(2)} | Y: ${imuMotionData.accel.y.toFixed(2)} | Z: ${imuMotionData.accel.z.toFixed(2)} m/s²`;
+    }
+    if (gyroEl) {
+        gyroEl.innerText = `X: ${imuMotionData.gyro.x.toFixed(2)} | Y: ${imuMotionData.gyro.y.toFixed(2)} | Z: ${imuMotionData.gyro.z.toFixed(2)} rad/s`;
+    }
+
+    // Odometry
+    const odomPosEl = document.getElementById('val-imu-odom-pos');
+    const odomVelEl = document.getElementById('val-imu-odom-vel');
+    if (odomPosEl) {
+        odomPosEl.innerText = `X: ${imuOdomData.pos.x.toFixed(2)}m | Y: ${imuOdomData.pos.y.toFixed(2)}m | Z: ${imuOdomData.pos.z.toFixed(2)}m`;
+    }
+    if (odomVelEl) {
+        odomVelEl.innerText = `Vx: ${imuOdomData.vel.x.toFixed(2)} | Vy: ${imuOdomData.vel.y.toFixed(2)} | Vz: ${imuOdomData.vel.z.toFixed(2)} m/s`;
+    }
+
+    // System Telemetry cards
+    const sysEuler = document.getElementById('val-imu-telemetry-euler');
+    const sysMotion = document.getElementById('val-imu-telemetry-motion');
+    if (sysEuler) {
+        sysEuler.innerText = hasData ? `R: ${euler.roll.toFixed(1)}° | P: ${euler.pitch.toFixed(1)}° | Y: ${euler.yaw.toFixed(1)}°` : "R: --, P: --, Y: --";
+    }
+    if (sysMotion) {
+        sysMotion.innerText = hasData ? `A: ${imuMotionData.accel.z.toFixed(1)} m/s² | G: ${imuMotionData.gyro.z.toFixed(2)} rad/s` : "A: -- | G: --";
+    }
+
+    // Redraw tactical radar if open so heading arrow updates
+    if (gpsMapMode === 'radar') {
+        drawTacticalRadar();
+    }
+}
+
+// Morse Code Dictionary for Live Dashboard Teletype Decoding
+const MORSE_TO_ENGLISH_TABLE = {
+    '*-': 'A', '-***': 'B', '-*-*': 'C', '-**': 'D', '*': 'E',
+    '**-*': 'F', '--*': 'G', '****': 'H', '**': 'I', '*---': 'J',
+    '-*-': 'K', '*-**': 'L', '--': 'M', '-*': 'N', '---': 'O',
+    '*--*': 'P', '--*-': 'Q', '*-*': 'R', '***': 'S', '-': 'T',
+    '**-': 'U', '***-': 'V', '*--': 'W', '-**-': 'X', '-*--': 'Y',
+    '--**': 'Z', '-----': '0', '*----': '1', '**---': '2', '***--': '3',
+    '****-': '4', '*****': '5', '-****': '6', '--***': '7', '---**': '8',
+    '----*': '9', '*-*-*-': '.', '--**--': ',', '**--**': '?'
+};
+
+let morseAudioEnabled = false;
+let audioCtx = null;
+
+function decodeMorseStringToEnglish(morseStr) {
+    if (!morseStr) return "";
+    const words = morseStr.split('  '); // Double space between words
+    return words.map(word => {
+        const letters = word.split(' '); // Single space between letters
+        return letters.map(code => MORSE_TO_ENGLISH_TABLE[code] || '?').join('');
+    }).join(' ');
+}
+
+function playMorseCWBeep(durationMs) {
+    if (!morseAudioEnabled) return;
+    try {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(750, audioCtx.currentTime); // 750Hz CW tone
+
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (durationMs / 1000.0));
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + (durationMs / 1000.0));
+    } catch(e) {
+        console.warn("Audio Context Error:", e);
+    }
+}
+
+function updateMorseTeletype(rawMsg) {
+    const rawStreamEl = document.getElementById('morse-raw-stream');
+    const teletypeEl = document.getElementById('morse-teletype-decoded');
+    const lastCharBadge = document.getElementById('morse-last-char-badge');
+
+    if (rawStreamEl) rawStreamEl.innerText = rawMsg || '---';
+
+    if (rawMsg && rawMsg !== '---') {
+        const decodedText = decodeMorseStringToEnglish(rawMsg);
+        if (teletypeEl) {
+            teletypeEl.innerText = decodedText ? decodedText : '[ DECODING... ]';
+        }
+
+        // Get last symbol
+        const parts = rawMsg.trim().split(' ');
+        const lastSymbol = parts[parts.length - 1];
+        const lastChar = MORSE_TO_ENGLISH_TABLE[lastSymbol] || '--';
+
+        if (lastCharBadge) {
+            lastCharBadge.innerText = `SYMBOL: ${lastSymbol} (${lastChar})`;
+        }
+
+        // Play audio beep for last symbol
+        if (lastSymbol.endsWith('-')) {
+            playMorseCWBeep(220); // Daw beep
+        } else if (lastSymbol.endsWith('*')) {
+            playMorseCWBeep(80);  // Dit beep
+        }
+    }
+}
+
+function simulateMorseTransmission() {
+    logMorseConsole("[Simulator] Injecting test Morse sequence...");
+    const sampleSequences = [
+        "*** - --- *--*",                        // STOP
+        "*** - --- *--* **** .. *** - --- *--*", // STOP HI STOP
+        "**** . .-.. .-.. ---",                  // HELLO
+        "*- -* -*--"                             // ANY
+    ];
+    const seq = sampleSequences[Math.floor(Math.random() * sampleSequences.length)];
+
+    if (connected && ros) {
+        const pub = new ROSLIB.Topic({
+            ros: ros,
+            name: '/morse_code',
+            messageType: 'enigma_machine_interfaces/msg/Morse'
+        });
+        pub.publish(new ROSLIB.Message({ message: seq }));
+        logMorseConsole(`[Simulator] Published to /morse_code: "${seq}"`);
+    } else {
+        // Local UI simulation if offline
+        updateMorseTeletype(seq);
+        logMorseConsole(`[Offline Sim] Decoded: "${decodeMorseStringToEnglish(seq)}"`);
+    }
+}
+
+let morseStrSub = null;
+let morsePixelSub = null;
+
+function setupMorseSubscribers() {
+    if (!ros || !connected) return;
+
+    if (morseStrSub) {
+        try { morseStrSub.unsubscribe(); } catch(e){}
+    }
+    if (morsePixelSub) {
+        try { morsePixelSub.unsubscribe(); } catch(e){}
+    }
+
+    morseStrSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/morse_code_str',
+        messageType: 'std_msgs/msg/String'
+    });
+
+    morseStrSub.subscribe((message) => {
+        const rawMsg = (message && message.data !== undefined) ? message.data : '---';
+        updateMorseTeletype(rawMsg);
+        logMorseConsole(`[ROS Topic]: Received '${rawMsg}'`);
+        queryTerminalPassword();
+    });
+
+    morsePixelSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/morse_recorder/pixel_count',
+        messageType: 'std_msgs/msg/Int32'
+    });
+
+    morsePixelSub.subscribe((message) => {
+        const pixCount = (message && message.data !== undefined) ? message.data : 0;
+        const telemetryEl = document.getElementById('morse-pixel-telemetry');
+        if (telemetryEl) {
+            telemetryEl.innerText = `WHITE PIXELS: ${pixCount} px`;
+            telemetryEl.style.color = pixCount > 0 ? "var(--accent-amber)" : "var(--text-muted)";
+        }
+    });
+}
+
+function cleanupMorseSubscribers() {
+    if (morseStrSub) {
+        try { morseStrSub.unsubscribe(); } catch(e){}
+        morseStrSub = null;
+    }
+    if (morsePixelSub) {
+        try { morsePixelSub.unsubscribe(); } catch(e){}
+        morsePixelSub = null;
+    }
+}
+
+function setMorseRecorderParam(paramName, val) {
+    if (!connected || !ros) return;
+
+    const paramService = new ROSLIB.Service({
+        ros: ros,
+        name: '/morse_recorder/set_parameters',
+        serviceType: 'rcl_interfaces/srv/SetParameters'
+    });
+
+    const req = new ROSLIB.ServiceRequest({
+        parameters: [
+            {
+                name: paramName,
+                value: {
+                    type: 2, // INTEGER
+                    integer_value: parseInt(val)
+                }
+            }
+        ]
+    });
+
+    paramService.callService(req, (res) => {
+        logMorseConsole(`[Param Set] ${paramName} -> ${val}`);
+    }, (err) => {
+        logMorseConsole(`[Param Error] Failed to update ${paramName}`);
+    });
+}
+
+function queryTerminalPassword() {
+    if (!connected || !ros) {
+        logMorseConsole("[Error] Not connected to ROS 2 bridge.");
+        return;
+    }
+
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/get_password',
+        serviceType: 'enigma_machine_interfaces/srv/GetPassword'
+    });
+
+    const request = new ROSLIB.ServiceRequest({});
+
+    logMorseConsole("Calling /get_password service...");
+    service.callService(request, (result) => {
+        if (result && result.password !== undefined) {
+            const passEl = document.getElementById('morse-terminal-password');
+            if (passEl) {
+                passEl.innerText = result.password ? result.password.toUpperCase() : '[ UNLOCKED / WAITING ]';
+            }
+            logMorseConsole(`[GetPassword Success] Decoded Password: "${result.password}"`);
+        } else {
+            logMorseConsole("[GetPassword Error] Invalid service response.");
+        }
+    }, (error) => {
+        logMorseConsole(`[GetPassword Error] ${error}`);
+    });
+}
+
+function setAndEncodeMessage() {
+    const inputEl = document.getElementById('input-morse-message');
+    if (!inputEl || !inputEl.value.trim()) {
+        logMorseConsole("[Warning] Please enter a message to encode.");
+        return;
+    }
+
+    const msg = inputEl.value.trim();
+    if (!connected || !ros) {
+        logMorseConsole("[Error] Not connected to ROS 2 bridge.");
+        return;
+    }
+
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/set_message',
+        serviceType: 'enigma_machine_interfaces/srv/SetMessage'
+    });
+
+    const request = new ROSLIB.ServiceRequest({
+        message: msg
+    });
+
+    logMorseConsole(`Calling /set_message with '${msg}'...`);
+    service.callService(request, (result) => {
+        logMorseConsole(`[SetMessage Success] Message '${msg}' set & encoded for appendage.`);
+    }, (error) => {
+        logMorseConsole(`[SetMessage Error] ${error}`);
+    });
+}
+
+function logMorseConsole(text) {
+    const logEl = document.getElementById('morse-console-log');
+    if (!logEl) return;
+    const timeStr = new Date().toLocaleTimeString();
+    logEl.textContent = `[${timeStr}] ${text}\n` + logEl.textContent;
+}
+
+function clearMorseTeletype() {
+    const rawStreamEl = document.getElementById('morse-raw-stream');
+    const teletypeEl = document.getElementById('morse-teletype-decoded');
+    const lastCharBadge = document.getElementById('morse-last-char-badge');
+
+    if (rawStreamEl) rawStreamEl.innerText = '---';
+    if (teletypeEl) teletypeEl.innerText = '[ TELETYPE READY ]';
+    if (lastCharBadge) lastCharBadge.innerText = 'SYMBOL: --';
+
+    logMorseConsole("[UI] Cleared raw stream and teletype display.");
+
+    // Call ROS 2 service to clear memory buffer on morse_recorder node
+    if (connected && ros) {
+        const service = new ROSLIB.Service({
+            ros: ros,
+            name: '/morse_recorder/reset',
+            serviceType: 'std_srvs/srv/Trigger'
+        });
+        service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+            logMorseConsole("[Reset Success] Cleared Morse node buffer memory.");
+        }, (error) => {
+            // Silently ignore if node is currently stopped
+        });
+    }
+}
+
+// Attach event listeners for Morse Code Section
+document.addEventListener('DOMContentLoaded', () => {
+    const btnGetPass = document.getElementById('btn-morse-get-password');
+    if (btnGetPass) {
+        btnGetPass.addEventListener('click', queryTerminalPassword);
+    }
+
+    const btnClear = document.getElementById('btn-morse-clear');
+    if (btnClear) {
+        btnClear.addEventListener('click', clearMorseTeletype);
+    }
+
+    const btnSetMsg = document.getElementById('btn-morse-set-message');
+    if (btnSetMsg) {
+        btnSetMsg.addEventListener('click', setAndEncodeMessage);
+    }
+
+    const btnSimulate = document.getElementById('btn-morse-simulate');
+    if (btnSimulate) {
+        btnSimulate.addEventListener('click', simulateMorseTransmission);
+    }
+
+    const btnAudioToggle = document.getElementById('btn-morse-audio-toggle');
+    if (btnAudioToggle) {
+        btnAudioToggle.addEventListener('click', () => {
+            morseAudioEnabled = !morseAudioEnabled;
+            btnAudioToggle.innerText = morseAudioEnabled ? "🔊 CW BEEP: ON" : "🔊 CW BEEP: OFF";
+            btnAudioToggle.className = morseAudioEnabled ? "neon-btn-green" : "neon-btn-blue";
+            if (morseAudioEnabled) playMorseCWBeep(100);
+        });
+    }
+
+    const inputMsg = document.getElementById('input-morse-message');
+    if (inputMsg) {
+        inputMsg.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                setAndEncodeMessage();
+            }
+        });
+    }
+
+    const sliderBright = document.getElementById('slider-brightness-thresh');
+    const valBright = document.getElementById('val-brightness-thresh');
+    if (sliderBright && valBright) {
+        sliderBright.addEventListener('input', (e) => {
+            valBright.innerText = e.target.value;
+        });
+        sliderBright.addEventListener('change', (e) => {
+            setMorseRecorderParam('brightness_threshold', e.target.value);
+        });
+    }
+
+    const sliderPix = document.getElementById('slider-pixel-thresh');
+    const valPix = document.getElementById('val-pixel-thresh');
+    if (sliderPix && valPix) {
+        sliderPix.addEventListener('input', (e) => {
+            valPix.innerText = e.target.value;
+        });
+        sliderPix.addEventListener('change', (e) => {
+            setMorseRecorderParam('pixel_count_threshold', e.target.value);
+        });
+    }
+});
+
+
+
 

@@ -9,7 +9,7 @@ Panels:
         - /RobotModel1
         - /TF1
       Splitter Ratio: 0.5
-    Tree Height: 442
+    Tree Height: 671
 Visualization Manager:
   Class: ""
   Displays:
@@ -74,6 +74,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        gripper_motor_body_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        gripper_motor_shaft_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
         left_finger_link:
           Alpha: 1
           Show Axes: false
@@ -127,6 +137,10 @@ Visualization Manager:
           Value: true
         front_right_wheel_link:
           Value: true
+        gripper_motor_body_link:
+          Value: true
+        gripper_motor_shaft_link:
+          Value: true
         left_finger_link:
           Value: true
         mount_link:
@@ -153,6 +167,9 @@ Visualization Manager:
               mount_link:
                 actual_arm_link:
                   tool_link:
+                    gripper_motor_body_link:
+                      gripper_motor_shaft_link:
+                        {}
                     left_finger_link:
                       {}
                     right_finger_link:
@@ -236,10 +253,10 @@ Visualization Manager:
 Window Geometry:
   Displays:
     collapsed: false
-  Height: 846
+  Height: 960
   Hide Left Dock: false
   Hide Right Dock: false
-  QMainWindow State: 000000ff00000000fd0000000100000000000001f7000002b2fc0200000001fb000000100044006900730070006c006100790073010000006e000002b20000018200ffffff000002ad000002b200000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
-  Width: 1200
-  X: 1172
-  Y: 167
+  QMainWindow State: 000000ff00000000fd0000000100000000000001f700000366fc0200000001fb000000100044006900730070006c006100790073010000003d00000366000000c900ffffff000002bd0000036600000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Width: 1210
+  X: 70
+  Y: 27

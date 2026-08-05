@@ -1,0 +1,31 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    overlay-name = "Enable J17 CAN0";
+    compatible = "nvidia,p3768-0000+p3767-0000", "nvidia,p3768-0000+p3767-0005";
+
+    /* Fragment 0: Override the Pinmux settings to route pins to CAN0 */
+    fragment@0 {
+        target = <&pinmux>;
+        __overlay__ {
+            pinmux-names = "default";
+            pinmux-0 = <&can0_pinmux>;
+
+            can0_pinmux: can0-pinmux {
+                pinctrl-single,pins = <
+                    0x0c303018 0xc458 /* can0_din / RX: Input, pull-up, enable */
+                    0x0c303010 0xc400 /* can0_dout / TX: Output, pull-down, enable */
+                >;
+            };
+        };
+    };
+
+    /* Fragment 1: Enable the native MTTCAN controller */
+    fragment@1 {
+        target = <&mttcan0>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+};

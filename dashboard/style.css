@@ -29,24 +29,26 @@
     padding: 0;
 }
 
-body {
+html, body {
     background-color: var(--bg-primary);
     color: var(--text-main);
     font-family: var(--font-stack);
-    height: 100vh;
-    overflow: hidden;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
     position: relative;
 }
 
-/* Layout container */
+/* layout container */
 .dashboard-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: auto;
+    min-height: 100vh;
     padding: 20px;
     z-index: 10;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* HEADER STYLE */
@@ -138,21 +140,19 @@ body {
     border-color: var(--accent-blue);
 }
 
-/* GRID SETUP */
+/* grid setup */
 .dashboard-grid {
-    display: grid;
-    grid-template-columns: 3fr 2fr;
+    display: flex;
+    flex-direction: column;
     gap: 20px;
     flex-grow: 1;
-    min-height: 0; /* allows flex scrolling child */
 }
 
-/* VIEWPORT CONTAINER */
+/* viewport container */
 .viewport-section {
     display: flex;
     flex-direction: column;
     padding: 20px;
-    min-height: 0;
 }
 
 .panel-header {
@@ -266,30 +266,9 @@ body {
     transform: translateX(-50%);
 }
 
-/* RIGHT COLUMN LAYOUT */
+/* right column layout */
 .controls-column {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-height: 0;
-    overflow-y: auto;
-    padding-right: 8px;
-}
-
-/* Custom Scrollbar for Controls Column */
-.controls-column::-webkit-scrollbar {
-    width: 6px;
-}
-.controls-column::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 3px;
-}
-.controls-column::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-.controls-column::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-blue);
+    display: contents;
 }
 
 /* TELEMETRY VIEW */
@@ -653,9 +632,9 @@ input[type="range"]::-webkit-slider-thumb {
     transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
                 opacity 0.25s ease, 
                 margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: 500px;
+    max-height: 1200px;
     opacity: 1;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .module-list.collapsed {
@@ -663,6 +642,7 @@ input[type="range"]::-webkit-slider-thumb {
     opacity: 0;
     margin-top: 0;
     pointer-events: none;
+    overflow: hidden;
 }
 
 .module-row {
@@ -827,5 +807,56 @@ input[type="range"]::-webkit-slider-thumb {
 .val-fr { top: 28px; right: calc(50% - 148px); text-align: left; }
 .val-rl { bottom: 28px; left: calc(50% - 148px); text-align: right; }
 .val-rr { bottom: 28px; right: calc(50% - 148px); text-align: left; }
+
+/* GPS & Location Navigation Styling */
+@media (max-width: 900px) {
+    .gps-layout-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Leaflet Dark Mode Custom Tiles */
+.leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+.leaflet-container {
+    background: #050811 !important;
+    font-family: var(--font-stack) !important;
+}
+.leaflet-popup-content-wrapper {
+    background: rgba(18, 24, 38, 0.9) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+    border-radius: 6px !important;
+    backdrop-filter: blur(8px);
+}
+.leaflet-popup-tip {
+    background: rgba(18, 24, 38, 0.9) !important;
+}
+
+/* Radar pulse animation */
+@keyframes radar-ping {
+    0% { transform: scale(0.2); opacity: 0.8; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
+.radar-pulse-dot {
+    position: relative;
+    width: 12px;
+    height: 12px;
+    background: var(--accent-blue);
+    border-radius: 50%;
+}
+.radar-pulse-dot::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--accent-blue);
+    border-radius: 50%;
+    animation: radar-ping 1.5s infinite ease-out;
+}
+
 
 
