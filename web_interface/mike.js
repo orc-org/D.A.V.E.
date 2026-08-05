@@ -91,10 +91,10 @@ function playMikeSound() {
 
     let sound;
 
-    if (random < 0.02) {
+    if (random < 0.01) {
         sound = document.getElementById("fun_song");
     } 
-    else if (random < 0.05) {
+    else if (random < 0.04) {
         sound = document.getElementById("swamp");
     }
     else {
