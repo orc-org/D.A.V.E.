@@ -123,6 +123,6 @@ function spawnMikeAtCorner() {
     console.log("Mike spawned near corner");
 }
 
-document.getElementById("test-corner").onclick = spawnMikeAtCorner;
+//document.getElementById("test-corner").onclick = spawnMikeAtCorner;
 
-document.getElementById("test-jumpscare").onclick = triggerJumpscare;
+//document.getElementById("test-jumpscare").onclick = triggerJumpscare;
