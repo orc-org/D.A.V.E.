@@ -131,6 +131,13 @@ const controller = (() => {
             pressShiftTab();
         }
 
+        if (mic === 1 && previous_buttons[16] !== 1) {
+
+            if (window.playMikeSound) {
+                window.playMikeSound();
+            }
+
+        }
         previous_buttons = [...buttons];
 
     }
