@@ -129,6 +129,7 @@ public:
 
     std::vector<bool> wasAWaypointTheLastPointAdded; // used in the remove last method
     bool editingMode;
+    bool removingPoint; // used as a safety catch to make sure that we do not simultaneously add and remove an obstacle
     Vector2 currentPosition; // current position of DaVE
     Vector2 nextWaypoint;
 
@@ -177,6 +178,8 @@ public:
         RemoveLastWaypointClient = this->create_client<RemoveLastWaypoint> ("RemoveLastWaypoint");
         RemoveLastObstacleClient = this->create_client<RemoveLastWaypoint> ("RemoveLastObstacle");
 
+        addLocalWaypoint(0, 0); // initialize Home Position
+
         std::thread display(&NAVDisplay::mainDisplay, this);
         display.detach();
 
@@ -202,11 +205,11 @@ public:
         // Load Textures
         const std::string pathToBackground      = resolveAssetPath("Floor.png");
         const std::string pathToDaVE_texture    = resolveAssetPath("Isometric_DaVE.png");
-        const std::string pathToCompass_texture = resolveAssetPath("dual-compass-rose.png");
+        // const std::string pathToCompass_texture = resolveAssetPath("dual-compass-rose.png");
 
         Texture2D background      = LoadTexture(pathToBackground.c_str());      // background image for the map, eventually this will be a satelite view of the area
         Texture2D DaVE_texture    = LoadTexture(pathToDaVE_texture.c_str());    // A simple image to be used as a sprite to represent DaVE
-        Texture2D compass_texture = LoadTexture(pathToCompass_texture.c_str()); // a simple Rose de Vent to indicate where north is (always up)
+        // Texture2D compass_texture = LoadTexture(pathToCompass_texture.c_str()); // a simple Rose de Vent to indicate where north is (always up)
 
         Vector2 origin = {background.width * 0.5, background.width * 0.5};
         Vector2 mousePosition = {};
@@ -266,11 +269,11 @@ public:
         DaVE.setRotation(180.0f);
         DaVE.setScale(0.03);
 
-        Sprite Compass(&compass_texture);
-        Compass.setPosition({50,50});
-        Compass.setRotation(180.0f);
-        Compass.setScale(0.2);
-        Compass.ReflectHorizontally(true);
+        // Sprite Compass(&compass_texture);
+        // Compass.setPosition({50,50});
+        // Compass.setRotation(180.0f);
+        // Compass.setScale(0.2);
+        // Compass.ReflectHorizontally(true);
 
         // create Camera
         Camera2D camera = {};
@@ -278,7 +281,7 @@ public:
         camera.target = DaVE.getPosition();
         camera.offset = {halfWidth, halfHeight};
 
-        while(!IsKeyDown(KEY_KP_MULTIPLY))
+        while(!IsKeyDown(KEY_F9))
         {
             ///////////////////////////////////////////////////////
             // Navigating mode
@@ -326,7 +329,7 @@ public:
                         DrawText("Toggle Direction of Travel                         ->      D",               12, 150, 10, BLACK);
                         DrawText("Manually Target Next Waypoint                   ->      Right Arrow",        12, 170, 10, BLACK);
                         DrawText("Manually Target Previous Waypoint              ->      Left Arrow",          12, 190, 10, BLACK);
-                        DrawText("Close Window (WARNING: This Is Ireversible)   ->      Asterisk",             12, 210, 10, BLACK);
+                        DrawText("Close Window (WARNING: This Is Ireversible)   ->      F9",                   12, 210, 10, BLACK);
                     EndDrawing();
                     continue;
                 }
@@ -443,6 +446,7 @@ public:
                         drawObstacles();
                         drawWaypoints();
                         DrawCircle(convertToPixelCoordinates_x(nextWaypoint.x), convertToPixelCoordinates_y(nextWaypoint.y), 6, ORANGE);
+                        DaVE.draw();
                     EndMode2D();
                 EndTextureMode();
 
@@ -498,17 +502,17 @@ public:
                 if(IsKeyDown(KEY_F1)){
                     BeginDrawing();
                         ClearBackground(RAYWHITE);
-                        DrawText("Add Waypoint                            ->      Left Click",                                12, 10,  10, BLACK);
+                        DrawText("Add Waypoint                           ->      Left Click",                                12, 10,  10, BLACK);
                         DrawText("Revove Waypoint                       ->      Shift + Left Click",                          12, 30,  10, BLACK);
-                        DrawText("Add Obstacle                            ->      Right Click + Drag to set radius",            12, 50,  10, BLACK);
+                        DrawText("Add Obstacle                           ->      Right Click + Drag to set radius",            12, 50,  10, BLACK);
                         DrawText("Revove Obstacle                       ->      Shift + Right Click",                         12, 70,  10, BLACK);
                         DrawText("Revove Last Obstacle/Waypoint   ->      Backspace",                                         12, 90,  10, BLACK);
                         DrawText("Edit Next Route                        ->      Up Arrow",                                   12, 110, 10, BLACK);
                         DrawText("Edit Previous Route                   ->      Down Arrow",                                  12, 130, 10, BLACK);
                         DrawText("Select Route To Edit                 ->      1, 2, 3, 4 or 5",                              12, 150, 10, BLACK);
                         DrawText("Reset Home To Next Waypoint      ->      H + O + M + E, then place a waypoint like usual",  12, 170, 10, BLACK);
-                        DrawText("Clear Current Route                  ->      K + I + L",                                    12, 190, 10, BLACK);
-                        DrawText("Exit Editing Mode                       ->      Enter",                                     12, 210, 10, BLACK);
+                        DrawText("Clear Current Route                 ->      K + I + L",                                    12, 190, 10, BLACK);
+                        DrawText("Exit Editing Mode                      ->      Enter",                                     12, 210, 10, BLACK);
                     EndDrawing();
                     continue;
                 }
@@ -530,43 +534,49 @@ public:
                     left shift + right click to remove obstacle
                     backspace to remove the last waypoint/obstacle
                 */
-                if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && IsKeyDown(KEY_LEFT_SHIFT)){
+                if(IsKeyPressed(KEY_LEFT_SHIFT)){
+                    removingPoint = true;
+                }
+                if(IsKeyReleased(KEY_LEFT_SHIFT)){
+                    removingPoint = false;
+                }
+                if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && removingPoint){
                     Vector2 position = convertToLocalCordinates({mousePosition.x, mousePosition.y});
                     removeLocalWaypoint(position.x, position.y); // remove actual waypoint in the NAVnode
-                    removeWaypoint(mousePosition.x, mousePosition.y); // remove simple obstacle from the display
+                    removeWaypoint(mousePosition.x * background.width / 2000, mousePosition.y * background.height / 2000); // remove simple obstacle from the display
                 }
-                else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && IsKeyDown(KEY_LEFT_SHIFT)){
+                else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && removingPoint){
                     Vector2 position = convertToLocalCordinates({mousePosition.x, mousePosition.y});
-                    removeLocalObstacle(position.x, position.y);
-                    removeObstacle(mousePosition.x, mousePosition.y);
+                    removeLocalObstacle(position.x, position.y); // remove actul obstacle on NAVnode side
+                    removeObstacle(mousePosition.x * background.width / 2000, mousePosition.y * background.height / 2000); // remove simple obstacle on NAVDisplay side
                 } 
                 else if(IsKeyPressed(KEY_BACKSPACE)){
                         removeLast();
                 }
-                else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+                else if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !removingPoint){
                     Vector2 position = convertToLocalCordinates({mousePosition.x, mousePosition.y});
                     if(resettingHome){
                         resettingHome = false;
                         resetHome(position.x, position.y);
                     }
                     else{
-                        addWaypoint(mousePosition.x, mousePosition.y);    // add simple waypoint on display side
+                        addWaypoint(mousePosition.x * background.width / 2000, mousePosition.y * background.width / 2000);    // add simple waypoint on display side
                         addLocalWaypoint(position.x, position.y); // add actual waypoint on NAVnode side
                     }
                 }
-                else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)){
-                    nextObstacle_x = mousePosition.x;
-                    nextObstacle_y = mousePosition.y;
+                else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !removingPoint){
+                    nextObstacle_x = mousePosition.x * background.width / 2000;
+                    nextObstacle_y = mousePosition.y * background.height / 2000;
                 }
-                else if(IsMouseButtonReleased(MOUSE_BUTTON_RIGHT)){
-                    int dx = nextObstacle_x - mousePosition.x;
-                    int dy = nextObstacle_y - mousePosition.y;                
+                else if(IsMouseButtonReleased(MOUSE_BUTTON_RIGHT) && !removingPoint){
+                    int dx = nextObstacle_x - mousePosition.x * background.width / 2000;
+                    int dy = nextObstacle_y - mousePosition.y * background.height / 2000;                
                     int radius = std::sqrt(dx * dx + dy * dy);
 
                     if (radius / mappingFactor.x < 1){
                         addObstacle(nextObstacle_x, nextObstacle_y, Obstacle::defaultRadius * mappingFactor.x); // add simple obstacle on the display side with default radius
                         Vector2 position = convertToLocalCordinates({nextObstacle_x, nextObstacle_y});
-                        addLocalObstacle(position.x, position.y, mappingFactor); // add actual obstacle on the NAVnode side with defaut radius
+                        addLocalObstacle(position.x, position.y); // add actual obstacle on the NAVnode side with defaut radius
                     }
                     else{
                         addObstacle(nextObstacle_x, nextObstacle_y, radius); // add simple obstacle on the display side
@@ -651,7 +661,7 @@ public:
 
         UnloadTexture(background);
         UnloadTexture(DaVE_texture);
-        UnloadTexture(compass_texture);
+        // UnloadTexture(compass_texture);
         UnloadRenderTexture(map);
         UnloadRenderTexture(editingMap);
 
@@ -697,7 +707,7 @@ public:
         std::vector<simpleWaypoint>::iterator it;
 
         for(it = waypoints[routeToEdit].begin(); it != waypoints[routeToEdit].end(); ++it){
-            if (it->x == x && it->y == y){
+            if (it->x <= x + 12 && it->x >= x - 12 && it->y <= y + 12 && it->y >= y - 12){
                 waypoints[routeToEdit].erase(it);
                 break;
             }
@@ -708,7 +718,7 @@ public:
         std::vector<simpleObstacle>::iterator it;
 
         for(it = obstacles.begin(); it != obstacles.end(); ++it){
-            if (it->x == x && it->y == y){
+            if (it->x <= x + 12 && it->x >= x - 12 && it->y <= y + 12 && it->y >= y - 12){
                 obstacles.erase(it);
                 break;
             }
@@ -861,7 +871,7 @@ public:
         AddLocalObstacleClient->async_send_request(request); 
     }
 
-    void addLocalObstacle(int x, int y, Vector2 mappingFactor){
+    void addLocalObstacle(int x, int y){
         auto request = std::make_shared<AddLocalObstacle::Request>();
         request->x = x;
         request->y = y;
