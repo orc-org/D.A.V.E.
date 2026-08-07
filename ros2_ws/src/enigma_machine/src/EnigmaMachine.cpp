@@ -15,7 +15,7 @@
 #include "enigma_machine_interfaces/srv/set_message.hpp"
 #include "enigma_machine_interfaces/action/decode.hpp"
 #include "enigma_machine_interfaces/action/encode.hpp"
-#include "arm_interfaces/action/gripper_command.hpp"
+#include <std_msgs/msg/string.hpp>
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -167,7 +167,7 @@ rclcpp_action::Server<enigma_machine_interfaces::action::Encode>::SharedPtr enco
 rclcpp::Service<enigma_machine_interfaces::srv::GetPassword>::SharedPtr get_password_srv_;
 rclcpp::Service<enigma_machine_interfaces::srv::SetMessage>::SharedPtr set_message_srv_;
 rclcpp::Subscription<enigma_machine_interfaces::msg::Morse>::SharedPtr morse_sub_;
-rclcpp_action::Client<arm_interfaces::action::GripperCommand>::SharedPtr gripper_client_;
+rclcpp::Publisher<std_msgs::msg::String>::SharedPtr morse_command_pub_;
 
 public:
     EnigmaMachine() : Node("enigma_machine"), treeRoot(nullptr) {
@@ -208,10 +208,7 @@ public:
             std::bind(&EnigmaMachine::handle_encode_accepted, this, std::placeholders::_1)
         );
 
-        gripper_client_ = rclcpp_action::create_client<arm_interfaces::action::GripperCommand>(
-            this,
-            "gripper_command"
-        );
+        morse_command_pub_ = this->create_publisher<std_msgs::msg::String>("/morse_command", 10);
 
         RCLCPP_INFO(this->get_logger(), "Enigma Machine Node initialized.");
     }
@@ -606,43 +603,12 @@ string encode(string message){
     return encodedMessage;
 }
 
-void sendGripperGoal(double position) {
-    auto goal_msg = arm_interfaces::action::GripperCommand::Goal();
-    goal_msg.position = position;
-    gripper_client_->async_send_goal(goal_msg);
-}
-
 void sendToAppendage(){
-    // send the translated message to the appendage
-    // Run in a separate thread to avoid blocking the main spinner
-    std::thread([this]() {
-        if (!gripper_client_->wait_for_action_server(std::chrono::seconds(2))) {
-            RCLCPP_ERROR(this->get_logger(), "Gripper action server not available in sendToAppendage");
-            return;
-        }
-
-        RCLCPP_INFO(this->get_logger(), "Tapping out Morse Message: %s", morseMessage.c_str());
-
-        for (char c : morseMessage) {
-            if (c == '*') {
-                RCLCPP_INFO(this->get_logger(), "Tapping DIT (*)");
-                sendGripperGoal(1.0); // tap down
-                std::this_thread::sleep_for(1200ms); // 1.0s to close + 200ms hold
-                sendGripperGoal(0.0); // release
-                std::this_thread::sleep_for(1200ms); // 1.0s to open + 200ms rest
-            } else if (c == '-') {
-                RCLCPP_INFO(this->get_logger(), "Tapping DAW (-)");
-                sendGripperGoal(1.0); // tap down
-                std::this_thread::sleep_for(1600ms); // 1.0s to close + 600ms hold
-                sendGripperGoal(0.0); // release
-                std::this_thread::sleep_for(1200ms); // 1.0s to open + 200ms rest
-            } else if (c == ' ') {
-                RCLCPP_INFO(this->get_logger(), "Resting (space)");
-                std::this_thread::sleep_for(600ms); // space rest
-            }
-        }
-        RCLCPP_INFO(this->get_logger(), "Finished tapping out message.");
-    }).detach();
+    // send the translated message to the morse bridge node
+    auto msg = std_msgs::msg::String();
+    msg.data = morseMessage;
+    RCLCPP_INFO(this->get_logger(), "Sending Morse Message to Bridge: %s", morseMessage.c_str());
+    morse_command_pub_->publish(msg);
 }
 
 

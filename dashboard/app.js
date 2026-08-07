@@ -1946,7 +1946,7 @@ btnToggleModules.addEventListener('click', () => {
 });
 
 // click delegation for toggle buttons
-modulesDrawer.addEventListener('click', (e) => {
+document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('.module-toggle-btn');
     if (btn) {
         const key = btn.getAttribute('data-module');
