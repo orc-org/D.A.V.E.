@@ -21,6 +21,12 @@ add_executable(XLRnode
 )
 ament_target_dependencies(XLRnode rclcpp serial_interfaces)
 
+add_executable(XLR_UI 
+  src/XLR_User_input.cpp
+  src/SerialPort.cpp
+)
+ament_target_dependencies(XLR_UI rclcpp serial_interfaces)
+
 target_include_directories(XLRnode PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/serial_communication>
   $<INSTALL_INTERFACE:include/serial_communication>
@@ -35,6 +41,7 @@ install(
 
 install(TARGETS
   XLRnode
+  XLR_UI
   DESTINATION lib/${PROJECT_NAME})
 
 
