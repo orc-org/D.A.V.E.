@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(serial_interfaces REQUIRED)
+find_package(std_msgs REQUIRED)
 
 set(SOURCE_FILES
   src/SerialPort.cpp 
@@ -26,6 +27,17 @@ target_include_directories(XLRnode PUBLIC
   $<INSTALL_INTERFACE:include/serial_communication>
 )
 
+add_executable(morse_bridge_node 
+  src/MorseBridgeNode.cpp
+  src/SerialPort.cpp
+)
+ament_target_dependencies(morse_bridge_node rclcpp std_msgs)
+
+target_include_directories(morse_bridge_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/serial_communication>
+  $<INSTALL_INTERFACE:include/serial_communication>
+)
+
 ament_export_include_directories(include/serial_communication)
 
 install(
@@ -35,6 +47,7 @@ install(
 
 install(TARGETS
   XLRnode
+  morse_bridge_node
   DESTINATION lib/${PROJECT_NAME})
 
 
