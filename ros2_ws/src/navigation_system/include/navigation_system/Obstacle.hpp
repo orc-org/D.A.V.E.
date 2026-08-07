@@ -30,6 +30,14 @@ public:
     double getX();
     double getY();
 
+    double getLatitude();
+    double getLongitude();
+    double getAltitude();
+
+    double getECEF_x();
+    double getECEF_y();
+    double getECEF_z();
+
     // constructors
     Obstacle();
 

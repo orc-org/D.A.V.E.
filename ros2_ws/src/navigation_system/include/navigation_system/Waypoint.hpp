@@ -2,6 +2,7 @@
 
 #include <string>
 #include <cmath>
+#include <array>
 
 
 
@@ -40,12 +41,13 @@ protected:
 
 
     // Constants
-
+     inline static const int password = 741021;                   // Password for resetting home waypoint
+public:
     inline static constexpr double a = 6378137.0;                // Semi-major axis (meters)
     inline static constexpr double f = 1.0 / 298.257223565;      // Flattening
     inline static constexpr double e2 = f * (2.0 - f);           // Eccentricity squared
     inline static constexpr double pi = 3.14159265358979323846;  // pi
-    inline static const int password = 741021;                   // Password for resetting home waypoint
+
 
     // Constructors
 
@@ -142,7 +144,7 @@ public:
         return radians * 180.0 / pi;
     }
 
-    double calcPrimeVerticalRadius(double latRad) {
+    static double calcPrimeVerticalRadius(double latRad) {
         return a / sqrt(1.0 - e2 * sin(latRad) * sin(latRad));
     }
 
@@ -166,6 +168,8 @@ public:
         Converts a local 2D waypoint (East, North) back into an ECEF point.
     */
     void local_To_EarthCentred();
+
+    static std::array<double,3> local_To_EarthCentred(int x, int y);
     
     /*
     EarthCentered_To_Geodetic()
@@ -176,4 +180,6 @@ public:
     Good enough for this project skeleton.
     */
     void EarthCentred_To_GeodeticApprox();
+
+    static std::array<double,2> local_To_GeodeticApprox(int x, int y);
 };

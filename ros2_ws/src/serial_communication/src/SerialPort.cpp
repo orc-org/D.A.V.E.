@@ -290,3 +290,12 @@ void SerialPort::printConfig(){
     printf("Echo: %s\n", enableEcho ? "enabled" : "disabled");
     printf("Baud Rate: %d\n", baudRate);
 }
+
+// int main(int argc, char** argv) {
+//     (void)argc;
+//     (void)argv;
+
+//     std::cout << "Hello From the Serial Port file!!";
+
+//     return 0;
+// }

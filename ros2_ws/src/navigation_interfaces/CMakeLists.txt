@@ -31,6 +31,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/NavigationAction.action"
 
   "msg/Velocity.msg"
+  "msg/DisplayInfo.msg"
 
   "srv/SelectRoute.srv"
   "srv/VoidService.srv"
