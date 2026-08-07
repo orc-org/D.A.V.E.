@@ -148,27 +148,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-
-// Compass Rotation Placeholder
-document.addEventListener('DOMContentLoaded', () => {
-    const compassArrow = document.getElementById('compass-arrow');
-    const northArrow = document.getElementById('north-arrow');
-    const southArrow = document.getElementById('south-arrow');
-
-    if (!compassArrow || !northArrow || !southArrow) return;
-
-    function updateCompassArrows() {
-        compassArrow.style.transform = `translate(-50%, -100%) rotate(${ph1}deg)`;
-        northArrow.style.transform = `translate(-50%, -100%) rotate(${ph2}deg)`;
-        southArrow.style.transform = `translate(-50%, -100%) rotate(${ph2 + 180}deg)`;
-    }
-
-    function updateCompassValues() {
-        ph1 += 1;
-        ph2 -= 1;
-        updateCompassArrows();
-    }
-
-    updateCompassArrows();
-    setInterval(updateCompassValues, 1);
-});
