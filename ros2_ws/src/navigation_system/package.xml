@@ -13,6 +13,16 @@
           It communuicates with GNSS to get out current position
           It also can do obstacle avoidance (for software defined obstacles) and will have a built in mini-map display
   </description>
+  <description>Package to handle wayfinding and route recording for DaVE
+          We use waypoints to define places where we want the rover to go 
+          and we use obstacles to define regions we cannot traverse on the way there
+          
+          the NAVnode uses a linked list for waypoints and a dynamic array for obstacles
+          it allows for the creation of up to 5 preplanned routes for DaVE to take
+          
+          It communuicates with GNSS to get out current position
+          It also can do obstacle avoidance (for software defined obstacles) and will have a built in mini-map display
+  </description>
   <maintainer email="isaac.bobmeyer@gmail.com">isaac</maintainer>
   <license>Apache-2.0</license>
 
@@ -20,6 +30,8 @@
 
 
   <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>rclcpp_components</depend>
   <depend>rclcpp_action</depend>
   <depend>rclcpp_components</depend>
   <depend>navigation_interfaces</depend>

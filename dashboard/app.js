@@ -52,6 +52,35 @@ let roverPathHistory = []; // Array of { lat, lon, x, y, timestamp }
 let leafletPathPolyline = null;
 
 // 3d viewer state (Disabled - 3D Robot View removed)
+let gpsFixSub = null;
+let gpsNmeaSub = null;
+let gpsTargetPub = null;
+
+// IMU Subscribers & State
+let imuEulerSub = null;
+let imuFilteredEulerSub = null;
+let imuRawSub = null;
+let imuFilteredSub = null;
+let imuOdomSub = null;
+let imuStrSub = null;
+
+let imuEulerData = { roll: 0.0, pitch: 0.0, yaw: 0.0, lastUpdate: null };
+let imuFilteredEulerData = { roll: 0.0, pitch: 0.0, yaw: 0.0, lastUpdate: null };
+let imuMotionData = {
+    accel: { x: 0.0, y: 0.0, z: 9.81 },
+    gyro: { x: 0.0, y: 0.0, z: 0.0 }
+};
+let imuOdomData = {
+    pos: { x: 0.0, y: 0.0, z: 0.0 },
+    vel: { x: 0.0, y: 0.0, z: 0.0 }
+};
+let imuPublishingEnabled = true;
+
+// Rover Path Trajectory History
+let roverPathHistory = []; // Array of { lat, lon, x, y, timestamp }
+let leafletPathPolyline = null;
+
+// 3d viewer state (Disabled - 3D Robot View removed)
 let showing3D = false;
 let viewer3D = null;
 let tfClient = null;
@@ -262,6 +291,7 @@ function setupROSInterfaces() {
         ros: ros,
         serverName: '/gripper_command',
         actionName: 'arm_interfaces/GripperCommand'
+        actionName: 'arm_interfaces/GripperCommand'
     });
 
     // Subscribers
@@ -336,8 +366,11 @@ function setupROSInterfaces() {
             let t = msg.transforms[i];
             // Accept TF transforms from authoritative odom or map frames to avoid collisions
             if (t.child_frame_id === 'base_link' && (t.header.frame_id === 'odom' || t.header.frame_id === 'map')) {
+            // Accept TF transforms from authoritative odom or map frames to avoid collisions
+            if (t.child_frame_id === 'base_link' && (t.header.frame_id === 'odom' || t.header.frame_id === 'map')) {
                 let x = t.transform.translation.x;
                 let y = t.transform.translation.y;
+                if (valBasePos) valBasePos.innerText = `X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`;
                 if (valBasePos) valBasePos.innerText = `X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`;
 
                 // Extract Heading (Yaw) from 3D Quaternion
@@ -348,7 +381,16 @@ function setupROSInterfaces() {
                 let siny_cosp = 2.0 * (qw * qz + qx * qy);
                 let cosy_cosp = 1.0 - 2.0 * (qy * qy + qz * qz);
                 let yaw = Math.atan2(siny_cosp, cosy_cosp);
+                // Extract Heading (Yaw) from 3D Quaternion
+                let qx = t.transform.rotation.x || 0.0;
+                let qy = t.transform.rotation.y || 0.0;
+                let qz = t.transform.rotation.z || 0.0;
+                let qw = t.transform.rotation.w || 1.0;
+                let siny_cosp = 2.0 * (qw * qz + qx * qy);
+                let cosy_cosp = 1.0 - 2.0 * (qy * qy + qz * qz);
+                let yaw = Math.atan2(siny_cosp, cosy_cosp);
                 let deg = yaw * (180.0 / Math.PI);
+                if (valBaseYaw) valBaseYaw.innerText = `${yaw.toFixed(2)} rad (${deg.toFixed(1)}°)`;
                 if (valBaseYaw) valBaseYaw.innerText = `${yaw.toFixed(2)} rad (${deg.toFixed(1)}°)`;
             }
         }
@@ -841,12 +883,15 @@ function startControlLoopTimer() {
         
         // UI Button & Keyboard (Z / C) Gripper control (runs in both modes, whether gamepad is connected or not)
         if (gripperOpenBtnActive || keysPressed['z']) {
+        // UI Button & Keyboard (Z / C) Gripper control (runs in both modes, whether gamepad is connected or not)
+        if (gripperOpenBtnActive || keysPressed['z']) {
             const oldVal = currentGripperTarget;
             currentGripperTarget = Math.max(0.0, currentGripperTarget - 0.05);
             if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
                 publishGripperTarget(currentGripperTarget);
             }
         }
+        if (gripperCloseBtnActive || keysPressed['c']) {
         if (gripperCloseBtnActive || keysPressed['c']) {
             const oldVal = currentGripperTarget;
             currentGripperTarget = Math.min(1.0, currentGripperTarget + 0.05);
@@ -1609,6 +1654,7 @@ class LocalTFClient {
 // 3D Viewer initialization and destruction functions
 function init3DViewer() {
     if (!showing3D) return;
+    if (!showing3D) return;
     if (!connected || !ros) {
         console.warn('init3DViewer: Not connected to ROS.');
         return;
@@ -1725,6 +1771,7 @@ function loadURDFClient() {
         tfClient: tfClient,
         rootObject: viewer3D.scene,
         param: 'robot_description'
+        param: 'robot_description'
     });
 }
 
@@ -1772,6 +1819,8 @@ function updateModuleStatusUI(status) {
 
     const currentKeys = Object.keys(status).join(',');
     if (!modulesInitialized || drawer.getAttribute('data-keys') !== currentKeys) {
+    const currentKeys = Object.keys(status).join(',');
+    if (!modulesInitialized || drawer.getAttribute('data-keys') !== currentKeys) {
         drawer.innerHTML = '';
         for (const key in status) {
             const info = status[key];
@@ -1787,9 +1836,11 @@ function updateModuleStatusUI(status) {
             drawer.appendChild(row);
         }
         drawer.setAttribute('data-keys', currentKeys);
+        drawer.setAttribute('data-keys', currentKeys);
         modulesInitialized = true;
     }
 
+    // update statuses and buttons
     // update statuses and buttons
     for (const key in status) {
         const info = status[key];
@@ -1810,6 +1861,41 @@ function updateModuleStatusUI(status) {
             } else {
                 btn.innerText = "START";
                 btn.className = "module-toggle-btn neon-btn-blue";
+            }
+        }
+
+        // update corresponding camera card UI widgets if these are the stream modules
+        if (key === 'stream_cam_0') {
+            const cam0Dot = document.getElementById('status-cam-0-dot');
+            const cam0Text = document.getElementById('status-cam-0-text');
+            const cam0Btn = document.getElementById('btn-toggle-cam-0');
+            if (cam0Dot) cam0Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam0Text) cam0Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam0Btn) {
+                cam0Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam0Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
+            }
+        }
+        if (key === 'stream_cam_1') {
+            const cam1Dot = document.getElementById('status-cam-1-dot');
+            const cam1Text = document.getElementById('status-cam-1-text');
+            const cam1Btn = document.getElementById('btn-toggle-cam-1');
+            if (cam1Dot) cam1Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam1Text) cam1Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam1Btn) {
+                cam1Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam1Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
+            }
+        }
+        if (key === 'stream_cam_2') {
+            const cam2Dot = document.getElementById('status-cam-2-dot');
+            const cam2Text = document.getElementById('status-cam-2-text');
+            const cam2Btn = document.getElementById('btn-toggle-cam-2');
+            if (cam2Dot) cam2Dot.className = isRunning ? "status-indicator connected" : "status-indicator disconnected";
+            if (cam2Text) cam2Text.innerText = isRunning ? "ACTIVE" : "OFFLINE";
+            if (cam2Btn) {
+                cam2Btn.innerText = isRunning ? "STOP STREAM" : "START STREAM";
+                cam2Btn.className = isRunning ? "neon-btn-red" : "neon-btn-blue";
             }
         }
 
@@ -1884,6 +1970,27 @@ function resetModuleStatusUI() {
         cam1Btn.className = "neon-btn-blue";
         cam1Btn.disabled = false;
     }
+    // reset camera card indicators too
+    const cam0Dot = document.getElementById('status-cam-0-dot');
+    const cam0Text = document.getElementById('status-cam-0-text');
+    const cam0Btn = document.getElementById('btn-toggle-cam-0');
+    if (cam0Dot) cam0Dot.className = "status-indicator disconnected";
+    if (cam0Text) cam0Text.innerText = "OFFLINE";
+    if (cam0Btn) {
+        cam0Btn.innerText = "START STREAM";
+        cam0Btn.className = "neon-btn-blue";
+        cam0Btn.disabled = false;
+    }
+    const cam1Dot = document.getElementById('status-cam-1-dot');
+    const cam1Text = document.getElementById('status-cam-1-text');
+    const cam1Btn = document.getElementById('btn-toggle-cam-1');
+    if (cam1Dot) cam1Dot.className = "status-indicator disconnected";
+    if (cam1Text) cam1Text.innerText = "OFFLINE";
+    if (cam1Btn) {
+        cam1Btn.innerText = "START STREAM";
+        cam1Btn.className = "neon-btn-blue";
+        cam1Btn.disabled = false;
+    }
 }
 
 function toggleModule(key) {
@@ -1893,7 +2000,24 @@ function toggleModule(key) {
     }
     
     // support toggling both process manager list buttons and specific viewport buttons
+    
+    // support toggling both process manager list buttons and specific viewport buttons
     const btn = document.getElementById(`btn-toggle-${key}`);
+    const camBtn = (key === 'stream_cam_0') ? document.getElementById('btn-toggle-cam-0') : 
+                   (key === 'stream_cam_1') ? document.getElementById('btn-toggle-cam-1') : 
+                   (key === 'stream_cam_2') ? document.getElementById('btn-toggle-cam-2') : null;
+
+    const currentText = btn ? btn.innerText : (camBtn ? camBtn.innerText : "");
+    const shouldStart = currentText.includes("START");
+
+    if (btn) {
+        btn.innerText = shouldStart ? "STARTING..." : "STOPPING...";
+        btn.disabled = true;
+    }
+    if (camBtn) {
+        camBtn.innerText = shouldStart ? "STARTING..." : "STOPPING...";
+        camBtn.disabled = true;
+    }
     const camBtn = (key === 'stream_cam_0') ? document.getElementById('btn-toggle-cam-0') : 
                    (key === 'stream_cam_1') ? document.getElementById('btn-toggle-cam-1') : 
                    (key === 'stream_cam_2') ? document.getElementById('btn-toggle-cam-2') : null;
@@ -1923,22 +2047,31 @@ function toggleModule(key) {
     service.callService(request, (result) => {
         if (btn) btn.disabled = false;
         if (camBtn) camBtn.disabled = false;
+        if (btn) btn.disabled = false;
+        if (camBtn) camBtn.disabled = false;
         if (result && result.success) {
             console.log(`Successfully toggled ${key}: ${result.message}`);
         } else {
             console.error(`Failed to toggle ${key}: ${result ? result.message : 'Unknown error'}`);
             if (btn) btn.innerText = shouldStart ? "START" : "STOP";
             if (camBtn) camBtn.innerText = shouldStart ? "START STREAM" : "STOP STREAM";
+            if (btn) btn.innerText = shouldStart ? "START" : "STOP";
+            if (camBtn) camBtn.innerText = shouldStart ? "START STREAM" : "STOP STREAM";
         }
     }, (error) => {
+        if (btn) btn.disabled = false;
+        if (camBtn) camBtn.disabled = false;
         if (btn) btn.disabled = false;
         if (camBtn) camBtn.disabled = false;
         console.error(`Service call error for ${key}:`, error);
         if (btn) btn.innerText = shouldStart ? "START" : "STOP";
         if (camBtn) camBtn.innerText = shouldStart ? "START STREAM" : "STOP STREAM";
+        if (btn) btn.innerText = shouldStart ? "START" : "STOP";
+        if (camBtn) camBtn.innerText = shouldStart ? "START STREAM" : "STOP STREAM";
     });
 }
 
+// collapsible panel event listener
 // collapsible panel event listener
 btnToggleModules.addEventListener('click', () => {
     modulesDrawer.classList.toggle('collapsed');

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title>D.A.V.E Control Panel</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
+    <script src="controller.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/eventemitter3@5.0.1/dist/eventemitter3.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+    <script src="ros_bridge.js"></script>
+</head>
+
+<body>
+    <div id="top-bar">
+        <div id="controller-status">
+            <div class="circle" id="controller-status-indicator"></div>
+            <span id="controller-status-text">No Controller Found</span>
+
+        </div>
+
+        <div id="connection-status">
+            <div class="circle" id="connection-status-indicator"></div>
+            <span id="connection-status-text">Disconnected</span>
+            <input id="connection-port" placeholder="ws://localhost:9090" value="ws://localhost:9090"></input>
+            <button id="connect-button" style="cursor: pointer;">CONNECT</button>
+        </div>
+
+    </div>
+
+    <div style="display: flex;">
+        <div id="main-cont">
+            <div id="video-stream"></div>
+            <div class="data-cont">
+                <p class="data-title">Arm Position</p>
+                <div class="cont">
+                    <div class="data" id="arm-height" style="width: 45%;">
+                        <span class="data-title-inner">height</span>
+                        <span class="data-input">0.00m</span>
+                    </div>
+                    <div class="data" id="hand-pos">
+                        <span class="data-title-inner">hand position</span>
+                        <span class="data-input">0.00m</span>
+                    </div>
+                </div>
+                <div class="data-title">Morse Tapper</div>
+                <div class="data" id="button-push" style="width: 95%;">
+                    <span class="data-title-inner">current code</span>
+                    <div class="data-box">
+                        <div class="data-input" id="morse-string"> .--. .-.. .- -.-. . .... --- .-.. -.. . .-.</div>
+                    </div>
+                    <span class="data-title-inner">Code Transmit</span>
+                    <div class="cont">
+                        <button id="arm-push" class="button-single">tap morse</button>
+                    </div>
+                    <div class="slide-container">
+                        <span class="data-title-inner" style="margin-left: 1%;">Brightness Cutoff</span>
+                        <span class="data-input" id="morse-brightness" style="float: right;">50%</span>
+                        <input type="range" min="0" max="100" value="50" class="slider" id="morse-brightness-slider">
+                    </div>
+                    <div class="slide-container">
+                        <span class="data-title-inner" style="margin-left: 1%;">Threshold</span>
+                        <span class="data-input" id="morse-threshold" style="float: right;">50%</span>
+                        <input type="range" min="0" max="100" value="50" class="slider" id="morse-threshold-slider">
+                    </div>
+
+
+                </div>
+
+                <p class="data-title">Wheel Power</p>
+                <div id="wheel-cont">
+                    <div class="cont">
+                        <div class="data" id="wheel-monitor-fl">
+                            <div class="cont">
+                                <span class="data-title-inner">front left</span>
+                                <span class="data-input" id="wheel-fl-power">00%</span>
+                                <div class="wheel-monitor"></div>
+
+                            </div>
+
+
+                        </div>
+
+                        <div class="data" id="wheel-monitor-fr">
+                            <div class="cont">
+                                <span class="data-title-inner">front right</span>
+                                <span class="data-input" id="wheel-fr-power">00%</span>
+                                <div class="wheel-monitor"></div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="cont">
+                        <div class="data" id="wheel-monitor-bl">
+                            <div class="cont">
+                                <span class="data-title-inner">back left</span>
+                                <span class="data-input" id="wheel-bl-power">00%</span>
+                                <div class="wheel-monitor"></div>
+                            </div>
+
+                        </div>
+                        <div class="data" id="wheel-monitor-br">
+                            <div class="cont">
+                                <span class="data-title-inner">back right</span>
+                                <span class="data-input" id="wheel-br-power">00%</span>
+                                <div class="wheel-monitor"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="data-title">Stop Transmission</div>
+                <div class="data">
+                    <div class="data-title-inner">end all web app systems</div>
+                    <div class="cont">
+                        
+                        <button class="button-single" id="stop-all">stop</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="gnss-cont">
+            <div class="data-cont" style="width: 100%; margin-bottom: 1%;">
+                <div class="data-title">
+                    GNSS Information
+                </div>
+                <div class="cont">
+
+                    <div id="compass">
+                        <div id="arrow-cont">
+
+                            <div id="compass-arrow"></div>
+                        </div>
+                        <div id="north-arrow"></div>
+                        <div id="south-arrow"></div>
+
+                    </div>
+
+                    <div style="display: block; width: 60%;" id="beside-compass">
+                        <div class="data">
+                            <span class="data-title-inner">Speed</span>
+                            <span class="data-input" id="speed-value">placeholder</span>
+                        </div>
+                        <div class="data">
+                            <span class="data-title-inner">Latitude</span>
+                            <span class="data-input" id="latitude-value"
+                                style="float: right; margin-right: 8px;">00.00</span>
+
+                            <br>
+
+                            <span class="data-title-inner">Longitude</span>
+                            <span class="data-input" id="longitude-value"
+                                style="float: right; margin-right: 8px;">00.00</span>
+                            <br>
+
+                            <span class="data-title-inner">Bearing</span>
+                            <span class="data-input" id="bearing-value"
+                                style="float: right; margin-right: 8px;">00.00</span>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="data">
+                    <span class="data-title-inner">Distance to next waypoint</span>
+                    <span class="data-input" id="distance-value" style="float: right; margin-right: 8px;">00.00</span>
+
+                    <br>
+
+                    <span class="data-title-inner">Latitude of next waypoint</span>
+                    <span class="data-input" id="next-waypoint-lat"
+                        style="float: right; margin-right: 8px;">00.00</span>
+                    <br>
+
+                    <span class="data-title-inner">Longitude of next waypoint</span>
+                    <span class="data-input" id="next-waypoint-lng"
+                        style="float: right; margin-right: 8px;">00.00</span>
+                </div>
+
+                <div class="data">
+                    <span class="data-title-inner">Current Route</span>
+                    <span class="data-input" id="current-route" style="float: right; margin-right: 8px;">0</span>
+                    <br>
+                    <span class="data-title-inner">Following</span>
+                    <span class="data-input" id="following" style="float: right; margin-right: 8px;">false</span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div id="lower-cont">
+        <div class="data-cont" style="width: 30%; margin-bottom: 1%; height: 210px;">
+            <div class="data-title">Control Settings</div>
+            <div class="cont">
+                <div class="data" id="sensitivity">
+                    <span class="data-title-inner">sensitivity:</span>
+                    <span class="data-input">fine</span>
+                    <div class="cont" style="justify-content: center;">
+                        <button class="toggle-three" id="sensitivity-ultra">ultra</button>
+                        <button class="toggle-three" id="sensitivity-fine">fine</button>
+                        <button class="toggle-three" id="sensitivity-coarse">coarse</button>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="cont">
+                <div class="data" id="arm-toggle">
+                    <span class="data-title-inner">drive mode:</span>
+                    <span class="data-input">drive</span>
+                    <div class="cont" style="justify-content: center;">
+                        <button class="toggle-two" id="set-mode-drive">drive</button>
+                        <button class="toggle-two" id="set-mode-arm">arm</button>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="data" id="light-toggle" style="width: 93%;">
+                <span class="data-title-inner" style="margin-left: 3%;">toggle lights:</span>
+                <span class="data-input">on</span>
+                <div class="cont" style="justify-content: center;">
+                    <button class="toggle-two" id="light-on">on</button>
+                    <button class="toggle-two" id="light-off">off</button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="data-cont" style="width: 30%; margin-bottom: 1%; height:210px;">
+            <div class="data-title">Camera Servo Control</div>
+
+            <div class="data" id="camera-servo-front">
+                <div class="servo-header">
+                    <span class="data-title-inner">front cam position</span>
+                    <span class="data-input">centre</span>
+                </div>
+                <div class="cont servo-buttons">
+                    <button class="toggle-three" position="left">left</button>
+                    <button class="toggle-three" position="centre">centre</button>
+                    <button class="toggle-three" position="right">right</button>
+                </div>
+            </div>
+            <div class="data" id="camera-servo-arm">
+                <div class="servo-header">
+                    <span class="data-title-inner">arm cam position</span>
+                    <span class="data-input">centre</span>
+                </div>
+                <div class="cont servo-buttons">
+                    <button class="toggle-three" position="left">left</button>
+                    <button class="toggle-three" position="centre">centre</button>
+                    <button class="toggle-three" position="right">right</button>
+                </div>
+            </div>
+            <div class="data" id="camera-servo-left">
+                <div class="servo-header">
+                    <span class="data-title-inner">left cam position</span>
+                    <span class="data-input">centre</span>
+                </div>
+                <div class="cont servo-buttons">
+                    <button class="toggle-three" position="left">left</button>
+                    <button class="toggle-three" position="centre">centre</button>
+                    <button class="toggle-three" position="right">right</button>
+                </div>
+
+            </div>
+        </div>
+        <div class="data-cont" id="pos-cont" style="width: 37.5%; margin-bottom: 1%; height: 210px">
+            <div class="data-title">Arm Control</div>
+
+            <div class="slide-container">
+                <span class="data-title-inner">hand position</span>
+                <span class="data-input" id="hand-pos-value">50%</span>
+                <input type="range" min="0" max="100" value="50" class="slider" id="hand-pos-slider">
+            </div>
+
+            <div class="slide-container">
+                <span class="data-title-inner">arm position</span>
+                <span class="data-input" id="arm-pos-value">50%</span>
+                <input type="range" min="0" max="100" value="50" class="slider" id="arm-pos-slider">
+            </div>
+
+
+        </div>
+
+    </div>
+
+</body>

@@ -12,6 +12,7 @@ class DashboardHelperNode(Node):
         super().__init__('dashboard_helper')
         
         # define processes: key -> display_name, cmd_args, pgrep_pattern
+        # define processes: key -> display_name, cmd_args, pgrep_pattern
         self.processes = {
             "tf_republisher": {
                 "name": "TF Web Republisher",
@@ -21,6 +22,7 @@ class DashboardHelperNode(Node):
             },
             "state_publisher": {
                 "name": "Robot State Publisher",
+                "cmd": ["ros2", "launch", "rover_description", "view_robot.launch.py", "use_rviz:=false"],
                 "cmd": ["ros2", "launch", "rover_description", "view_robot.launch.py", "use_rviz:=false"],
                 "pattern": "view_robot.launch.py",
                 "proc": None
@@ -35,15 +37,19 @@ class DashboardHelperNode(Node):
                 "name": "Drive Node (Manual/Joystick)",
                 "cmd": ["ros2", "run", "drive_package", "drive_node"],
                 "pattern": "drive_package/drive_node",
+                "pattern": "drive_package/drive_node",
                 "proc": None
             },
             "vesc_driver": {
                 "name": "VESC BLDC Wheel Driver",
                 "cmd": ["ros2", "run", "drive_package", "vesc_can_driver_node", "--ros-args", "-p", "fl_can_id:=53", "-p", "fr_can_id:=44", "-p", "rl_can_id:=48", "-p", "rr_can_id:=7"],
                 "pattern": "vesc_can_driver_node",
+                "cmd": ["ros2", "run", "drive_package", "vesc_can_driver_node", "--ros-args", "-p", "fl_can_id:=53", "-p", "fr_can_id:=44", "-p", "rl_can_id:=48", "-p", "rr_can_id:=7"],
+                "pattern": "vesc_can_driver_node",
                 "proc": None
             },
             "arm_stepper_driver": {
+                "name": "Arm & Gripper Steppers (DM556Y)",
                 "name": "Arm & Gripper Steppers (DM556Y)",
                 "cmd": ["ros2", "run", "arm_controller", "arm_stepper_driver"],
                 "pattern": "arm_stepper_driver",
@@ -199,6 +205,9 @@ class DashboardHelperNode(Node):
                         full_cmd,
                         stdout=log_file,
                         stderr=log_file,
+                        full_cmd,
+                        stdout=log_file,
+                        stderr=log_file,
                         preexec_fn=os.setsid
                     )
                     proc_info["proc"] = proc
@@ -250,6 +259,22 @@ class DashboardHelperNode(Node):
                 self.status_pub.publish(msg)
         except Exception as e:
             pass
+        if not rclpy.ok():
+            return
+        try:
+            status_dict = {}
+            for key, info in self.processes.items():
+                status_dict[key] = {
+                    "name": info["name"],
+                    "running": self.is_running(info["pattern"])
+                }
+            
+            msg = String()
+            msg.data = json.dumps(status_dict)
+            if rclpy.ok():
+                self.status_pub.publish(msg)
+        except Exception as e:
+            pass
 
     def destroy_node(self):
         # Clean up any child processes on exit
@@ -267,8 +292,15 @@ def main(args=None):
     try:
         rclpy.spin(node)
     except (KeyboardInterrupt, BaseException):
+    except (KeyboardInterrupt, BaseException):
         pass
     finally:
+        try:
+            node.destroy_node()
+        except Exception:
+            pass
+        if rclpy.ok():
+            rclpy.shutdown()
         try:
             node.destroy_node()
         except Exception:

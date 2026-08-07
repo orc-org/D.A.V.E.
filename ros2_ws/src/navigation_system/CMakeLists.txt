@@ -9,9 +9,15 @@ endif()
 get_filename_component(ROS2_WS "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 list(APPEND CMAKE_PREFIX_PATH "${ROS2_WS}/install")
 
+# Resolve the workspace root so CMake can find built/installed packages
+get_filename_component(ROS2_WS "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+list(APPEND CMAKE_PREFIX_PATH "${ROS2_WS}/install")
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action)
+find_package(rclcpp_components)
 find_package(rclcpp_action)
 find_package(rclcpp_components)
 find_package(navigation_interfaces REQUIRED)
@@ -45,6 +51,10 @@ install(TARGETS
   NAVnode
   DESTINATION lib/${PROJECT_NAME})
 
+install(PROGRAMS
+  src/gps_bridge_node.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 install(PROGRAMS
   src/gps_bridge_node.py
   DESTINATION lib/${PROJECT_NAME}
