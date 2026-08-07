@@ -2687,10 +2687,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnImuStatus = document.getElementById('btn-imu-status');
     const btnImuResetFilter = document.getElementById('btn-imu-reset-filter');
     const btnImuGetState = document.getElementById('btn-imu-get-state');
+    const btnImuCalibrateAll = document.getElementById('btn-imu-calibrate-all');
 
     const btnCalibrateNorth = document.getElementById('btn-calibrate-north');
+    const btnCalibrateAll = document.getElementById('btn-calibrate-all');
     if (btnCalibrateNorth) btnCalibrateNorth.addEventListener('click', callIMUCalibrate);
+    if (btnCalibrateAll) btnCalibrateAll.addEventListener('click', callIMUCalibrateAll);
     if (btnImuCalibrate) btnImuCalibrate.addEventListener('click', callIMUCalibrate);
+    if (btnImuCalibrateAll) btnImuCalibrateAll.addEventListener('click', callIMUCalibrateAll);
     if (btnImuTogglePub) btnImuTogglePub.addEventListener('click', callIMUTogglePublishing);
     if (btnImuStatus) btnImuStatus.addEventListener('click', callIMUGetStatus);
     if (btnImuResetFilter) btnImuResetFilter.addEventListener('click', callIMUResetFilter);
@@ -2867,6 +2871,25 @@ function callIMUCalibrate() {
         }
     }, (error) => {
         logIMUServiceResponse("Calibrate", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUCalibrateAll() {
+    if (!ros) {
+        logIMUServiceResponse("Calibrate All", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_telemetry/calibrate_all',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Calibrate All", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Calibrate All", false, `Service Error: ${error}`);
     });
 }
 

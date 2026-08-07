@@ -83,7 +83,11 @@ class TelemetryNode(Node):
         self.last_valid_accel = (0.0, 0.0, 9.81)
         self.last_valid_gyro = (0.0, 0.0, 0.0)
         self.last_valid_quat = (0.0, 0.0, 0.0, 1.0)
+        self.roll_offset_deg = 0.0
+        self.pitch_offset_deg = 0.0
         self.yaw_offset_deg = 0.0
+        self.last_raw_roll = 0.0
+        self.last_raw_pitch = 0.0
         self.last_raw_yaw = 0.0
 
         # publishers
@@ -93,6 +97,7 @@ class TelemetryNode(Node):
 
         # services
         self.srv_calibrate = self.create_service(Trigger, '~/calibrate', self.handle_calibrate)
+        self.srv_calibrate_all = self.create_service(Trigger, '~/calibrate_all', self.handle_calibrate_all)
         self.srv_enable = self.create_service(SetBool, '~/enable_publishing', self.handle_enable_publishing)
         self.srv_status = self.create_service(Trigger, '~/get_status', self.handle_get_status)
 
@@ -193,9 +198,13 @@ class TelemetryNode(Node):
 
         accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, quat_i, quat_j, quat_k, quat_real = self.read_sensor_data()
         roll, pitch, raw_yaw = quaternion_to_euler_deg(quat_i, quat_j, quat_k, quat_real)
+        self.last_raw_roll = roll
+        self.last_raw_pitch = pitch
         self.last_raw_yaw = raw_yaw
 
-        # Apply True North Tare Offset
+        # Apply Tare Offsets
+        roll = ((roll - self.roll_offset_deg + 180.0) % 360.0) - 180.0
+        pitch = ((pitch - self.pitch_offset_deg + 180.0) % 360.0) - 180.0
         yaw = ((raw_yaw - self.yaw_offset_deg + 180.0) % 360.0) - 180.0
 
         now = self.get_clock().now().to_msg()
@@ -255,8 +264,8 @@ class TelemetryNode(Node):
             f"  Angular Velocity (rad/s):\n"
             f"    X: {gyro_x:8.3f} | Y: {gyro_y:8.3f} | Z: {gyro_z:8.3f}\n\n"
             f"  Orientation (Euler Degrees):\n"
-            f"    Roll : {roll:7.2f}°\n"
-            f"    Pitch: {pitch:7.2f}°\n"
+            f"    Roll : {roll:7.2f}° (Tare: {self.roll_offset_deg:+.2f}°)\n"
+            f"    Pitch: {pitch:7.2f}° (Tare: {self.pitch_offset_deg:+.2f}°)\n"
             f"    Yaw  : {yaw:7.2f}° (Tare: {self.yaw_offset_deg:+.2f}°)\n"
         )
         str_msg = String()
@@ -272,6 +281,18 @@ class TelemetryNode(Node):
         )
         response.success = True
         response.message = f"True North Calibrated! Current heading set to 0.0° North (Tare offset: {self.yaw_offset_deg:.2f}°)."
+        return response
+
+    def handle_calibrate_all(self, request, response):
+        """service callback to calibrate/tare roll, pitch, and yaw to 0.0 deg."""
+        self.roll_offset_deg = self.last_raw_roll
+        self.pitch_offset_deg = self.last_raw_pitch
+        self.yaw_offset_deg = self.last_raw_yaw
+        self.get_logger().info(
+            f"All Orientation Calibrated via service. Offsets: Roll: {self.roll_offset_deg:.2f}°, Pitch: {self.pitch_offset_deg:.2f}°, Yaw: {self.yaw_offset_deg:.2f}°."
+        )
+        response.success = True
+        response.message = f"Orientation Calibrated! All set to 0.0°."
         return response
 
     def handle_enable_publishing(self, request, response):
