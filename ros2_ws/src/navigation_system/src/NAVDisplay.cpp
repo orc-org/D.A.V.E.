@@ -428,9 +428,9 @@ public:
                     "Better to have it and not need it, than need it and not have it" - Rick Yansey
                 */
                 if(IsKeyPressed(KEY_LEFT))
-                    goToNextWaypoint();
+                    targetNextWaypoint();
                 else if(IsKeyPressed(KEY_RIGHT))
-                    goToPreviousWaypoint();
+                    targetPreviousWaypoint();
 
 
 
@@ -753,14 +753,6 @@ public:
             case data.GEODETIC : preference = geodetic; break;
             case data.EARTH_CENTRED : preference = earthCentred; break;
         }
-    }
-
-    void goToNextWaypoint(){
-
-    }
-
-    void goToPreviousWaypoint(){
-
     }
 
     void clearRoute(){

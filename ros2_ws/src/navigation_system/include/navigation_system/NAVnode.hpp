@@ -178,6 +178,9 @@ private:
     rclcpp::Service<RemoveLast>::SharedPtr RemoveLastWaypointServer;
     rclcpp::Service<RemoveLast>::SharedPtr RemoveLastObstacleServer;
 
+    rclcpp::Service<VoidService>::SharedPtr NextWaypointService;
+    rclcpp::Service<VoidService>::SharedPtr PreviousWaypointService;
+
     rclcpp::Service<SendToGNSS>::SharedPtr   SendToGNSSServer;
     rclcpp::Service<ReadFromGNSS>::SharedPtr ReadFromGNSSServer;
 
