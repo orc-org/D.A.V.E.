@@ -15,6 +15,7 @@
 #include "enigma_machine_interfaces/srv/set_message.hpp"
 #include "enigma_machine_interfaces/action/decode.hpp"
 #include "enigma_machine_interfaces/action/encode.hpp"
+#include <std_srvs/srv/trigger.hpp>
 #include <std_msgs/msg/string.hpp>
 
 using namespace std;
@@ -166,6 +167,7 @@ rclcpp_action::Server<enigma_machine_interfaces::action::Decode>::SharedPtr deco
 rclcpp_action::Server<enigma_machine_interfaces::action::Encode>::SharedPtr encode_action_server_;
 rclcpp::Service<enigma_machine_interfaces::srv::GetPassword>::SharedPtr get_password_srv_;
 rclcpp::Service<enigma_machine_interfaces::srv::SetMessage>::SharedPtr set_message_srv_;
+rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr transmit_cached_srv_;
 rclcpp::Subscription<enigma_machine_interfaces::msg::Morse>::SharedPtr morse_sub_;
 rclcpp::Publisher<std_msgs::msg::String>::SharedPtr morse_command_pub_;
 
@@ -189,6 +191,12 @@ public:
         set_message_srv_ = this->create_service<enigma_machine_interfaces::srv::SetMessage>(
             "set_message",
             std::bind(&EnigmaMachine::handleSetMessage, this, std::placeholders::_1, std::placeholders::_2)
+        );
+
+        // Transmit cached message service
+        transmit_cached_srv_ = this->create_service<std_srvs::srv::Trigger>(
+            "transmit_cached",
+            std::bind(&EnigmaMachine::handleTransmitCached, this, std::placeholders::_1, std::placeholders::_2)
         );
 
         // Action servers
@@ -271,6 +279,17 @@ public:
         message = request->message;
         morseMessage = encode(message);
         RCLCPP_INFO(this->get_logger(), "Message set to '%s' | Encoded: %s", message.c_str(), morseMessage.c_str());
+    }
+
+    void handleTransmitCached(
+        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+        std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+    {
+        (void)request;
+        // Instead of blind publishing, return the plain text message to the dashboard
+        // so it can send the English string to the Arduino (which does its own encoding!)
+        response->success = true;
+        response->message = message;
     }
 
     // Subscription

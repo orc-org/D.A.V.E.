@@ -1976,6 +1976,51 @@ if (cam2Toggle) {
     });
 }
 
+// XLR / Serial UI interactions
+const btnSerialConverse = document.getElementById('btn-serial-converse');
+const btnSerialTransmit = document.getElementById('btn-serial-transmit');
+const inputSerialOutgoing = document.getElementById('serial-outgoing-input');
+const preSerialConsole = document.getElementById('serial-console-log');
+
+function callSerialService(serviceName, serviceType, requestData, callback, errCallback) {
+    if (!connected || !ros) {
+        if (errCallback) errCallback("Not connected to ROS.");
+        else if (preSerialConsole) preSerialConsole.innerText = "Error: Not connected to ROS.";
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: serviceName,
+        serviceType: serviceType
+    });
+    const request = new ROSLIB.ServiceRequest(requestData);
+    service.callService(request, callback, (error) => {
+        if (errCallback) errCallback(error);
+        else if (preSerialConsole) preSerialConsole.innerText = "Service Error: " + error;
+    });
+}
+
+if (btnSerialConverse && inputSerialOutgoing && preSerialConsole) {
+    btnSerialConverse.addEventListener('click', () => {
+        const outStr = inputSerialOutgoing.value;
+        preSerialConsole.innerText = `[Sending Converse]: ${outStr}\n[Awaiting reply...]`;
+        callSerialService('/Converse', 'serial_interfaces/srv/Converse', { outgoing: outStr }, (result) => {
+            preSerialConsole.innerText = `[Received]: ${result.incoming}`;
+        });
+    });
+}
+
+if (btnSerialTransmit && inputSerialOutgoing && preSerialConsole) {
+    btnSerialTransmit.addEventListener('click', () => {
+        const outStr = inputSerialOutgoing.value;
+        preSerialConsole.innerText = `[Transmitting]: ${outStr}`;
+        callSerialService('/Transmit', 'serial_interfaces/srv/Transmit', { outgoing: outStr }, (result) => {
+            preSerialConsole.innerText += `\n[Transmit OK]`;
+        });
+    });
+}
+
+
 // click listener to collapse/expand diagnostics log panel
 const diagConsole = document.getElementById('diagnostic-console');
 const diagHeader = document.getElementById('diag-header');
@@ -3313,6 +3358,40 @@ function setAndEncodeMessage() {
     });
 }
 
+function transmitCachedMessage() {
+    if (!connected || !ros) {
+        logMorseConsole("[Error] Not connected to ROS 2 bridge.");
+        return;
+    }
+
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/transmit_cached',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+
+    const request = new ROSLIB.ServiceRequest({});
+
+    logMorseConsole(`Fetching cached Morse message to send to Arduino...`);
+    service.callService(request, (result) => {
+        if(result.success) {
+            const morseStr = result.message;
+            logMorseConsole(`[Fetched] '${morseStr}'. Sending to Arduino...`);
+            
+            // Call the MorseBridge /morse_converse service to get Arduino feedback
+            callSerialService('/morse_converse', 'serial_interfaces/srv/Converse', { outgoing: morseStr + '\n' }, (convResult) => {
+                logMorseConsole(`[Arduino Feedback]: ${convResult.incoming}`);
+            }, (err) => {
+                logMorseConsole(`[Arduino Error]: ${err}`);
+            });
+        } else {
+            logMorseConsole(`[Error] Failed to fetch.`);
+        }
+    }, (error) => {
+        logMorseConsole(`[Service Error] ${error}`);
+    });
+}
+
 function logMorseConsole(text) {
     const logEl = document.getElementById('morse-console-log');
     if (!logEl) return;
@@ -3361,6 +3440,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSetMsg = document.getElementById('btn-morse-set-message');
     if (btnSetMsg) {
         btnSetMsg.addEventListener('click', setAndEncodeMessage);
+    }
+
+    const btnTransmitCached = document.getElementById('btn-morse-transmit-cached');
+    if (btnTransmitCached) {
+        btnTransmitCached.addEventListener('click', transmitCachedMessage);
     }
 
     const btnSimulate = document.getElementById('btn-morse-simulate');

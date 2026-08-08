@@ -31,7 +31,7 @@ add_executable(morse_bridge_node
   src/MorseBridgeNode.cpp
   src/SerialPort.cpp
 )
-ament_target_dependencies(morse_bridge_node rclcpp std_msgs)
+ament_target_dependencies(morse_bridge_node rclcpp std_msgs serial_interfaces)
 
 target_include_directories(morse_bridge_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/serial_communication>

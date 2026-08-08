@@ -592,12 +592,31 @@
                     <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; background: rgba(0,0,0,0.2); display: flex; gap: 12px; align-items: center;">
                         <input type="text" id="input-morse-message" placeholder="Enter message to encode (e.g. 'HEIST PASS')..." style="flex: 1; background: #000; border: 1px solid var(--border-color); border-radius: 4px; padding: 8px 12px; color: var(--text-main); font-family: monospace; font-size: 0.8rem;">
                         <button id="btn-morse-set-message" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 16px; white-space: nowrap;">ENCODE & SET MESSAGE</button>
+                        <button id="btn-morse-transmit-cached" class="neon-btn-green" style="font-size: 0.75rem; padding: 8px 16px; white-space: nowrap;">SEND TO ARDUINO</button>
                     </div>
 
                     <!-- Response Console -->
                     <div>
                         <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted);">ENIGMA SERVICE & ACTION LOG:</span>
                         <pre id="morse-console-log" style="background: #000; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.75rem; color: var(--accent-green); max-height: 90px; overflow-y: auto; margin-top: 4px; white-space: pre-wrap;">[Enigma Machine Console Ready]</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Serial Terminal Section -->
+            <section class="viewport-section glass-panel" id="serial-terminal-section" style="margin-bottom: 20px;">
+                <div class="section-header">
+                    <h2 class="section-title"><span class="icon">🔌</span>XLR/Serial Terminal</h2>
+                </div>
+                <div class="section-content" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="serial-outgoing-input" class="modern-input" placeholder="Enter command to send..." style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color);">
+                        <button class="neon-btn-blue" id="btn-serial-converse" style="padding: 8px 16px;">CONVERSE</button>
+                        <button class="neon-btn-red" id="btn-serial-transmit" style="padding: 8px 16px;">TX ONLY</button>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted);">SERIAL INCOMING:</span>
+                        <pre id="serial-console-log" style="background: #000; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.75rem; color: var(--accent-green); height: 60px; overflow-y: auto; margin-top: 4px; white-space: pre-wrap;">[Awaiting response...]</pre>
                     </div>
                 </div>
             </section>
