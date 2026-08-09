@@ -281,7 +281,7 @@ function setupROSInterfaces() {
     gripperStateSub.subscribe((msg) => {
         const progress = msg.data;
         if (valGripper) {
-            valGripper.innerText = `${((1.0 - progress) * 0.2).toFixed(3)} m (${(progress * 100).toFixed(0)}% CLOSED)`;
+            valGripper.innerText = `${progress.toFixed(3)} pos`;
         }
         
         const slider = document.getElementById('slider-gripper');
@@ -1184,13 +1184,13 @@ function sendGripperCommand(position) {
     });
 
     goal.on('feedback', (feedback) => {
-        valGripper.innerText = `${((1.0 - feedback.progress) * 0.2).toFixed(3)} m (${(feedback.progress * 100).toFixed(0)}% CLOSED)`;
+        valGripper.innerText = `${feedback.progress.toFixed(3)} pos`;
     });
 
     goal.on('result', (result) => {
         if (result.success) {
             console.log('Gripper command succeeded.');
-            valGripper.innerText = position === 1.0 ? "0.000 m (CLOSED)" : "0.200 m (OPEN)";
+            valGripper.innerText = `${position.toFixed(3)} pos`;
         }
     });
 
