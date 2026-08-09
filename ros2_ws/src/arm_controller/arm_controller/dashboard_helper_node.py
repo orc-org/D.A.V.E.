@@ -49,6 +49,12 @@ class DashboardHelperNode(Node):
                 "pattern": "arm_stepper_driver",
                 "proc": None
             },
+            "arm_stepper_arduino_driver": {
+                "name": "Arm & Gripper Steppers (Arduino Serial)",
+                "cmd": ["ros2", "run", "arm_controller", "arm_stepper_arduino_driver"],
+                "pattern": "arm_stepper_arduino_driver",
+                "proc": None
+            },
             "battery_monitor": {
                 "name": "PowerQueen BMS Monitor (Bluetooth)",
                 "cmd": ["ros2", "run", "arm_controller", "battery_monitor", "--ros-args", "-p", "mac_address:=C8:47:80:54:35:AE"],

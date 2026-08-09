@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'motion_coordinator = arm_controller.motion_coordinator_node:main',
             'arm_stepper_driver = arm_controller.arm_stepper_driver_node:main',
+            'arm_stepper_arduino_driver = arm_controller.arm_stepper_arduino_driver_node:main',
             'dashboard_helper = arm_controller.dashboard_helper_node:main',
             'battery_monitor = arm_controller.battery_monitor_node:main',
         ],

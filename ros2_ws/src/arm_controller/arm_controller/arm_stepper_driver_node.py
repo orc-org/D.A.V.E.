@@ -41,10 +41,8 @@ class DM556YHardwareDriver:
             if self.enable_pin is not None:
                 GPIO.setup(self.enable_pin, GPIO.OUT, initial=GPIO.HIGH if self.active_low else GPIO.LOW)
             
-            # Instantiate single persistent PWM object once on startup
-            freq = int(max(100, min(200000, self.step_freq_hz)))
-            self.pwm = GPIO.PWM(self.step_pin, freq)
-            self.pwm.start(0)  # 0% duty cycle (Solid 0.0V DC when idle)
+            # Set initial step pin output to LOW (Off / Idle state)
+            GPIO.output(self.step_pin, GPIO.LOW)
             
             # Explicitly drive direction pin to solid 3.3V HIGH on startup
             GPIO.output(self.dir_pin, GPIO.HIGH)
@@ -70,27 +68,27 @@ class DM556YHardwareDriver:
                 time.sleep(self.dir_setup_s)
 
     def start_pwm(self, forward: bool, freq_hz: float = None):
-        """Starts PWM signal generation by setting 50% duty cycle"""
-        if not self.hardware_active or self.pwm is None:
+        """Drives step_pin to digital HIGH to signal motion trigger to Arduino slave driver"""
+        if not self.hardware_active:
             return
-        freq = int(freq_hz if freq_hz is not None else self.step_freq_hz)
-        freq = max(100, min(200000, freq))
         
         self.set_direction(forward)
         
         if not self.is_pwm_running:
             try:
-                self.pwm.ChangeFrequency(freq)
-                self.pwm.ChangeDutyCycle(50)  # 50% duty cycle square wave
+                # Set step pin output to digital HIGH (Motion Active)
+                step_active_state = GPIO.LOW if self.active_low else GPIO.HIGH
+                GPIO.output(self.step_pin, step_active_state)
                 self.is_pwm_running = True
             except Exception:
                 pass
 
     def stop_pwm(self):
-        """Stops PWM signal generation by setting 0% duty cycle (Solid 0.0V DC)"""
-        if self.pwm is not None:
+        """Drives step_pin to digital LOW (0.0V DC) to stop Arduino step pulse generator"""
+        if self.hardware_active and self.is_pwm_running:
             try:
-                self.pwm.ChangeDutyCycle(0)  # Always force 0% duty cycle (Solid 0.0V DC)
+                step_idle_state = GPIO.HIGH if self.active_low else GPIO.LOW
+                GPIO.output(self.step_pin, step_idle_state)
             except Exception:
                 pass
             self.is_pwm_running = False
