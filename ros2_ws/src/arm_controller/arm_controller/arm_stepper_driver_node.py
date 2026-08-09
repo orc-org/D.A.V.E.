@@ -101,6 +101,17 @@ class DM556YHardwareDriver:
             else:
                 GPIO.output(self.enable_pin, GPIO.LOW if enable else GPIO.HIGH)
 
+    def shutdown_pins_low(self):
+        """Forces step, dir, and enable pins to solid 0.0V LOW (0V DC) output"""
+        if self.hardware_active:
+            try:
+                GPIO.output(self.step_pin, GPIO.LOW)
+                GPIO.output(self.dir_pin, GPIO.LOW)
+                if self.enable_pin is not None:
+                    GPIO.output(self.enable_pin, GPIO.LOW)
+            except Exception:
+                pass
+
 
 class ArmStepperDriverNode(Node):
     def __init__(self):
@@ -385,20 +396,22 @@ class ArmStepperDriverNode(Node):
     def destroy_node(self):
         if self.hardware_initialized:
             try:
-                self.arm_hw.stop_pwm()
-                self.gripper_hw.stop_pwm()
-                self.arm_hw.set_enable(False)
-                self.gripper_hw.set_enable(False)
+                # Force all STEP, DIR, and ENABLE GPIO pins to solid 0.0V LOW output
+                self.arm_hw.shutdown_pins_low()
+                self.gripper_hw.shutdown_pins_low()
+                time.sleep(0.01)  # Short 10ms delay for electrical levels to settle
                 GPIO.cleanup()
             except Exception:
                 pass
+        super().destroy_node()
+
 
 def main(args=None):
     rclpy.init(args=args)
     node = ArmStepperDriverNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except Exception:
         pass
     finally:
         node.destroy_node()
