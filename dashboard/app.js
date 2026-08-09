@@ -279,9 +279,9 @@ function setupROSInterfaces() {
         messageType: 'std_msgs/msg/Float32'
     });
     gripperStateSub.subscribe((msg) => {
-        const progress = msg.data;
+        const stepVal = Math.round(msg.data);
         if (valGripper) {
-            valGripper.innerText = `${progress.toFixed(3)} pos`;
+            valGripper.innerText = `${stepVal} steps`;
         }
         
         const slider = document.getElementById('slider-gripper');
@@ -289,12 +289,12 @@ function setupROSInterfaces() {
         const isSliderActive = slider && document.activeElement === slider;
         
         if (!isSliderActive) {
-            currentGripperTarget = progress;
+            currentGripperTarget = stepVal;
             if (slider) {
-                slider.value = progress;
+                slider.value = stepVal;
             }
             if (lbl) {
-                lbl.innerText = progress.toFixed(2);
+                lbl.innerText = `${stepVal} steps`;
             }
         }
     });
@@ -1267,10 +1267,10 @@ const gripperSlider = document.getElementById('slider-gripper');
 const gripperSliderLbl = document.getElementById('lbl-gripper-val');
 if (gripperSlider) {
     gripperSlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
+        const val = Math.round(parseFloat(e.target.value));
         currentGripperTarget = val;
         if (gripperSliderLbl) {
-            gripperSliderLbl.innerText = val.toFixed(2);
+            gripperSliderLbl.innerText = `${val} steps`;
         }
         publishGripperTarget(val);
     });

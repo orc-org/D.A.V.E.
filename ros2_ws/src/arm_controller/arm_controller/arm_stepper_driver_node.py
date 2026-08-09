@@ -221,14 +221,9 @@ class ArmStepperDriverNode(Node):
         self.current_arm_step = 0
         self.target_arm_step = 0
 
-        # Assuming the gripper starts fully OPEN (0.0)
-        self.target_gripper_pos = 0.0   # 0.0 = open, 1.0 = closed
-        self.current_gripper_pos = 0.0
-        
-        # 0.0 (open) mathematically equals 40,000 steps (0.2m * 200,000 steps/m)
-        # 1.0 (closed) mathematically equals 0 steps
-        self.current_gripper_step = int(0.2 * self.gripper_steps_per_m)
-        self.target_gripper_step = self.current_gripper_step
+        # Gripper step tracking
+        self.current_gripper_step = 0
+        self.target_gripper_step = 0
 
         self.last_control_time = time.time()
         self.last_log_time = 0.0
@@ -257,7 +252,7 @@ class ArmStepperDriverNode(Node):
 
     def publish_gripper_state(self):
         state_msg = Float32()
-        state_msg.data = float(self.current_gripper_pos)
+        state_msg.data = float(self.current_gripper_step)
         self.gripper_state_pub.publish(state_msg)
 
     def manual_vel_callback(self, msg):
@@ -278,9 +273,7 @@ class ArmStepperDriverNode(Node):
             self.target_arm_step = int(self.target_arm_angle * self.arm_steps_per_rad)
 
     def gripper_target_callback(self, msg):
-        self.target_gripper_pos = msg.data
-        finger_linear_pos = (1.0 - self.target_gripper_pos) * 0.2
-        self.target_gripper_step = int(finger_linear_pos * self.gripper_steps_per_m)
+        self.target_gripper_step = int(msg.data)
 
     def control_and_step_loop(self):
         now_time = time.time()
@@ -330,21 +323,13 @@ class ArmStepperDriverNode(Node):
 
         if is_gripper_manual_active:
             grip_step_dir = 1 if self.gripper_manual_vel_input > 0 else -1
-            pos_added = abs(self.gripper_manual_vel_input) * dt
-            proposed_pos = self.current_gripper_pos + (grip_step_dir * pos_added)
+            max_gripper_sec = self.gripper_max_vel * self.gripper_steps_per_m
+            steps_added = int(max_gripper_sec * dt)
+            steps_to_move = max(1, steps_added)
             
-            finger_linear_pos = (1.0 - proposed_pos) * 0.2
-            proposed_step = int(finger_linear_pos * self.gripper_steps_per_m)
-            
-            if proposed_step != self.current_gripper_step:
-                self.gripper_hw.start_pwm(forward=(grip_step_dir > 0), freq_hz=self.gripper_step_freq_hz)
-            else:
-                self.gripper_hw.stop_pwm()
-                
-            self.current_gripper_step = proposed_step
-            self.current_gripper_pos = proposed_pos
+            self.current_gripper_step += grip_step_dir * steps_to_move
             self.target_gripper_step = self.current_gripper_step
-            self.target_gripper_pos = self.current_gripper_pos
+            self.gripper_hw.start_pwm(forward=(grip_step_dir > 0), freq_hz=self.gripper_step_freq_hz)
             self.publish_gripper_state()
         else:
             gripper_step_diff = self.target_gripper_step - self.current_gripper_step
@@ -356,9 +341,6 @@ class ArmStepperDriverNode(Node):
                 steps_added = int(max_gripper_sec * dt)
                 steps_to_move = min(abs(gripper_step_diff), max(1, steps_added))
                 self.current_gripper_step += step_dir * steps_to_move
-                
-                cur_linear = self.current_gripper_step / self.gripper_steps_per_m
-                self.current_gripper_pos = 1.0 - (cur_linear / 0.2)
                 self.publish_gripper_state()
             else:
                 self.gripper_hw.stop_pwm()
@@ -369,7 +351,7 @@ class ArmStepperDriverNode(Node):
             hw_str = f"HARDWARE PWM ({self.arm_step_freq_hz/1000:.0f}kHz)" if self.hardware_initialized else "SIMULATION"
             self.get_logger().info(
                 f'[{hw_str}] Arm: {self.current_arm_angle:.3f} rad ({self.current_arm_step}/{self.target_arm_step} steps) | '
-                f'Gripper: {self.current_gripper_pos:.2f} ({self.current_gripper_step}/{self.target_gripper_step} steps)'
+                f'Gripper: {self.current_gripper_step} steps'
             )
 
     def execute_gripper_goal(self, goal_handle):
