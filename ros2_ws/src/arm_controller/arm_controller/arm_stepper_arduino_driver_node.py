@@ -196,12 +196,15 @@ class ArmStepperArduinoDriverNode(Node):
         # ROS 2 Subscriptions & Publishers
         self.joint_sub = self.create_subscription(JointState, 'joint_states', self.joint_state_callback, 10)
         self.manual_vel_sub = self.create_subscription(Float32, '/arm_manual_vel', self.manual_vel_callback, 10)
+        self.gripper_manual_vel_sub = self.create_subscription(Float32, '/gripper_manual_vel', self.gripper_manual_vel_callback, 10)
         self.gripper_state_pub = self.create_publisher(Float32, '/gripper_state', 10)
         self.gripper_target_sub = self.create_subscription(Float32, '/gripper_target', self.gripper_target_callback, 10)
         self.gripper_action_server = ActionServer(self, GripperCommand, 'gripper_command', self.execute_gripper_goal)
 
         self.manual_vel_input = 0.0
         self.last_manual_vel_time = 0.0
+        self.gripper_manual_vel_input = 0.0
+        self.last_gripper_manual_vel_time = 0.0
 
         # 50Hz high-speed control loop
         self.control_timer = self.create_timer(0.02, self.control_and_step_loop)
@@ -221,14 +224,21 @@ class ArmStepperArduinoDriverNode(Node):
         self.manual_vel_input = msg.data
         self.last_manual_vel_time = time.time()
 
+    def gripper_manual_vel_callback(self, msg):
+        self.gripper_manual_vel_input = msg.data
+        self.last_gripper_manual_vel_time = time.time()
+
     def joint_state_callback(self, msg):
+        now_time = time.time()
+        if (now_time - self.last_manual_vel_time < 0.4) and (abs(self.manual_vel_input) > 0.01):
+            return
         if 'arm_joint' in msg.name:
             idx = msg.name.index('arm_joint')
             self.target_arm_angle = msg.position[idx]
             self.target_arm_step = int(self.target_arm_angle * self.arm_steps_per_rad)
 
     def gripper_target_callback(self, msg):
-        self.target_gripper_pos = max(0.0, min(1.0, msg.data))
+        self.target_gripper_pos = msg.data
         finger_linear_pos = (1.0 - self.target_gripper_pos) * 0.2
         self.target_gripper_step = int(finger_linear_pos * self.gripper_steps_per_m)
 
@@ -254,7 +264,6 @@ class ArmStepperArduinoDriverNode(Node):
 
             angle_added = abs(self.manual_vel_input) * dt
             proposed_angle = self.current_arm_angle + (step_dir * angle_added)
-            proposed_angle = max(-1.57079632679, min(1.57079632679, proposed_angle))
             proposed_step = int(proposed_angle * self.arm_steps_per_rad)
 
             if proposed_step != self.current_arm_step:
@@ -289,26 +298,52 @@ class ArmStepperArduinoDriverNode(Node):
                 arm_cmd_freq = 0.0
 
         # Process Gripper Stepper Motor
-        gripper_step_diff = self.target_gripper_step - self.current_gripper_step
-        if abs(gripper_step_diff) > 2:
-            step_dir = 1 if gripper_step_diff > 0 else -1
+        is_gripper_manual_active = (now_time - self.last_gripper_manual_vel_time < 0.4) and (abs(self.gripper_manual_vel_input) > 0.01)
+
+        if is_gripper_manual_active:
+            step_dir = 1 if self.gripper_manual_vel_input > 0 else -1
             if self.gripper_invert_dir:
                 step_dir = -step_dir
 
-            grip_cmd_dir = step_dir
-            grip_cmd_freq = self.gripper_step_freq_hz
+            pos_added = abs(self.gripper_manual_vel_input) * dt
+            proposed_pos = self.current_gripper_pos + (step_dir * pos_added)
 
-            max_gripper_sec = self.gripper_max_vel * self.gripper_steps_per_m
-            steps_added = int(max_gripper_sec * dt)
-            steps_to_move = min(abs(gripper_step_diff), max(1, steps_added))
-            self.current_gripper_step += (1 if gripper_step_diff > 0 else -1) * steps_to_move
+            finger_linear_pos = (1.0 - proposed_pos) * 0.2
+            proposed_step = int(finger_linear_pos * self.gripper_steps_per_m)
 
-            cur_linear = self.current_gripper_step / self.gripper_steps_per_m
-            self.current_gripper_pos = max(0.0, min(1.0, 1.0 - (cur_linear / 0.2)))
+            if proposed_step != self.current_gripper_step:
+                grip_cmd_dir = step_dir
+                grip_cmd_freq = self.gripper_step_freq_hz
+            else:
+                grip_cmd_dir = 0
+                grip_cmd_freq = 0.0
+
+            self.current_gripper_step = proposed_step
+            self.current_gripper_pos = proposed_pos
+            self.target_gripper_step = self.current_gripper_step
+            self.target_gripper_pos = self.current_gripper_pos
             self.publish_gripper_state()
         else:
-            grip_cmd_dir = 0
-            grip_cmd_freq = 0.0
+            gripper_step_diff = self.target_gripper_step - self.current_gripper_step
+            if abs(gripper_step_diff) > 2:
+                step_dir = 1 if gripper_step_diff > 0 else -1
+                if self.gripper_invert_dir:
+                    step_dir = -step_dir
+
+                grip_cmd_dir = step_dir
+                grip_cmd_freq = self.gripper_step_freq_hz
+
+                max_gripper_sec = self.gripper_max_vel * self.gripper_steps_per_m
+                steps_added = int(max_gripper_sec * dt)
+                steps_to_move = min(abs(gripper_step_diff), max(1, steps_added))
+                self.current_gripper_step += (1 if gripper_step_diff > 0 else -1) * steps_to_move
+
+                cur_linear = self.current_gripper_step / self.gripper_steps_per_m
+                self.current_gripper_pos = 1.0 - (cur_linear / 0.2)
+                self.publish_gripper_state()
+            else:
+                grip_cmd_dir = 0
+                grip_cmd_freq = 0.0
 
         # Send command frame over USB Serial to Arduino
         if self.use_hardware_serial:

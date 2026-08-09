@@ -7,6 +7,7 @@ let cmdVelPub = null;
 let armTargetPub = null;
 let autoModePub = null;
 let armManualVelPub = null;
+let gripperManualVelPub = null;
 let gripperTargetPub = null;
 let gripperActionClient = null;
 let lightsPub = null;
@@ -76,6 +77,7 @@ let currentGripperTarget = 0.0;
 let linearSpeed = 0.0;
 let angularSpeed = 0.0;
 let armManualVel = 0.0;
+let gripperManualVel = 0.0;
 let armUpBtnActive = false;
 let armDownBtnActive = false;
 let gripperOpenBtnActive = false;
@@ -236,6 +238,12 @@ function setupROSInterfaces() {
     armManualVelPub = new ROSLIB.Topic({
         ros: ros,
         name: '/arm_manual_vel',
+        messageType: 'std_msgs/msg/Float32'
+    });
+
+    gripperManualVelPub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/gripper_manual_vel',
         messageType: 'std_msgs/msg/Float32'
     });
 
@@ -513,6 +521,7 @@ function cleanupROSInterfaces() {
     armTargetPub = null;
     autoModePub = null;
     armManualVelPub = null;
+    gripperManualVelPub = null;
     gripperTargetPub = null;
     gripperActionClient = null;
 
@@ -869,8 +878,11 @@ function startControlLoopTimer() {
                 calculateManualArmVelocities();
             }
             
+            calculateManualGripperVelocities();
+            
             publishDriveCommand();
             publishArmManualCommand();
+            publishGripperManualCommand();
         }
     }, 100); // 10Hz
 }
@@ -888,11 +900,18 @@ function stopRoverMovement() {
     }
 
     armManualVel = 0.0;
+    gripperManualVel = 0.0;
     if (connected && armManualVelPub) {
         const msg = new ROSLIB.Message({
             data: 0.0
         });
         armManualVelPub.publish(msg);
+    }
+    if (connected && gripperManualVelPub) {
+        const msg = new ROSLIB.Message({
+            data: 0.0
+        });
+        gripperManualVelPub.publish(msg);
     }
 }
 
@@ -900,10 +919,10 @@ function calculateManualArmVelocities() {
     let speed = 0.0;
     // Q/PageUp moves arm UP, E/PageDown moves arm DOWN
     if (keysPressed['q'] || keysPressed['pageup'] || armUpBtnActive) {
-        speed -= 0.3; // Inverted sign so arm goes up
+        speed += 0.3; // Arm UP (Positive)
     }
     if (keysPressed['e'] || keysPressed['pagedown'] || armDownBtnActive) {
-        speed += 0.3; // Inverted sign so arm goes down
+        speed -= 0.3; // Arm DOWN (Negative)
     }
     armManualVel = speed;
 }
@@ -914,6 +933,27 @@ function publishArmManualCommand() {
             data: armManualVel
         });
         armManualVelPub.publish(msg);
+    }
+}
+
+function calculateManualGripperVelocities() {
+    let speed = 0.0;
+    // Z / Button Open moves gripper OPEN, C / Button Close moves gripper CLOSE
+    if (gripperOpenBtnActive || keysPressed['z']) {
+        speed += 0.5; // Gripper OPEN (Positive)
+    }
+    if (gripperCloseBtnActive || keysPressed['c']) {
+        speed -= 0.5; // Gripper CLOSE (Negative)
+    }
+    gripperManualVel = speed;
+}
+
+function publishGripperManualCommand() {
+    if (connected && gripperManualVelPub && !autoMode) {
+        const msg = new ROSLIB.Message({
+            data: gripperManualVel
+        });
+        gripperManualVelPub.publish(msg);
     }
 }
 

@@ -38,7 +38,7 @@ class MotionCoordinatorNode(Node):
         self.column = Component3D("Column", parent=self.base, offset_z=params['column_base_offset'], fixed=True)
         self.mount = Component3D("Mount", parent=self.column, offset_z=params['column_height'], fixed=True)
         self.wrist = Component3D("Wrist", parent=self.mount, offset_x=params['mount_length'], 
-                                 limit_x=(0,0), limit_y=(-90, 90), limit_z=(0,0))
+                                 limit_x=(0,0), limit_y=None, limit_z=(0,0))
         self.tool = Component3D("Tool Tip", parent=self.wrist, offset_x=params['arm_length'], fixed=True)
         
         self.declare_parameter('show_plot', False)

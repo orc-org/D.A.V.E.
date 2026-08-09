@@ -172,4 +172,3 @@ ros2 run rover_video_streamer video_streamer --camera-type csi --device 0 --host
 ```bash
 gst-launch-1.0 -v udpsrc port=5000 ! application/x-rtp,media=video,clock-rate=90000,encoding-name=JPEG,payload=26 ! rtpjpegdepay ! jpegdec ! videoconvert ! autovideosink sync=false
 ```
-
