@@ -703,22 +703,21 @@ function startGamepadUIInterval() {
             }
             
             let activeBtnText = "-";
-            let openPressed = false;
-            if ((gp.buttons[4] && gp.buttons[4].pressed) || (gp.buttons[2] && gp.buttons[2].pressed)) {
-                openPressed = true;
-            }
+            const lb = (gp.buttons[4] && gp.buttons[4].pressed);
+            const rb = (gp.buttons[5] && gp.buttons[5].pressed);
+            const lt = (gp.buttons[6] && gp.buttons[6].pressed);
+            const rt = (gp.buttons[7] && gp.buttons[7].pressed);
+            const btnX = (gp.buttons[2] && gp.buttons[2].pressed);
+            const btnA = (gp.buttons[0] && gp.buttons[0].pressed);
 
-            let closePressed = false;
-            if ((gp.buttons[5] && gp.buttons[5].pressed) || (gp.buttons[0] && gp.buttons[0].pressed)) {
-                closePressed = true;
-            }
+            let activeActions = [];
+            if (lb) activeActions.push("ARM UP");
+            if (rb) activeActions.push("ARM DOWN");
+            if (lt || btnX) activeActions.push("GRIP OPEN");
+            if (rt || btnA) activeActions.push("GRIP CLOSE");
 
-            if (openPressed && closePressed) {
-                activeBtnText = "OPEN & CLOSE";
-            } else if (openPressed) {
-                activeBtnText = "OPEN";
-            } else if (closePressed) {
-                activeBtnText = "CLOSE";
+            if (activeActions.length > 0) {
+                activeBtnText = activeActions.join(" | ");
             }
             
             if (gamepadValBtns) {
@@ -803,64 +802,45 @@ function startControlLoopTimer() {
                     publishArmTarget();
                 }
             } else {
-                // MANUAL MODE: Gamepad controls driving & arm velocities
+                // MANUAL MODE: Gamepad controls driving, arm & gripper velocities
                 if (hasSteering || hasThrottle) {
                     linearSpeed = -gpThrottle * 0.8 * linearSens;
                     angularSpeed = -gpSteering * 1.0 * angularSens;
                     gpDrivingActive = true;
                 }
                 
+                // Read shoulder buttons (LB/RB), triggers (LT/RT), and face buttons (X/A)
+                const lb = (gp.buttons[4] && gp.buttons[4].pressed);
+                const rb = (gp.buttons[5] && gp.buttons[5].pressed);
+                const lt = (gp.buttons[6] && gp.buttons[6].pressed);
+                const rt = (gp.buttons[7] && gp.buttons[7].pressed);
+                const btnX = (gp.buttons[2] && gp.buttons[2].pressed);
+                const btnA = (gp.buttons[0] && gp.buttons[0].pressed);
+
+                // Arm velocity via Right Stick Y or Shoulder Bumpers LB/RB
                 if (hasArm) {
-                    armManualVel = gpArm * 0.3; // Inverted sign so joystick up (negative axis) moves arm up
+                    armManualVel = -gpArm * 0.3; // Right stick Y (up = +0.3 rad/s)
+                    gpArmActive = true;
+                } else if (lb) {
+                    armManualVel = 0.3;  // LB (Left Bumper) = Arm UP
+                    gpArmActive = true;
+                } else if (rb) {
+                    armManualVel = -0.3; // RB (Right Bumper) = Arm DOWN
                     gpArmActive = true;
                 }
-            }
-            
-            // Process gripper buttons with edge-detection (works in both modes)
-            let openPressed = false;
-            if ((gp.buttons[4] && gp.buttons[4].pressed) || (gp.buttons[2] && gp.buttons[2].pressed)) {
-                openPressed = true;
-            }
 
-            let closePressed = false;
-            if ((gp.buttons[5] && gp.buttons[5].pressed) || (gp.buttons[0] && gp.buttons[0].pressed)) {
-                closePressed = true;
-            }
-
-            if (openPressed) {
-                const oldVal = currentGripperTarget;
-                currentGripperTarget = Math.max(0.0, currentGripperTarget - 0.05);
-                if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
-                    publishGripperTarget(currentGripperTarget);
+                // Gripper velocity via Triggers (LT/RT) or Face Buttons (X/A)
+                if (lt || btnX) {
+                    gripperOpenBtnActive = true;
                 }
-            }
-            if (closePressed) {
-                const oldVal = currentGripperTarget;
-                currentGripperTarget = Math.min(1.0, currentGripperTarget + 0.05);
-                if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
-                    publishGripperTarget(currentGripperTarget);
+                if (rt || btnA) {
+                    gripperCloseBtnActive = true;
                 }
             }
         } else {
             if (gamepadConnected) {
                 gamepadConnected = false;
                 showGamepadStatus(false, "");
-            }
-        }
-        
-        // UI Button & Keyboard (Z / C) Gripper control (runs in both modes, whether gamepad is connected or not)
-        if (gripperOpenBtnActive || keysPressed['z']) {
-            const oldVal = currentGripperTarget;
-            currentGripperTarget = Math.max(0.0, currentGripperTarget - 0.05);
-            if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
-                publishGripperTarget(currentGripperTarget);
-            }
-        }
-        if (gripperCloseBtnActive || keysPressed['c']) {
-            const oldVal = currentGripperTarget;
-            currentGripperTarget = Math.min(1.0, currentGripperTarget + 0.05);
-            if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
-                publishGripperTarget(currentGripperTarget);
             }
         }
         
