@@ -705,16 +705,10 @@ function startGamepadUIInterval() {
             let activeBtnText = "-";
             const lb = (gp.buttons[4] && gp.buttons[4].pressed);
             const rb = (gp.buttons[5] && gp.buttons[5].pressed);
-            const lt = (gp.buttons[6] && gp.buttons[6].pressed);
-            const rt = (gp.buttons[7] && gp.buttons[7].pressed);
-            const btnX = (gp.buttons[2] && gp.buttons[2].pressed);
-            const btnA = (gp.buttons[0] && gp.buttons[0].pressed);
 
             let activeActions = [];
-            if (lb) activeActions.push("ARM UP");
-            if (rb) activeActions.push("ARM DOWN");
-            if (lt || btnX) activeActions.push("GRIP OPEN");
-            if (rt || btnA) activeActions.push("GRIP CLOSE");
+            if (lb) activeActions.push("GRIP OPEN (LB)");
+            if (rb) activeActions.push("GRIP CLOSE (RB)");
 
             if (activeActions.length > 0) {
                 activeBtnText = activeActions.join(" | ");
@@ -754,6 +748,7 @@ function startControlLoopTimer() {
     driveIntervalId = setInterval(() => {
         let gpDrivingActive = false;
         let gpArmActive = false;
+        let gpGripperActive = false;
         const gp = getActiveGamepad();
         
         if (gp) {
@@ -772,6 +767,10 @@ function startControlLoopTimer() {
             const hasSteering = Math.abs(gpSteering) >= deadzone;
             const hasThrottle = Math.abs(gpThrottle) >= deadzone;
             const hasArm = Math.abs(gpArm) >= deadzone;
+
+            // Read shoulder buttons LB (4) and RB (5)
+            const lb = (gp.buttons[4] && gp.buttons[4].pressed);
+            const rb = (gp.buttons[5] && gp.buttons[5].pressed);
             
             if (autoMode) {
                 // AUTO MODE: Gamepad controls targets
@@ -803,38 +802,27 @@ function startControlLoopTimer() {
                 }
             } else {
                 // MANUAL MODE: Gamepad controls driving, arm & gripper velocities
+                
+                // 1. Rover Drive: Left Joystick (Y = Throttle, X = Steering)
                 if (hasSteering || hasThrottle) {
                     linearSpeed = -gpThrottle * 0.8 * linearSens;
                     angularSpeed = -gpSteering * 1.0 * angularSens;
                     gpDrivingActive = true;
                 }
                 
-                // Read shoulder buttons (LB/RB), triggers (LT/RT), and face buttons (X/A)
-                const lb = (gp.buttons[4] && gp.buttons[4].pressed);
-                const rb = (gp.buttons[5] && gp.buttons[5].pressed);
-                const lt = (gp.buttons[6] && gp.buttons[6].pressed);
-                const rt = (gp.buttons[7] && gp.buttons[7].pressed);
-                const btnX = (gp.buttons[2] && gp.buttons[2].pressed);
-                const btnA = (gp.buttons[0] && gp.buttons[0].pressed);
-
-                // Arm velocity via Right Stick Y or Shoulder Bumpers LB/RB
+                // 2. Arm Control: Right Joystick Y
                 if (hasArm) {
-                    armManualVel = -gpArm * 0.3; // Right stick Y (up = +0.3 rad/s)
-                    gpArmActive = true;
-                } else if (lb) {
-                    armManualVel = 0.3;  // LB (Left Bumper) = Arm UP
-                    gpArmActive = true;
-                } else if (rb) {
-                    armManualVel = -0.3; // RB (Right Bumper) = Arm DOWN
+                    armManualVel = -gpArm * 0.3; // Push stick UP = +0.3 rad/s (Arm UP)
                     gpArmActive = true;
                 }
 
-                // Gripper velocity via Triggers (LT/RT) or Face Buttons (X/A)
-                if (lt || btnX) {
-                    gripperOpenBtnActive = true;
-                }
-                if (rt || btnA) {
-                    gripperCloseBtnActive = true;
+                // 3. Gripper Control: Shoulder Bumpers LB & RB
+                if (lb || rb) {
+                    let gripSpeed = 0.0;
+                    if (lb) gripSpeed += 0.5; // LB (Left Bumper) = Gripper OPEN
+                    if (rb) gripSpeed -= 0.5; // RB (Right Bumper) = Gripper CLOSE
+                    gripperManualVel = gripSpeed;
+                    gpGripperActive = true;
                 }
             }
         } else {
@@ -858,7 +846,10 @@ function startControlLoopTimer() {
                 calculateManualArmVelocities();
             }
             
-            calculateManualGripperVelocities();
+            // If gamepad did not override gripper speed, fall back to keyboard/buttons
+            if (!gpGripperActive) {
+                calculateManualGripperVelocities();
+            }
             
             publishDriveCommand();
             publishArmManualCommand();
