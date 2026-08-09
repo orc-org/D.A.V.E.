@@ -4,6 +4,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix, NavSatStatus
 from std_msgs.msg import String
+from navigation_interfaces.msg import DisplayInfo
 import serial
 
 def verify_nmea_checksum(line: str) -> bool:
@@ -50,6 +51,7 @@ class GPSBridgeNode(Node):
         # ROS 2 Publishers
         self.fix_pub = self.create_publisher(NavSatFix, '/gps/fix', 10)
         self.raw_nmea_pub = self.create_publisher(String, '/gps/nmea_raw', 10)
+        # self.info_for_navigation_display = self.create_publisher(DisplayInfo, '/gps/display_info', 10)
 
         self.buffer = ""
 
