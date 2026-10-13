@@ -55,7 +55,7 @@
 					nvidia,enable-input = <0x00>;
 				};
 
-				/* Pin 32: PWM0 for Servo */
+				/* Pin 32: PWM0 for Gripper Stepper */
 				hdr40-pin32 {
 					nvidia,pins = "soc_gpio19_pg6";
 					nvidia,function = "pwm0";
@@ -63,9 +63,33 @@
 					nvidia,enable-input = <0x00>;
 				};
 
-				/* Pin 33: Stepper */
+				/* Pin 33: PWM2 for Arm Stepper */
 				hdr40-pin33 {
 					nvidia,pins = "soc_gpio21_ph0";
+					nvidia,function = "pwm2";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 21: Servo */
+				hdr40-pin21 {
+					nvidia,pins = "spi1_miso_pz4";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 23: Servo */
+				hdr40-pin23 {
+					nvidia,pins = "spi1_sck_pz3";
+					nvidia,function = "gp";
+					nvidia,tristate = <0x00>;
+					nvidia,enable-input = <0x00>;
+				};
+
+				/* Pin 24: Servo */
+				hdr40-pin24 {
+					nvidia,pins = "spi1_cs0_pz6";
 					nvidia,function = "gp";
 					nvidia,tristate = <0x00>;
 					nvidia,enable-input = <0x00>;
@@ -87,6 +111,20 @@
 			__overlay__ {
 				pinctrl-0 = <0x00>;
 			};
+		};
+	};
+
+	fragment@1 {
+		target-path = "/bus@0/spi@3210000";
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@2 {
+		target-path = "/bus@0/spi@3230000";
+		__overlay__ {
+			status = "disabled";
 		};
 	};
 };

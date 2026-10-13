@@ -26,7 +26,13 @@ class XLRnode : public rclcpp::Node {
 public:
 
     XLRnode() : Node("XLRnode") {
-        xlr = new SerialPort(SerialPort::stringToCharacterArray("/dev/ttyUSB0"), 115200);
+        this->declare_parameter("port", "/dev/ttyTHS1");
+        this->declare_parameter("baud", 115200);
+        
+        std::string port = this->get_parameter("port").as_string();
+        int baud = this->get_parameter("baud").as_int();
+        
+        xlr = new SerialPort(SerialPort::stringToCharacterArray(port), baud);
 
         converseServer = this->create_service<serial_interfaces::srv::Converse>("Converse", std::bind(&XLRnode::converseWithTerminal, this, _1, _2));
         receiveServer = this->create_service<serial_interfaces::srv::Receive>("Receive", std::bind(&XLRnode::receiveMessage, this, _1, _2));

@@ -7,8 +7,11 @@ let cmdVelPub = null;
 let armTargetPub = null;
 let autoModePub = null;
 let armManualVelPub = null;
+let gripperManualVelPub = null;
 let gripperTargetPub = null;
 let gripperActionClient = null;
+let lightsPub = null;
+let servoCommandsPub = null;
 
 // Subscribers
 let jointStateSub = null;
@@ -74,6 +77,7 @@ let currentGripperTarget = 0.0;
 let linearSpeed = 0.0;
 let angularSpeed = 0.0;
 let armManualVel = 0.0;
+let gripperManualVel = 0.0;
 let armUpBtnActive = false;
 let armDownBtnActive = false;
 let gripperOpenBtnActive = false;
@@ -237,10 +241,28 @@ function setupROSInterfaces() {
         messageType: 'std_msgs/msg/Float32'
     });
 
+    gripperManualVelPub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/gripper_manual_vel',
+        messageType: 'std_msgs/msg/Float32'
+    });
+
     gripperTargetPub = new ROSLIB.Topic({
         ros: ros,
         name: '/gripper_target',
         messageType: 'std_msgs/msg/Float32'
+    });
+
+    lightsPub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/lights',
+        messageType: 'std_msgs/msg/Bool'
+    });
+
+    servoCommandsPub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/servo_commands',
+        messageType: 'std_msgs/msg/String'
     });
 
     // Action Client for gripper
@@ -257,9 +279,9 @@ function setupROSInterfaces() {
         messageType: 'std_msgs/msg/Float32'
     });
     gripperStateSub.subscribe((msg) => {
-        const progress = msg.data;
+        const stepVal = Math.round(msg.data);
         if (valGripper) {
-            valGripper.innerText = `${((1.0 - progress) * 0.2).toFixed(3)} m (${(progress * 100).toFixed(0)}% CLOSED)`;
+            valGripper.innerText = `${stepVal} steps`;
         }
         
         const slider = document.getElementById('slider-gripper');
@@ -267,12 +289,12 @@ function setupROSInterfaces() {
         const isSliderActive = slider && document.activeElement === slider;
         
         if (!isSliderActive) {
-            currentGripperTarget = progress;
+            currentGripperTarget = stepVal;
             if (slider) {
-                slider.value = progress;
+                slider.value = stepVal;
             }
             if (lbl) {
-                lbl.innerText = progress.toFixed(2);
+                lbl.innerText = `${stepVal} steps`;
             }
         }
     });
@@ -364,6 +386,23 @@ function setupROSInterfaces() {
             }
         } catch (e) {
             console.error("Failed to parse process status JSON:", e);
+        }
+    });
+
+    const batteryStatusSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/battery/status',
+        messageType: 'std_msgs/msg/String'
+    });
+    batteryStatusSub.subscribe((msg) => {
+        try {
+            const batt = JSON.parse(msg.data);
+            document.getElementById('batt-val-soc').innerText = `${batt.SOC}%`;
+            document.getElementById('batt-val-volts').innerText = `${batt.voltage}V`;
+            document.getElementById('batt-val-amps').innerText = `${batt.current}A`;
+            document.getElementById('batt-val-status').innerText = batt.battery_status ? batt.battery_status.toUpperCase() : "OK";
+        } catch (e) {
+            console.error("Failed to parse battery JSON:", e);
         }
     });
 
@@ -482,6 +521,7 @@ function cleanupROSInterfaces() {
     armTargetPub = null;
     autoModePub = null;
     armManualVelPub = null;
+    gripperManualVelPub = null;
     gripperTargetPub = null;
     gripperActionClient = null;
 
@@ -663,22 +703,15 @@ function startGamepadUIInterval() {
             }
             
             let activeBtnText = "-";
-            let openPressed = false;
-            if ((gp.buttons[4] && gp.buttons[4].pressed) || (gp.buttons[2] && gp.buttons[2].pressed)) {
-                openPressed = true;
-            }
+            const lb = (gp.buttons[4] && gp.buttons[4].pressed);
+            const rb = (gp.buttons[5] && gp.buttons[5].pressed);
 
-            let closePressed = false;
-            if ((gp.buttons[5] && gp.buttons[5].pressed) || (gp.buttons[0] && gp.buttons[0].pressed)) {
-                closePressed = true;
-            }
+            let activeActions = [];
+            if (lb) activeActions.push("GRIP OPEN (LB)");
+            if (rb) activeActions.push("GRIP CLOSE (RB)");
 
-            if (openPressed && closePressed) {
-                activeBtnText = "OPEN & CLOSE";
-            } else if (openPressed) {
-                activeBtnText = "OPEN";
-            } else if (closePressed) {
-                activeBtnText = "CLOSE";
+            if (activeActions.length > 0) {
+                activeBtnText = activeActions.join(" | ");
             }
             
             if (gamepadValBtns) {
@@ -715,6 +748,7 @@ function startControlLoopTimer() {
     driveIntervalId = setInterval(() => {
         let gpDrivingActive = false;
         let gpArmActive = false;
+        let gpGripperActive = false;
         const gp = getActiveGamepad();
         
         if (gp) {
@@ -733,6 +767,10 @@ function startControlLoopTimer() {
             const hasSteering = Math.abs(gpSteering) >= deadzone;
             const hasThrottle = Math.abs(gpThrottle) >= deadzone;
             const hasArm = Math.abs(gpArm) >= deadzone;
+
+            // Read shoulder buttons LB (4) and RB (5)
+            const lb = (gp.buttons[4] && gp.buttons[4].pressed);
+            const rb = (gp.buttons[5] && gp.buttons[5].pressed);
             
             if (autoMode) {
                 // AUTO MODE: Gamepad controls targets
@@ -763,64 +801,34 @@ function startControlLoopTimer() {
                     publishArmTarget();
                 }
             } else {
-                // MANUAL MODE: Gamepad controls driving & arm velocities
+                // MANUAL MODE: Gamepad controls driving, arm & gripper velocities
+                
+                // 1. Rover Drive: Left Joystick (Y = Throttle, X = Steering)
                 if (hasSteering || hasThrottle) {
                     linearSpeed = -gpThrottle * 0.8 * linearSens;
                     angularSpeed = -gpSteering * 1.0 * angularSens;
                     gpDrivingActive = true;
                 }
                 
+                // 2. Arm Control: Right Joystick Y
                 if (hasArm) {
-                    armManualVel = gpArm * 0.3; // Inverted sign so joystick up (negative axis) moves arm up
+                    armManualVel = -gpArm * 0.3; // Push stick UP = +0.3 rad/s (Arm UP)
                     gpArmActive = true;
                 }
-            }
-            
-            // Process gripper buttons with edge-detection (works in both modes)
-            let openPressed = false;
-            if ((gp.buttons[4] && gp.buttons[4].pressed) || (gp.buttons[2] && gp.buttons[2].pressed)) {
-                openPressed = true;
-            }
 
-            let closePressed = false;
-            if ((gp.buttons[5] && gp.buttons[5].pressed) || (gp.buttons[0] && gp.buttons[0].pressed)) {
-                closePressed = true;
-            }
-
-            if (openPressed) {
-                const oldVal = currentGripperTarget;
-                currentGripperTarget = Math.max(0.0, currentGripperTarget - 0.05);
-                if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
-                    publishGripperTarget(currentGripperTarget);
-                }
-            }
-            if (closePressed) {
-                const oldVal = currentGripperTarget;
-                currentGripperTarget = Math.min(1.0, currentGripperTarget + 0.05);
-                if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
-                    publishGripperTarget(currentGripperTarget);
+                // 3. Gripper Control: Shoulder Bumpers LB & RB
+                if (lb || rb) {
+                    let gripSpeed = 0.0;
+                    if (lb) gripSpeed += 0.5; // LB (Left Bumper) = Gripper OPEN
+                    if (rb) gripSpeed -= 0.5; // RB (Right Bumper) = Gripper CLOSE
+                    gripperManualVel = gripSpeed;
+                    gpGripperActive = true;
                 }
             }
         } else {
             if (gamepadConnected) {
                 gamepadConnected = false;
                 showGamepadStatus(false, "");
-            }
-        }
-        
-        // UI Button & Keyboard (Z / C) Gripper control (runs in both modes, whether gamepad is connected or not)
-        if (gripperOpenBtnActive || keysPressed['z']) {
-            const oldVal = currentGripperTarget;
-            currentGripperTarget = Math.max(0.0, currentGripperTarget - 0.05);
-            if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
-                publishGripperTarget(currentGripperTarget);
-            }
-        }
-        if (gripperCloseBtnActive || keysPressed['c']) {
-            const oldVal = currentGripperTarget;
-            currentGripperTarget = Math.min(1.0, currentGripperTarget + 0.05);
-            if (Math.abs(currentGripperTarget - oldVal) > 0.001) {
-                publishGripperTarget(currentGripperTarget);
             }
         }
         
@@ -838,8 +846,14 @@ function startControlLoopTimer() {
                 calculateManualArmVelocities();
             }
             
+            // If gamepad did not override gripper speed, fall back to keyboard/buttons
+            if (!gpGripperActive) {
+                calculateManualGripperVelocities();
+            }
+            
             publishDriveCommand();
             publishArmManualCommand();
+            publishGripperManualCommand();
         }
     }, 100); // 10Hz
 }
@@ -857,11 +871,18 @@ function stopRoverMovement() {
     }
 
     armManualVel = 0.0;
+    gripperManualVel = 0.0;
     if (connected && armManualVelPub) {
         const msg = new ROSLIB.Message({
             data: 0.0
         });
         armManualVelPub.publish(msg);
+    }
+    if (connected && gripperManualVelPub) {
+        const msg = new ROSLIB.Message({
+            data: 0.0
+        });
+        gripperManualVelPub.publish(msg);
     }
 }
 
@@ -869,10 +890,10 @@ function calculateManualArmVelocities() {
     let speed = 0.0;
     // Q/PageUp moves arm UP, E/PageDown moves arm DOWN
     if (keysPressed['q'] || keysPressed['pageup'] || armUpBtnActive) {
-        speed -= 0.3; // Inverted sign so arm goes up
+        speed += 0.3; // Arm UP (Positive)
     }
     if (keysPressed['e'] || keysPressed['pagedown'] || armDownBtnActive) {
-        speed += 0.3; // Inverted sign so arm goes down
+        speed -= 0.3; // Arm DOWN (Negative)
     }
     armManualVel = speed;
 }
@@ -883,6 +904,27 @@ function publishArmManualCommand() {
             data: armManualVel
         });
         armManualVelPub.publish(msg);
+    }
+}
+
+function calculateManualGripperVelocities() {
+    let speed = 0.0;
+    // Z / Button Open moves gripper OPEN, C / Button Close moves gripper CLOSE
+    if (gripperOpenBtnActive || keysPressed['z']) {
+        speed += 0.5; // Gripper OPEN (Positive)
+    }
+    if (gripperCloseBtnActive || keysPressed['c']) {
+        speed -= 0.5; // Gripper CLOSE (Negative)
+    }
+    gripperManualVel = speed;
+}
+
+function publishGripperManualCommand() {
+    if (connected && gripperManualVelPub && !autoMode) {
+        const msg = new ROSLIB.Message({
+            data: gripperManualVel
+        });
+        gripperManualVelPub.publish(msg);
     }
 }
 
@@ -1113,13 +1155,13 @@ function sendGripperCommand(position) {
     });
 
     goal.on('feedback', (feedback) => {
-        valGripper.innerText = `${((1.0 - feedback.progress) * 0.2).toFixed(3)} m (${(feedback.progress * 100).toFixed(0)}% CLOSED)`;
+        valGripper.innerText = `${feedback.progress.toFixed(3)} pos`;
     });
 
     goal.on('result', (result) => {
         if (result.success) {
             console.log('Gripper command succeeded.');
-            valGripper.innerText = position === 1.0 ? "0.000 m (CLOSED)" : "0.200 m (OPEN)";
+            valGripper.innerText = `${position.toFixed(3)} pos`;
         }
     });
 
@@ -1128,6 +1170,52 @@ function sendGripperCommand(position) {
 
 const gripperOpenBtn = document.getElementById('btn-gripper-open');
 const gripperCloseBtn = document.getElementById('btn-gripper-close');
+
+const lightOnBtn = document.getElementById('btn-light-on');
+const lightOffBtn = document.getElementById('btn-light-off');
+
+if (lightOnBtn) {
+    lightOnBtn.addEventListener('click', () => {
+        if (!lightsPub) return;
+        const msg = new ROSLIB.Message({ data: true });
+        lightsPub.publish(msg);
+        console.log("Published Lights ON");
+    });
+}
+if (lightOffBtn) {
+    lightOffBtn.addEventListener('click', () => {
+        if (!lightsPub) return;
+        const msg = new ROSLIB.Message({ data: false });
+        lightsPub.publish(msg);
+        console.log("Published Lights OFF");
+    });
+}
+
+const servo1LeftBtn = document.getElementById('btn-servo1-left');
+const servo1RightBtn = document.getElementById('btn-servo1-right');
+const servo2LeftBtn = document.getElementById('btn-servo2-left');
+const servo2RightBtn = document.getElementById('btn-servo2-right');
+
+function publishServoCommand(cmd) {
+    if (!servoCommandsPub) return;
+    const msg = new ROSLIB.Message({ data: cmd });
+    servoCommandsPub.publish(msg);
+    console.log("Published Servo Command: " + cmd);
+}
+
+function bindServoBtn(btn, moveCmd, stopCmd) {
+    if (!btn) return;
+    btn.addEventListener('mousedown', () => publishServoCommand(moveCmd));
+    btn.addEventListener('touchstart', (e) => { e.preventDefault(); publishServoCommand(moveCmd); });
+    btn.addEventListener('mouseup', () => publishServoCommand(stopCmd));
+    btn.addEventListener('mouseleave', () => publishServoCommand(stopCmd));
+    btn.addEventListener('touchend', () => publishServoCommand(stopCmd));
+}
+
+bindServoBtn(servo1LeftBtn, 'servo1_left', 'servo1_stop');
+bindServoBtn(servo1RightBtn, 'servo1_right', 'servo1_stop');
+bindServoBtn(servo2LeftBtn, 'servo2_left', 'servo2_stop');
+bindServoBtn(servo2RightBtn, 'servo2_right', 'servo2_stop');
 
 if (gripperOpenBtn) {
     gripperOpenBtn.addEventListener('mousedown', () => { gripperOpenBtnActive = true; });
@@ -1150,10 +1238,10 @@ const gripperSlider = document.getElementById('slider-gripper');
 const gripperSliderLbl = document.getElementById('lbl-gripper-val');
 if (gripperSlider) {
     gripperSlider.addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
+        const val = Math.round(parseFloat(e.target.value));
         currentGripperTarget = val;
         if (gripperSliderLbl) {
-            gripperSliderLbl.innerText = val.toFixed(2);
+            gripperSliderLbl.innerText = `${val} steps`;
         }
         publishGripperTarget(val);
     });
@@ -1869,7 +1957,7 @@ btnToggleModules.addEventListener('click', () => {
 });
 
 // click delegation for toggle buttons
-modulesDrawer.addEventListener('click', (e) => {
+document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('.module-toggle-btn');
     if (btn) {
         const key = btn.getAttribute('data-module');
@@ -1898,6 +1986,51 @@ if (cam2Toggle) {
         toggleModule('stream_cam_2');
     });
 }
+
+// XLR / Serial UI interactions
+const btnSerialConverse = document.getElementById('btn-serial-converse');
+const btnSerialTransmit = document.getElementById('btn-serial-transmit');
+const inputSerialOutgoing = document.getElementById('serial-outgoing-input');
+const preSerialConsole = document.getElementById('serial-console-log');
+
+function callSerialService(serviceName, serviceType, requestData, callback, errCallback) {
+    if (!connected || !ros) {
+        if (errCallback) errCallback("Not connected to ROS.");
+        else if (preSerialConsole) preSerialConsole.innerText = "Error: Not connected to ROS.";
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: serviceName,
+        serviceType: serviceType
+    });
+    const request = new ROSLIB.ServiceRequest(requestData);
+    service.callService(request, callback, (error) => {
+        if (errCallback) errCallback(error);
+        else if (preSerialConsole) preSerialConsole.innerText = "Service Error: " + error;
+    });
+}
+
+if (btnSerialConverse && inputSerialOutgoing && preSerialConsole) {
+    btnSerialConverse.addEventListener('click', () => {
+        const outStr = inputSerialOutgoing.value;
+        preSerialConsole.innerText = `[Sending Converse]: ${outStr}\n[Awaiting reply...]`;
+        callSerialService('/Converse', 'serial_interfaces/srv/Converse', { outgoing: outStr }, (result) => {
+            preSerialConsole.innerText = `[Received]: ${result.incoming}`;
+        });
+    });
+}
+
+if (btnSerialTransmit && inputSerialOutgoing && preSerialConsole) {
+    btnSerialTransmit.addEventListener('click', () => {
+        const outStr = inputSerialOutgoing.value;
+        preSerialConsole.innerText = `[Transmitting]: ${outStr}`;
+        callSerialService('/Transmit', 'serial_interfaces/srv/Transmit', { outgoing: outStr }, (result) => {
+            preSerialConsole.innerText += `\n[Transmit OK]`;
+        });
+    });
+}
+
 
 // click listener to collapse/expand diagnostics log panel
 const diagConsole = document.getElementById('diagnostic-console');
@@ -2610,10 +2743,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnImuStatus = document.getElementById('btn-imu-status');
     const btnImuResetFilter = document.getElementById('btn-imu-reset-filter');
     const btnImuGetState = document.getElementById('btn-imu-get-state');
+    const btnImuCalibrateAll = document.getElementById('btn-imu-calibrate-all');
 
     const btnCalibrateNorth = document.getElementById('btn-calibrate-north');
+    const btnCalibrateAll = document.getElementById('btn-calibrate-all');
     if (btnCalibrateNorth) btnCalibrateNorth.addEventListener('click', callIMUCalibrate);
+    if (btnCalibrateAll) btnCalibrateAll.addEventListener('click', callIMUCalibrateAll);
     if (btnImuCalibrate) btnImuCalibrate.addEventListener('click', callIMUCalibrate);
+    if (btnImuCalibrateAll) btnImuCalibrateAll.addEventListener('click', callIMUCalibrateAll);
     if (btnImuTogglePub) btnImuTogglePub.addEventListener('click', callIMUTogglePublishing);
     if (btnImuStatus) btnImuStatus.addEventListener('click', callIMUGetStatus);
     if (btnImuResetFilter) btnImuResetFilter.addEventListener('click', callIMUResetFilter);
@@ -2790,6 +2927,25 @@ function callIMUCalibrate() {
         }
     }, (error) => {
         logIMUServiceResponse("Calibrate", false, `Service Error: ${error}`);
+    });
+}
+
+function callIMUCalibrateAll() {
+    if (!ros) {
+        logIMUServiceResponse("Calibrate All", false, "ROS Bridge not connected.");
+        return;
+    }
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/imu_telemetry/calibrate_all',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+    service.callService(new ROSLIB.ServiceRequest({}), (result) => {
+        if (result) {
+            logIMUServiceResponse("Calibrate All", result.success, result.message);
+        }
+    }, (error) => {
+        logIMUServiceResponse("Calibrate All", false, `Service Error: ${error}`);
     });
 }
 
@@ -3213,6 +3369,40 @@ function setAndEncodeMessage() {
     });
 }
 
+function transmitCachedMessage() {
+    if (!connected || !ros) {
+        logMorseConsole("[Error] Not connected to ROS 2 bridge.");
+        return;
+    }
+
+    const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/transmit_cached',
+        serviceType: 'std_srvs/srv/Trigger'
+    });
+
+    const request = new ROSLIB.ServiceRequest({});
+
+    logMorseConsole(`Fetching cached Morse message to send to Arduino...`);
+    service.callService(request, (result) => {
+        if(result.success) {
+            const morseStr = result.message;
+            logMorseConsole(`[Fetched] '${morseStr}'. Sending to Arduino...`);
+            
+            // Call the MorseBridge /morse_converse service to get Arduino feedback
+            callSerialService('/morse_converse', 'serial_interfaces/srv/Converse', { outgoing: morseStr + '\n' }, (convResult) => {
+                logMorseConsole(`[Arduino Feedback]: ${convResult.incoming}`);
+            }, (err) => {
+                logMorseConsole(`[Arduino Error]: ${err}`);
+            });
+        } else {
+            logMorseConsole(`[Error] Failed to fetch.`);
+        }
+    }, (error) => {
+        logMorseConsole(`[Service Error] ${error}`);
+    });
+}
+
 function logMorseConsole(text) {
     const logEl = document.getElementById('morse-console-log');
     if (!logEl) return;
@@ -3261,6 +3451,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSetMsg = document.getElementById('btn-morse-set-message');
     if (btnSetMsg) {
         btnSetMsg.addEventListener('click', setAndEncodeMessage);
+    }
+
+    const btnTransmitCached = document.getElementById('btn-morse-transmit-cached');
+    if (btnTransmitCached) {
+        btnTransmitCached.addEventListener('click', transmitCachedMessage);
     }
 
     const btnSimulate = document.getElementById('btn-morse-simulate');

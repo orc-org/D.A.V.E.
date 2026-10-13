@@ -8,13 +8,13 @@ Adafruit IMU: Pins 3, 5
 
 XLR: Pins, 8, 10
 
-Stepper Arm: Pins 15, 7, 11
+Stepper Arm: Pins 18, 22, 33
 
-Stepper Hand: Pins 32, 31, 29
+Stepper Hand: Pins 13, 15, 16
 
-Lights: Pin 40
+Lights: Pin 12
 
-Servo: 19, 21, 23, 24, 26, 27
+Camera Servos: 21, 23, 27, 29
 
 
 # _Code to run morse servo_ (note: It uses pin 32 on the jetson nano)

@@ -17,7 +17,7 @@
             <userTransports>
                 <transport_id>udp_transport</transport_id>
             </userTransports>
-            <useBuiltinTransports>true</useBuiltinTransports>
+            <useBuiltinTransports>false</useBuiltinTransports>
             <builtin>
                 <initialPeersList>
                     <!-- Localhost for Jetson internal communication and local testing -->

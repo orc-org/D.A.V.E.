@@ -4,7 +4,9 @@
 # Resolve the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-# Removed FastDDS profiles configuration as it was breaking IPC
+# Re-enabled FastDDS profiles configuration (Fixed IPC bug by disabling SHM in XML)
+export FASTRTPS_DEFAULT_PROFILES_FILE=/home/orc/D.A.V.E./fastdds_profiles.xml
+
 echo "Cleaning up any old background processes..."
 pkill -f "python3.*dashboard_helper" 2>/dev/null
 pkill -f rosbridge_websocket 2>/dev/null

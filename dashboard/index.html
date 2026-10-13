@@ -105,6 +105,26 @@
     <div class="dashboard-container">
         <!-- HEADER -->
         <header class="dashboard-header" style="justify-content: flex-end;">
+            <!-- Battery Status Display -->
+            <div id="battery-status-display" class="connection-panel glass-panel" style="margin-right: 15px; font-family: monospace; font-size: 0.75rem; color: var(--text-muted); gap: 12px; padding: 10px 18px; align-items: center; justify-content: center; height: 38px; box-sizing: border-box; min-width: 250px;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="color: var(--accent-green); font-weight: bold;">BATT:</span>
+                    <span id="batt-val-soc" style="color: var(--text-main); font-weight: bold;">--%</span>
+                </div>
+                <div style="border-left: 1px solid var(--border-color); height: 16px;"></div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span id="batt-val-volts" style="color: var(--text-main);">--.V</span>
+                </div>
+                <div style="border-left: 1px solid var(--border-color); height: 16px;"></div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span id="batt-val-amps" style="color: var(--text-main);">--.A</span>
+                </div>
+                <div style="border-left: 1px solid var(--border-color); height: 16px;"></div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span id="batt-val-status" style="color: var(--accent-amber); font-size: 0.65rem;">NO DATA</span>
+                </div>
+            </div>
+
             <!-- Gamepad Live Input Display -->
             <div id="gamepad-inputs-display" class="connection-panel glass-panel hidden" style="margin-right: 15px; font-family: monospace; font-size: 0.75rem; color: var(--text-muted); gap: 12px; padding: 10px 18px; align-items: center; justify-content: center; height: 38px; box-sizing: border-box; min-width: 320px;">
                 <div style="display: flex; align-items: center; gap: 5px;">
@@ -209,6 +229,7 @@
                         <!-- Map Interactive Control Bar -->
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <button id="btn-calibrate-north" class="neon-btn-green" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 130px;">SET TRUE NORTH</button>
+                            <button id="btn-calibrate-all" class="neon-btn-amber" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 130px;">TARE ALL ATTITUDE</button>
                             <button id="btn-set-home-origin" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 120px;">SET HOME ORIGIN</button>
                             <button id="btn-set-target-waypoint" class="neon-btn-amber" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 130px;">CLICK MAP TO TARGET</button>
                             <button id="btn-center-rover" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 12px; flex: 1; min-width: 110px;">CENTER ROVER</button>
@@ -364,6 +385,7 @@
                             <!-- Service Action Buttons Grid -->
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
                                 <button id="btn-imu-calibrate" class="neon-btn-green" style="font-size: 0.75rem; padding: 10px 8px;">SET TRUE NORTH (0°)</button>
+                                <button id="btn-imu-calibrate-all" class="neon-btn-amber" style="font-size: 0.75rem; padding: 10px 8px;">TARE ALL ATTITUDE (0°)</button>
                                 <button id="btn-imu-toggle-pub" class="neon-btn-blue" style="font-size: 0.75rem; padding: 10px 8px;">TOGGLE STREAM</button>
                                 <button id="btn-imu-status" class="neon-btn-blue" style="font-size: 0.75rem; padding: 10px 8px;">GET SENSOR STATUS</button>
                                 <button id="btn-imu-reset-filter" class="neon-btn-red" style="font-size: 0.75rem; padding: 10px 8px;">RESET KALMAN FILTER</button>
@@ -570,12 +592,31 @@
                     <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; background: rgba(0,0,0,0.2); display: flex; gap: 12px; align-items: center;">
                         <input type="text" id="input-morse-message" placeholder="Enter message to encode (e.g. 'HEIST PASS')..." style="flex: 1; background: #000; border: 1px solid var(--border-color); border-radius: 4px; padding: 8px 12px; color: var(--text-main); font-family: monospace; font-size: 0.8rem;">
                         <button id="btn-morse-set-message" class="neon-btn-blue" style="font-size: 0.75rem; padding: 8px 16px; white-space: nowrap;">ENCODE & SET MESSAGE</button>
+                        <button id="btn-morse-transmit-cached" class="neon-btn-green" style="font-size: 0.75rem; padding: 8px 16px; white-space: nowrap;">SEND TO ARDUINO</button>
                     </div>
 
                     <!-- Response Console -->
                     <div>
                         <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted);">ENIGMA SERVICE & ACTION LOG:</span>
                         <pre id="morse-console-log" style="background: #000; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.75rem; color: var(--accent-green); max-height: 90px; overflow-y: auto; margin-top: 4px; white-space: pre-wrap;">[Enigma Machine Console Ready]</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Serial Terminal Section -->
+            <section class="viewport-section glass-panel" id="serial-terminal-section" style="margin-bottom: 20px;">
+                <div class="section-header">
+                    <h2 class="section-title"><span class="icon">🔌</span>XLR/Serial Terminal</h2>
+                </div>
+                <div class="section-content" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="serial-outgoing-input" class="modern-input" placeholder="Enter command to send..." style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-color);">
+                        <button class="neon-btn-blue" id="btn-serial-converse" style="padding: 8px 16px;">CONVERSE</button>
+                        <button class="neon-btn-red" id="btn-serial-transmit" style="padding: 8px 16px;">TX ONLY</button>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.7rem; font-weight: bold; color: var(--text-muted);">SERIAL INCOMING:</span>
+                        <pre id="serial-console-log" style="background: #000; border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 0.75rem; color: var(--accent-green); height: 60px; overflow-y: auto; margin-top: 4px; white-space: pre-wrap;">[Awaiting response...]</pre>
                     </div>
                 </div>
             </section>
@@ -904,9 +945,25 @@
                             <button id="btn-gripper-open" class="neon-btn-amber">OPEN GRIPPER (Z)</button>
                             <button id="btn-gripper-close" class="neon-btn-green">CLOSE GRIPPER (C)</button>
                         </div>
+                        
+                        <!-- Light controls -->
+                        <div class="gripper-action-bar" style="margin-top: 12px;">
+                            <button id="btn-light-on" class="neon-btn-blue">LIGHTS ON</button>
+                            <button id="btn-light-off" class="neon-btn-red">LIGHTS OFF</button>
+                        </div>
+                        
+                        <!-- Servo controls -->
+                        <div class="gripper-action-bar" style="margin-top: 12px;">
+                            <button id="btn-servo1-left" class="neon-btn-blue" style="font-size: 0.75rem;">SERVO 1 LEFT</button>
+                            <button id="btn-servo1-right" class="neon-btn-blue" style="font-size: 0.75rem;">SERVO 1 RIGHT</button>
+                        </div>
+                        <div class="gripper-action-bar" style="margin-top: 12px;">
+                            <button id="btn-servo2-left" class="neon-btn-amber" style="font-size: 0.75rem;">SERVO 2 LEFT</button>
+                            <button id="btn-servo2-right" class="neon-btn-amber" style="font-size: 0.75rem;">SERVO 2 RIGHT</button>
+                        </div>
                         <div class="slider-wrapper" style="margin-top: 10px;">
                             <label for="slider-gripper">MANUAL GRIPPER STEPPER: <span id="lbl-gripper-val">0.00</span></label>
-                            <input type="range" id="slider-gripper" min="0.0" max="1.0" step="0.05" value="0.0">
+                            <input type="range" id="slider-gripper" min="-100.0" max="100.0" step="0.1" value="0.0">
                         </div>
                     </div>
                 </section>

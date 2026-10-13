@@ -15,6 +15,7 @@ find_package(cv_bridge REQUIRED)
 find_package(enigma_machine_interfaces REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(arm_interfaces REQUIRED)
+find_package(std_srvs REQUIRED)
 
 # c++ stuff
 # Include cpp "include" directory (because the tutorial guy defined header files there)
@@ -22,7 +23,7 @@ include_directories(include)
 
 #create c++ executables
 add_executable(enigma_node src/EnigmaMachine.cpp)
-ament_target_dependencies(enigma_node rclcpp rclcpp_action enigma_machine_interfaces arm_interfaces)
+ament_target_dependencies(enigma_node rclcpp rclcpp_action enigma_machine_interfaces arm_interfaces std_srvs)
 
 #install cpp excecutables
 install(TARGETS

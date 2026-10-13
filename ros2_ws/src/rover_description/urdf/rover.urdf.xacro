@@ -61,10 +61,9 @@
     <visual><origin xyz="${m_len/2} 0 0"/><geometry><box size="${m_len} 0.5 0.5"/></geometry><material name="red"/></visual>
   </link>
 
-  <joint name="arm_joint" type="revolute">
+  <joint name="arm_joint" type="continuous">
     <parent link="mount_link"/><child link="actual_arm_link"/>
     <origin xyz="${m_len} 0 0"/><axis xyz="0 1 0"/>
-    <limit lower="-1.57" upper="1.57" effort="10" velocity="1.0"/>
   </joint>
   <link name="actual_arm_link">
     <visual><origin xyz="${a_len/2} 0 0"/><geometry><box size="${a_len} 0.4 0.4"/></geometry><material name="green"/></visual>

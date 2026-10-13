@@ -49,11 +49,29 @@ class DashboardHelperNode(Node):
                 "pattern": "arm_stepper_driver",
                 "proc": None
             },
+            "arm_stepper_arduino_driver": {
+                "name": "Arm & Gripper Steppers (Arduino Serial)",
+                "cmd": ["ros2", "run", "arm_controller", "arm_stepper_arduino_driver"],
+                "pattern": "arm_stepper_arduino_driver",
+                "proc": None
+            },
+            "battery_monitor": {
+                "name": "PowerQueen BMS Monitor (Bluetooth)",
+                "cmd": ["ros2", "run", "arm_controller", "battery_monitor", "--ros-args", "-p", "mac_address:=C8:47:80:54:35:AE"],
+                "pattern": "battery_monitor",
+                "proc": None
+            },
 
             "stream_cam_0": {
                 "name": "Camera 0 Streamer (CSIPort0)",
                 "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "csi", "--device", "0", "--host", "192.168.1.87", "--port", "5000"],
-                "pattern": "video_streamer.py.*--device 0",
+                "pattern": "video_streamer.py.*--device 0(?!.*--fps 60)",
+                "proc": None
+            },
+            "stream_cam_0_60fps": {
+                "name": "Camera 0 Streamer (60 FPS)",
+                "cmd": ["python3", "/home/orc/D.A.V.E./ros2_ws/src/rover_video_streamer/rover_video_streamer/video_streamer.py", "--camera-type", "csi", "--device", "0", "--host", "192.168.1.87", "--port", "5000", "--fps", "60"],
+                "pattern": "video_streamer.py.*--device 0.*--fps 60",
                 "proc": None
             },
             "stream_cam_1": {
@@ -114,6 +132,18 @@ class DashboardHelperNode(Node):
                 "name": "Enigma Machine Decoder/Encoder",
                 "cmd": ["ros2", "run", "enigma_machine", "enigma_node"],
                 "pattern": "enigma_node",
+                "proc": None
+            },
+            "xlr_node": {
+                "name": "XLR / Serial Port Node",
+                "cmd": ["ros2", "run", "serial_communication", "XLRnode"],
+                "pattern": "XLRnode",
+                "proc": None
+            },
+            "morse_bridge_node": {
+                "name": "Arduino USB Bridge Node",
+                "cmd": ["ros2", "run", "serial_communication", "morse_bridge_node"],
+                "pattern": "morse_bridge_node",
                 "proc": None
             }
         }
@@ -186,7 +216,7 @@ class DashboardHelperNode(Node):
                     cmd_str = " ".join(cmd)
                     full_cmd = [
                         "bash", "-c",
-                        f"source /opt/ros/humble/setup.bash 2>/dev/null; source /home/orc/D.A.V.E./ros2_ws/install/setup.bash 2>/dev/null; export ROS_DOMAIN_ID=1; exec {cmd_str}"
+                        f"source /opt/ros/humble/setup.bash 2>/dev/null; source /home/orc/D.A.V.E./ros2_ws/install/setup.bash 2>/dev/null; exec {cmd_str}"
                     ]
                     log_file = open(f"/tmp/dashboard_proc_{key}.log", "w")
                     proc = subprocess.Popen(
