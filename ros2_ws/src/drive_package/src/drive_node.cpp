@@ -2,6 +2,7 @@
 #include "sensor_msgs/msg/joy.hpp"
 #include "std_msgs/msg/float32.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include "std_msgs/msg/string.hpp"
 #include <algorithm>
 
 class JoyDrive : public rclcpp::Node
@@ -20,6 +21,15 @@ public:
         cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
             "/cmd_vel", sub_qos,
             std::bind(&JoyDrive::cmdVelCallback, this, std::placeholders::_1));
+        
+        mode_sub_ = this->create_subscription<std_msgs::msg::String>(
+            "/control_mode", 10,
+            std::bind(&JoyDrive::modeCallback, this, std::placeholders::_1));
+
+        sensitivity_sub_ = this->create_subscription<std_msgs::msg::String>(
+            "/sensitivity", 10,
+            std::bind(&JoyDrive::sensitivityCallback, this, std::placeholders::_1));
+
 
         rclcpp::QoS pub_qos(10);
         pub_qos.reliable();
@@ -34,8 +44,65 @@ public:
     }
 
 private:
+    void modeCallback(const std_msgs::msg::String::SharedPtr msg)
+    {
+        current_mode_ = msg->data;
+
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Drive mode changed to: %s",
+            current_mode_.c_str()
+        );
+        
+        //Should delete later once other control scheme enabled
+        if (current_mode_ != "drive")
+        {
+            stopMotors();
+        }
+    }
+
+    void sensitivityCallback(const std_msgs::msg::String::SharedPtr msg)
+    {
+        if (msg->data == "ultra")
+        {
+            sensitivity_ = 0.25f;
+        }
+        else if (msg->data == "fine")
+        {
+            sensitivity_ = 0.5f;
+        }
+        else if (msg->data == "coarse")
+        {
+            sensitivity_ = 1.0f;
+        }
+
+        RCLCPP_INFO(
+            this->get_logger(),
+            "Sensitivity changed to %s (%.2f)",
+            msg->data.c_str(),
+            sensitivity_);
+    }
+
+    //Probably delete later
+    void stopMotors()
+    {
+        std_msgs::msg::Float32 stop;
+        stop.data = 0.0;
+
+        front_left_pub_->publish(stop);
+        front_right_pub_->publish(stop);
+        rear_left_pub_->publish(stop);
+        rear_right_pub_->publish(stop);
+    }
+
     void joyCallback(const sensor_msgs::msg::Joy::SharedPtr msg)
     {
+        //Should change later to make rover drivable somehow while in arm mode
+        if (current_mode_ != "drive")
+        {
+            return;
+        }
+
         // Grabbing Controller Inputs
         float steering = msg->axes[0];   // left stick (X axis only for left/right)
         float lt_raw = msg->axes[4];     // left trigger
@@ -50,11 +117,11 @@ private:
         RCLCPP_INFO(this->get_logger(), "\n\n\tController Inputs (For Debugging): \n\n Left Trigger: %.3f, Right Trigger: %.3f, LStick X Direction: %.3f\n", lt_raw, rt_raw, steering);
 
         // NORMALIZE trigger inputs (released=1, pressed=-1 → 0..1)
-        float lt_norm = (1.0f - lt_raw) * 0.5f;   // backward  (0..1)
-        float rt_norm = (1.0f - rt_raw) * 0.5f;   // forward   (0..1)
+        float lt_norm = (1.0f - lt_raw) * 0.5f;   // forward  (0..1)
+        float rt_norm = (1.0f - rt_raw) * 0.5f;   // backward   (0..1)
         
         // Combines it into Throttle to send to motor drivers (for variable speeds)
-        float throttle = rt_norm - lt_norm;            // -1..1
+        float throttle = lt_norm - rt_norm;            // -1..1
         
         // Makes a deadzone to hopefully stop all the fluctuating values Im getting
         float deadzone = 0.05f;           // 5% deadzone around 0
@@ -83,7 +150,11 @@ private:
             left = -spin;
             right = spin;
         }
-
+        
+        //Takes the sensitivity mode into account
+        left *= sensitivity_;
+        right *= sensitivity_;
+        
         // Clamp makes sure that our power outputs to motors never go above 100%
         left  = std::clamp(left,  -1.0f, 1.0f);
         right = std::clamp(right, -1.0f, 1.0f);
@@ -111,12 +182,22 @@ private:
 
     void cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
     {
+        //Should change later to make rover drivable somehow while in arm mode
+        if (current_mode_ != "drive")
+        {
+            return;
+        }
+
         float throttle = msg->linear.x;
         float steering = msg->angular.z;
 
         // Simple skid-steer mixing
         float left = throttle - steering;
         float right = throttle + steering;
+
+        //Takes sensitivity setting into account
+        left *= sensitivity_;
+        right *= sensitivity_;
 
         left  = std::clamp(left,  -1.0f, 1.0f);
         right = std::clamp(right, -1.0f, 1.0f);
@@ -135,9 +216,13 @@ private:
         RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
             "cmd_vel -> Left Wheels: %.2f | Right Wheels: %.2f", left, right);
     }
+    std::string current_mode_ = "drive";
+    float sensitivity_ = 0.5f;   // Default = fine
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr mode_sub_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sensitivity_sub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr front_left_pub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr front_right_pub_;
     rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr rear_left_pub_;
